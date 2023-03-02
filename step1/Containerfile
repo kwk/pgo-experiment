@@ -1,0 +1,16 @@
+FROM fedora:37
+
+LABEL author="Konrad Kleine <kkleine@redhat.com>"
+LABEL description="A basic specfile-to-RPM process demo"
+
+# Install packages to build and package "myapp"
+RUN dnf install -y cmake fedora-packager clang
+
+WORKDIR /root
+RUN useradd --create-home tester
+COPY entrypoint.sh /root/entrypoint.sh
+COPY ./myapp /home/tester/myapp
+RUN chown -Rfv  tester:tester /home/tester/myapp
+
+USER root
+ENTRYPOINT [ "/root/entrypoint.sh" ]

@@ -1,0 +1,123 @@
+From b5641f79860dbb463c461f4579139c902b9df7f4 Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Wed, 1 Mar 2023 22:32:26 +0100
+Subject: [PATCH] Create <package>-<toolchain>-profdata subpackage
+
+For inspiration see also:
+
+https://src.fedoraproject.org/fork/tstellar/rpms/redhat-rpm-config/c/a62cbcf1d23df6cd2111b7cfa6f75a849d89f11d?branch=pgo
+---
+ macros                 | 23 ++++++++++++++++++++++-
+ redhat-rpm-config.spec |  6 +++++-
+ 2 files changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/macros b/macros
+index d10fa49..38e5134 100644
+--- a/macros
++++ b/macros
+@@ -25,6 +25,7 @@
+ %_include_gdb_index     1
+ %_debugsource_packages  1
+ %_debuginfo_subpackages 1
++%_toolchain_profile_subpackages 1
+ 
+ # GCC toolchain
+ %__cc_gcc gcc
+@@ -49,6 +50,18 @@
+ %build_cxx %{__cxx}
+ %build_cpp %{__cpp}
+ 
++# Generate profiledata packages for the compiler
++%_toolchain_profile_subpackage_template \
++%package -n %{name}-%{toolchain}-profdata \
++Summary: %{toolchain} profile data from %{name} package \
++%description -n %{name}-%{toolchain}-profdata \
++This package contains profiledata for %{toolchain} that was generated while \
++compiling %{name}.  This can be used for doing Profile Guided Optimizations \
++(PGO) builds of %{toolchain} \
++%files -n %{name}-%{toolchain}-profdata \
++/usr/lib/profraw/%{name}.%{toolchain}.profraw \
++%{nil}
++
+ #==============================================================================
+ # ---- compiler flags.
+ 
+@@ -81,6 +94,9 @@
+ # not been set already.  RPM_OPT_FLAGS and RPM_LD_FLAGS have already
+ # been set implicitly at the start of the %%build section.
+ # LT_SYS_LIBRARY_PATH is used by libtool script.
++# For LLVM_PROFILE_FILE see:
++# - https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
++# - https://docs.teamscale.com/howto/setting-up-profiler-tga/cpp/#clang-and-llvm-cov
+ %set_build_flags \
+   CFLAGS="${CFLAGS:-%{build_cflags}}" ; export CFLAGS ; \
+   CXXFLAGS="${CXXFLAGS:-%{build_cxxflags}}" ; export CXXFLAGS ; \
+@@ -89,7 +105,9 @@
+   LDFLAGS="${LDFLAGS:-%{build_ldflags}}" ; export LDFLAGS ; \
+   LT_SYS_LIBRARY_PATH="${LT_SYS_LIBRARY_PATH:-%_libdir:}" ; export LT_SYS_LIBRARY_PATH ; \
+   CC="${CC:-%{__cc}}" ; export CC ; \
+-  CXX="${CXX:-%{__cxx}}" ; export CXX
++  CXX="${CXX:-%{__cxx}}" ; export CXX ; \
++  [ "%_toolchain_profile_subpackages" = 1 ] && \
++  LLVM_PROFILE_FILE="%{name}.%{toolchain}.profraw" && export LLVM_PROFILE_FILE ; \
+ 
+ # Automatically use set_build_flags macro for build, check, and
+ # install phases.
+@@ -253,6 +271,7 @@ print(result)
+ %__brp_mangle_shebangs /usr/lib/rpm/redhat/brp-mangle-shebangs %{?__brp_mangle_shebangs_exclude:--shebangs "%{?__brp_mangle_shebangs_exclude}"} %{?__brp_mangle_shebangs_exclude_file:--shebangs-from "%{__brp_mangle_shebangs_exclude_file}"} %{?__brp_mangle_shebangs_exclude_from:--files "%{?__brp_mangle_shebangs_exclude_from}"} %{?__brp_mangle_shebangs_exclude_from_file:--files-from "%{__brp_mangle_shebangs_exclude_from_file}"}
+ 
+ %__brp_llvm_compile_lto_elf /usr/lib/rpm/redhat/brp-llvm-compile-lto-elf %{build_cflags} %{build_ldflags}
++% __copy_profraw mkdir -pv %{buildroot}/usr/lib/profraw && cp -v %{_builddir}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw
+ 
+ # note: %%__os_install_post_python is defined in python-srpm-macros and contains several policies
+ # redhat-rpm-config maintainers, don't remove it from %%__os_install_post unless coordinating the change with Python maintainers
+@@ -271,6 +290,7 @@ print(result)
+     %{?__brp_mangle_shebangs} \
+     %{?__brp_remove_la_files} \
+     %{__os_install_post_python} \
++    %{?_toolchain_profile_subpackages:%{?__copy_profraw}} \
+ %{nil}
+ 
+ %__spec_install_post\
+@@ -281,6 +301,7 @@ print(result)
+ %{nil}
+ 
+ %install %{?_enable_debug_packages:%{?buildsubdir:%{debug_package}}}\
++         %{?_toolchain_profile_subpackages:%{_toolchain_profile_subpackage_template}} \
+ %%install\
+ %{nil}
+ 
+diff --git a/redhat-rpm-config.spec b/redhat-rpm-config.spec
+index 09a5b7f..af044a8 100644
+--- a/redhat-rpm-config.spec
++++ b/redhat-rpm-config.spec
+@@ -4,7 +4,7 @@
+ # 2) When making changes, increment the version (in baserelease) by 1.
+ #    rpmdev-bumpspec and other tools update the macro below, which is used
+ #    in Version: to get the desired effect.
+-%global baserelease 229
++%global baserelease 230
+ 
+ Summary: Red Hat specific rpm configuration files
+ Name: redhat-rpm-config
+@@ -191,6 +191,7 @@ install -p -m 644 -t %{buildroot}%{_rpmluadir}/fedora/srpm forge.lua
+ %{rrcdir}/macros
+ %{rrcdir}/rpmrc
+ %{rrcdir}/brp-*
++# % {rrcdir}/clang-merge-prof-data
+ %{rrcdir}/dist.sh
+ %{rrcdir}/gpgverify
+ %{rrcdir}/redhat-hardened-*
+@@ -222,6 +223,9 @@ install -p -m 644 -t %{buildroot}%{_rpmluadir}/fedora/srpm forge.lua
+ %doc buildflags.md
+ 
+ %changelog
++* Wed Mar 01 2023 Konrad Kleine <kkleine@redhat.com> - 230-1
++- Profile data support
++
+ * Tue Jan 17 2023 Miro Hrončok <mhroncok@redhat.com> - 229-1
+ - Add pyproject-srpm-macros to the default buildroot
+ 
+-- 
+2.39.1
+

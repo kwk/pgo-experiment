@@ -1,5 +1,5 @@
 build-step0:
-	cd step0 && $(MAKE) all
+	$(MAKE) -C step0 all
 
 build-step4:
 	rm -rf step4/myapp
@@ -8,6 +8,9 @@ build-step4:
 	-podman rm -f pgo-experiment-step4
 	podman run -it --name pgo-experiment-step4 pgo-experiment-step4
 	podman cp pgo-experiment-step4:/home/tester/myapp/x86_64/myapp-clang-profdata-1.0.0-1.fc37.x86_64.rpm step4/myapp-clang-profdata-1.0.0-1.fc37.x86_64.rpm
+
+build-step5:
+	$(MAKE) -C step5 all
 
 build-step%:
 	$(eval step:=$(subst build-,,$@))

@@ -8,14 +8,17 @@ Summary: A simple "Hello, World!" application.
 
 License: Apache-2.0
 URL: https://github.com/kwk/pgo-experiment
-Source0: myapp.cpp
-Source1: CMakeLists.txt
+Source0: myapp-%{version}.tar.bz2
 
 BuildRequires:	clang
 BuildRequires:	cmake
+BuildRequires:	git
 
 %description
 A simple "Hello, World!" application.
+
+%prep
+%autosetup -S git
 
 #-----------------------------------------------------------------------
 # We want to generalize and automate this sub-package creation
@@ -49,7 +52,7 @@ export LLVM_PROFILE_FILE="myapp.clang.profraw"
 # Must be generatlized and automated as well.
 #-----------------------------------------------------------------------
 mkdir -pv %{buildroot}/usr/lib/profraw
-cp -v %{_builddir}/%{_vpath_builddir}/myapp.clang.profraw \
+cp -v %{_builddir}/myapp-1.0.0/%{_vpath_builddir}/myapp.clang.profraw \
       %{buildroot}/usr/lib/profraw/myapp.clang.profraw
 #-----------------------------------------------------------------------
 

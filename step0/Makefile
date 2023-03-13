@@ -1,7 +1,7 @@
 # It's necessary to set this because some environments don't link sh -> bash.
 SHELL := /bin/bash
 fas_user ?= ${USER}
-copr_project ?= llvm-pgo-37
+copr_project ?= llvm-pgo-instrumented
 
 .PHONY: all
 all: create-copr-project llvm.copr_build_id clang.copr_build_id lld.copr_build_id

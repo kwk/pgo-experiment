@@ -8,14 +8,17 @@ Summary: A simple "Hello, World!" application.
 
 License: Apache-2.0
 URL: https://github.com/kwk/pgo-experiment
-Source0: myapp.cpp
-Source1: CMakeLists.txt
+Source0: myapp-%{version}.tar.bz2
 
 BuildRequires:	clang
 BuildRequires:	cmake
+BuildRequires:	git
 
 %description
 A simple "Hello, World!" application.
+
+%prep
+%autosetup -S git
 
 #-----------------------------------------------------------------------
 # Generalize the naming and description of the profdata subpackage
@@ -49,7 +52,7 @@ export LLVM_PROFILE_FILE="%{name}.%{toolchain}.profraw"
 # Generalized
 #-----------------------------------------------------------------------
 mkdir -pv %{buildroot}/usr/lib/profraw
-cp -v %{_builddir}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw \
+cp -v %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw \
       %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw
 #-----------------------------------------------------------------------
 

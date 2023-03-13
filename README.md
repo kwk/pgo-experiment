@@ -37,7 +37,7 @@ The question is: How can we tap in the RPM build pipeline using [Fedora
 Copr](https://copr.fedorainfracloud.org/) and build RPM packages without
 modifying their `*.spec` files manually?
 
-I've created a 5 step experiment that shows how this can be achieved:
+I've created a 6 step experiment that shows how this can be achieved:
 
 * [Step 0](step0/README.md)
 * [Step 1](step1/README.md)
@@ -45,3 +45,4 @@ I've created a 5 step experiment that shows how this can be achieved:
 * [Step 3](step3/README.md)
 * [Step 4](step4/README.md)
 * [Step 5](step5/README.md)
+* [Step 6](step6/README.md)

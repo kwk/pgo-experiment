@@ -1,3 +1,5 @@
 redhat-rpm-config*
 *.copr_build_id
 myapp/
+chromium/
+firefox/

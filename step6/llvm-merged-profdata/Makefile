@@ -1,9 +1,9 @@
 # Prepare variables
 TMP = $(CURDIR)/tmp
-VERSION = $(shell grep ^Version myapp.spec | sed 's/.* //')
-PACKAGE = myapp-$(VERSION)
-FILES = LICENSE myapp.cpp \
-		myapp.spec CMakeLists.txt
+VERSION = $(shell grep ^Version llvm-merged-profdata.spec | sed 's/.* //')
+PACKAGE = llvm-merged-profdata-$(VERSION)
+FILES = LICENSE \
+		llvm-merged-profdata.spec CMakeLists.txt
 
 .PHONY: source, tarball, rpm, srpm, clean
 
@@ -14,8 +14,8 @@ source:
 tarball: source
 	cd $(TMP) && tar vcfj ../$(PACKAGE).tar.bz2 $(PACKAGE)
 rpm: tarball
-	fedpkg --release f37 --name myapp local -- --noclean
+	fedpkg --release f37 --name llvm-merged-profdata local -- --noclean
 srpm: tarball
-	fedpkg --release f37 --name myapp srpm
+	fedpkg --release f37 --name llvm-merged-profdata srpm
 clean:
 	rm -rf $(TMP) $(PACKAGE)*

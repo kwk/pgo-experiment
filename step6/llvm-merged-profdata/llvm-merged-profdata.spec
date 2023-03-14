@@ -8,6 +8,7 @@ Summary: Indexed Profile Optimized Data (PGO) file
 
 License: Apache-2.0
 URL: https://github.com/kwk/pgo-experiment
+Source0: llvm-merged-profdata-%{version}.tar.bz2
 
 # For llvm-profdata
 BuildRequires: llvm
@@ -17,6 +18,9 @@ BuildRequires: myapp-clang-profdata
 
 %description
 A merge of all raw profile data files into an index profile data file 
+
+%prep
+%autosetup -S git
 
 %build
 # TODO(kwk): This is a place to tweak with 

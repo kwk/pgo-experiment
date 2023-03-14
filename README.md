@@ -482,10 +482,10 @@ The `<PACKAGE>-clang-profdata` packages that we've build so far should be instal
 The [`step6/llvm-merged-profdata/llvm-merged-profdata.spec`](step6/llvm-merged-profdata/llvm-merged-profdata.spec) contains this line:
 
 ```
-%define _toolchain_profile_subpackages 0
+%global _toolchain_profile_subpackages 0
 ```
 
-This effectively disable the generation of raw profile data when we build `llvm-merged-profdata` in the [kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/) Copr project. Remember, there we have the modified `redhat-rpm-config` package that would immediately kick in an try to do it's job.
+This effectively disable the generation of raw profile data when we build `llvm-merged-profdata` in the [kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/) Copr project. Remember, there we have the modified `redhat-rpm-config` package that would immediately kick in an try to do it's job. But for the `llvm-merged-profdata` package we don't want that.
 
 ## Open questions:
 

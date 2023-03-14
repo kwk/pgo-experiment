@@ -1,8 +1,6 @@
 # Overview
 
-In this experiment I try to show the steps I take to generate PGO profile data
-from compiling unmodified RPM packages and feeding those profiles into a rebuild
-of LLVM to get an LLVM that PGO optimized.
+In this experiment I try to show the steps I take to generate PGO profile data from compiling unmodified RPM packages and feeding those profiles into a PGO optimized rebuild of LLVM.
 
 # Resources
 
@@ -11,38 +9,117 @@ of LLVM to get an LLVM that PGO optimized.
 
 # Understanding what PGO can do
 
-> PGO (Profile-Guided Optimization) allows your compiler to better optimize code
-> for how it actually runs. Users report that applying this to Clang and LLVM
-> can decrease overall compile time by 20%.
+> PGO (Profile-Guided Optimization) allows your compiler to better optimize code for how it actually runs. Users report that applying this to Clang and LLVM can decrease overall compile time by 20%.
 ([Source](https://llvm.org/docs/HowToBuildWithPGO.html#introduction))
 
-> Profile information enables better optimization. For example, knowing that a
-> branch is taken very frequently helps the compiler make better decisions when
-> ordering basic blocks. Knowing that a function `foo` is called more frequently
-> than another function `bar` helps the inliner. Optimization levels `-O2` and
-> above are recommended for use of profile guided optimization.
->
-> [...] be careful to collect profiles by running your code with inputs that are
-> representative of the typical behavior. Code that is not exercised in the
-> profile will be optimized as if it is unimportant, and the compiler may make
-> poor optimization choices for code that is disproportionately used while
-> profiling.
+> Profile information enables better optimization. For example, knowing that a branch is taken very frequently helps the compiler make better decisions when ordering basic blocks. Knowing that a function `foo` is called more frequently than another function `bar` helps the inliner. Optimization levels `-O2` and above are recommended for use of profile guided optimization. [...] [Be] careful to collect profiles by running your code with inputs that are representative of the typical behavior. Code that is not exercised in the profile will be optimized as if it is unimportant, and the compiler may make poor optimization choices for code that is disproportionately used while profiling.
 ([Source](https://clang.llvm.org/docs/UsersManual.html#profile-guided-optimization))
 
-As the [Fedora Linux](https://getfedora.org/) distribution we build a ton of
-packages with LLVM. The aforementioned *inputs* are these packages themselves.
-The programs to optimize are those under the LLVM umbrella (e.g. `clang`).
+For the [Fedora Linux](https://getfedora.org/) distribution we build a ton of packages with LLVM. The aforementioned *inputs* are these packages themselves. The programs to optimize are those under the LLVM umbrella (e.g. `clang`).
 
-The question is: How can we tap in the RPM build pipeline using [Fedora
-Copr](https://copr.fedorainfracloud.org/) and build RPM packages without
-modifying their `*.spec` files manually?
+The question is: How can we tap in the RPM build pipeline using [Fedora Copr](https://copr.fedorainfracloud.org/) and build RPM packages without modifying their `*.spec` files manually?
 
-I've created a 6 step experiment that shows how this can be achieved:
+I've created a 7 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile`s that. This allows for a good level of isolation when you want to build the steps on your own.
 
-* [Step 0](step0/README.md)
-* [Step 1](step1/README.md)
-* [Step 2](step2/README.md)
-* [Step 3](step3/README.md)
-* [Step 4](step4/README.md)
-* [Step 5](step5/README.md)
-* [Step 6](step6/README.md)
+To run any of the steps on your own, you can run `make build-stepX` where 
+
+$$ X \in \left \{ 0,1,2,...,6 \right \} $$
+
+## Step 0
+
+NOTE: This step mainly exists for documentation purposes. If you *do* build this step on your own, make sure to walk through the files where there's a reference to [kkleine/llvm-pgo-instrumented](https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/) and change it to your project. I don't see a need to consider this part of this excersise.
+
+In this step we're going to create PGO instrumented LLVM packages and host them
+for later consumption on a Copr project. 
+
+If you want to build this yourself, you need to have a valid Kerberos ticket. Try running:
+
+```
+$ kinit <FAS_USER>@FEDORAPROJECT.ORG
+```
+
+But rest assured, you don't need to run this on your own. The
+[kkleine/llvm-pgo-instrumented](https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/)
+project is ready for you to consume in the next steps.
+
+In this step, we're essentially following the [official documentation](https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo) for how to build a PGO instumented clang.
+
+The resulting `clang` will generate profile data upon execution and we're trying to collect, bundle, and merge it for optimizing a rebuild of `clang` later. 
+
+## Step 1
+
+In this step we set the foundation for our experiment.
+
+We have a simply "Hello, World!" application that we build and package as an RPM
+file.
+
+e build and package as an RPM
+file.
+
+The other steps build on this simple setup by first adding lines to the RPM spec
+file that we later want to generalize and finally auto-generate to come back to
+an unmodified spec file.
+
+## Step 2
+
+In this step we manually add a `myapp-clang-profdata` sub-package which contains
+PGO profile data from LLVM. This data is generated by executing a PGO
+instrumented `clang` from this Copr repo
+[kkleine/llvm-pgo-instrumented](https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/).
+The "workload" so to speak is the compilation of the `myapp` package, not its
+execution.
+
+The only changes from step1 to step2 should be in the `Containerfile`, adding
+the PGO instrumented LLVM, and in the `myapp/myapp.spec` file where we add the
+subpackage.
+
+In the next step we're generalizing the manual addition of the sub-package
+before we remove it entirely from the spec file.
+
+## Step 3
+
+In this step we generalize the `myapp-clang-profdata` sub-package from step 2 to
+`%{name}-%{toolchain}-profdata`.
+
+The only changes from step2 to step3 should be in the `myapp/myapp.spec` file.
+
+## Step 4
+
+In this step we use the `myapp` directory from `step1` that doesn't contain any
+information about the sub-package at all.
+
+And yet we're still gonna get our sub-package with profile data. We do this by
+patching, compiling and installing another package that is always present on
+Fedora: `redhat-rpm-config`. This package is the home of many useful macros like
+but it also allows us to tap into the build process by:
+
+1. exporting the `LLVM_PROFILE_FILE` environment variable
+2. getting our sub-package included
+3. tapping in the post-`%install` step
+
+This time around, we're actually exporting the sub-package
+`myapp-clang-profdata` because we're gonna need it to feed back into the
+re-compilation of LLVM to produce a profile-optimized LLVM.
+
+## Step 5
+
+NOTE: You don't need to run this step manually. It has already been run and the
+results are in the Copr project
+[kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/).
+
+In step 5 we essentially do the same thing as already done in step 4. But this
+time we do it on Copr. Copr will become the storage for our profile data
+sub-packages with all the rest of the regular packages.
+
+After running this step, we're gonna have a project called:
+
+[kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/)
+
+In that project, there will be the patched `redhat-rpm-config` package and the
+`myapp` package with the additional sub-package inside.
+
+Any package that will be built after `redhat-rpm-config` in the
+[kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/)
+Copr project will automatically have a `<package>-clang-profdata` subpackage
+that we can download in a later step to merge and feed it in the final,
+optimized build of LLVM.

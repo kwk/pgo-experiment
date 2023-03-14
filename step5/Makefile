@@ -18,8 +18,6 @@ redhat-rpm-config.patch: ../step4/redhat-rpm-config.patch
 clean:
 	rm -fv *.copr_build_id
 
-
-
 # We delete any redhat-rpm-config package first because we don't want to apply
 # an older version of it when building a new. This can cause weird results.
 .ONESHELL:
@@ -42,3 +40,17 @@ myapp.copr_build_id: redhat-rpm-config.copr_build_id
 	make srpm
 	copr build --after-build-id $(shell cat redhat-rpm-config.copr_build_id) --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project) myapp-1.0.0-1.fc37.src.rpm | tee build.log
 	grep -Po 'Created builds: \K(\d+)' build.log > ../myapp.copr_build_id
+
+# Just for fun build chromium
+.PHONY: chromium
+chromium:
+	-copr add-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)
+	copr edit-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)	
+	copr build-package --name chromium --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)
+
+# Just for fun build firefox
+.PHONY: firefox
+firefox:
+	-copr add-package-scm --name firefox --clone-url https://src.fedoraproject.org/rpms/firefox.git --commit f37 $(fas_user)/$(copr_project)
+	copr edit-package-scm --name firefox --clone-url https://src.fedoraproject.org/rpms/firefox.git --commit f37 $(fas_user)/$(copr_project)	
+	copr build-package --name firefox --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)

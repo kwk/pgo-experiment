@@ -3,7 +3,7 @@ TMP = $(CURDIR)/tmp
 VERSION = $(shell grep ^Version llvm-merged-profdata.spec | sed 's/.* //')
 PACKAGE = llvm-merged-profdata-$(VERSION)
 FILES = LICENSE \
-		llvm-merged-profdata.spec CMakeLists.txt
+		llvm-merged-profdata.spec
 
 .PHONY: source, tarball, rpm, srpm, clean
 

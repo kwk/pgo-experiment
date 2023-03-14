@@ -24,6 +24,7 @@ cd %{_builddir}
 llvm-profdata merge /usr/lib/profraw/* -output llvm-merged.profdata
 
 %install
+mkdir -pv %{buildroot}/usr/lib/profdata
 cp -v %{_builddir}/llvm-merged.profdata \
       %{buildroot}/usr/lib/profdata/llvm-merged.profdata
 

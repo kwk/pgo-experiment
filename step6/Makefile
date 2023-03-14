@@ -4,15 +4,16 @@ fas_user ?= ${USER}
 copr_project ?= profile-data-collection
 
 .PHONY: all
-all: create-copr-project llvm-merged-profdata.copr_build_id
+all: create-copr-project llvm-merged-profdata
 
 .PHONY: create-copr-project
 create-copr-project:
 	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
 	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
 
+.PHONY: llvm-merged-profdata
 .ONESHELL:
-llvm-merged-profdata.copr_build_id:
+llvm-merged-profdata:
 	cd llvm-merged-profdata
 	make srpm
 	copr build --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project) llvm-merged-profdata-1.0.0-1.fc37.src.rpm | tee build.log

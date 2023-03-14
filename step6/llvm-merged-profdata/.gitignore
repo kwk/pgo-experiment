@@ -1,4 +1,7 @@
 redhat-linux-build
 x86_64
+build*.log
 .build*.log
 *.rpm
+tmp/
+*.tar.bz2

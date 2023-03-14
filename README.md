@@ -21,11 +21,7 @@ The question is: How can we tap in the RPM build pipeline using [Fedora Copr](ht
 
 I've created a 7 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile`s that. This allows for a good level of isolation when you want to build the steps on your own.
 
-To run any of the steps on your own, you can run `make build-stepX` where 
-
-$$
-X \in \lbrace 0,1,2,...,6 \rbrace
-$$
+To run any of the steps on your own, you can run `make build-stepX` where $X \in \lbrace 0,1,2,...,6 \rbrace$.
 
 ## Step 0
 

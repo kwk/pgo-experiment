@@ -23,7 +23,9 @@ I've created a 7 step experiment that shows how this can be achieved. For educat
 
 To run any of the steps on your own, you can run `make build-stepX` where 
 
-$$ X \in \left \lbrace 0,1,2,...,6 \right \} $$
+$$
+X \in \lbrace 0,1,2,...,6 \rbrace
+$$
 
 ## Step 0
 

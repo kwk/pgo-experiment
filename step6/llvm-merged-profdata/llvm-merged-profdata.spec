@@ -12,6 +12,7 @@ Source0: llvm-merged-profdata-%{version}.tar.bz2
 
 # For llvm-profdata
 BuildRequires: llvm
+BuildRequires: git
 
 # List all *-clang-profdata packages here
 BuildRequires: myapp-clang-profdata

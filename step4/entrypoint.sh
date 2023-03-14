@@ -12,4 +12,6 @@ sudo dnf install -y --disablerepo=* noarch/redhat-rpm-config-230-1.fc37.noarch.r
 
 # Build the app and always enter bash for further inspection
 cd /home/tester/myapp
-su -c "make rpm" tester
+su -c "make rpm" tester || true
+
+bash

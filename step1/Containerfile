@@ -4,7 +4,7 @@ LABEL author="Konrad Kleine <kkleine@redhat.com>"
 LABEL description="A basic specfile-to-RPM process demo"
 
 # Install packages to build and package "myapp"
-RUN dnf install -y cmake fedora-packager clang
+RUN dnf install -y cmake fedora-packager git clang
 
 WORKDIR /root
 RUN useradd --create-home tester

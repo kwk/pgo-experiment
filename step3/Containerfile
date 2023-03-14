@@ -13,7 +13,7 @@ RUN sudo dnf install -y \
     clang
 
 # Install packages to build and package "myapp"
-RUN dnf install -y cmake fedora-packager
+RUN dnf install -y cmake fedora-packager git
 
 WORKDIR /root
 RUN useradd --create-home tester

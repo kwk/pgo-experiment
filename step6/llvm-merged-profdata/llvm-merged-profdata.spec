@@ -1,5 +1,5 @@
-# See https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros
-%global toolchain clang
+# Disable PGO data generation
+%global _toolchain_profile_subpackages 0
 
 Name: llvm-merged-profdata
 Version: 1.0.0

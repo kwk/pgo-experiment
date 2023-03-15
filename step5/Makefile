@@ -46,4 +46,4 @@ myapp.copr_build_id: redhat-rpm-config.copr_build_id
 chromium:
 	-copr add-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)
 	copr edit-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)	
-	copr build-package --name chromium --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)
+	copr build-package --name chromium --after-build-id 5647168 --timeout 1728000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)

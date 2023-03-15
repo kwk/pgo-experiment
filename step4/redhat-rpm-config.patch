@@ -1,29 +1,39 @@
-From 7bdd6489886f440b40162b007f5defb02d175139 Mon Sep 17 00:00:00 2001
+From 53578afefa3cd02d29962cb042a0adafc814e364 Mon Sep 17 00:00:00 2001
 From: Konrad Kleine <kkleine@redhat.com>
 Date: Wed, 1 Mar 2023 22:32:26 +0100
 Subject: [PATCH] Create <package>-<toolchain>-profdata subpackage
+
+Disable by specifying this in your specfile:
+
+```
+%global _toolchain_profile_subpackages %{nil}
+```
 
 For inspiration see also:
 
 https://src.fedoraproject.org/fork/tstellar/rpms/redhat-rpm-config/c/a62cbcf1d23df6cd2111b7cfa6f75a849d89f11d?branch=pgo
 ---
- macros                 | 24 +++++++++++++++++++++++-
+ macros                 | 28 +++++++++++++++++++++++++++-
  redhat-rpm-config.spec |  6 +++++-
- 2 files changed, 28 insertions(+), 2 deletions(-)
+ 2 files changed, 32 insertions(+), 2 deletions(-)
 
 diff --git a/macros b/macros
-index d10fa49..16cc825 100644
+index d10fa49..2acb129 100644
 --- a/macros
 +++ b/macros
-@@ -25,6 +25,7 @@
- %_include_gdb_index     1
+@@ -26,6 +26,11 @@
  %_debugsource_packages  1
  %_debuginfo_subpackages 1
-+%_toolchain_profile_subpackages 1
  
++# To disable generation of profile subpackage, specify this in specfile:
++# %global _toolchain_profile_subpackages %{nil}
++# TODO: Make sure to only enable it when building with clang.
++%_toolchain_profile_subpackages 1
++
  # GCC toolchain
  %__cc_gcc gcc
-@@ -49,6 +50,18 @@
+ %__cxx_gcc g++
+@@ -49,6 +54,18 @@
  %build_cxx %{__cxx}
  %build_cpp %{__cpp}
  
@@ -42,7 +52,7 @@ index d10fa49..16cc825 100644
  #==============================================================================
  # ---- compiler flags.
  
-@@ -81,6 +94,9 @@
+@@ -81,6 +98,9 @@
  # not been set already.  RPM_OPT_FLAGS and RPM_LD_FLAGS have already
  # been set implicitly at the start of the %%build section.
  # LT_SYS_LIBRARY_PATH is used by libtool script.
@@ -52,7 +62,7 @@ index d10fa49..16cc825 100644
  %set_build_flags \
    CFLAGS="${CFLAGS:-%{build_cflags}}" ; export CFLAGS ; \
    CXXFLAGS="${CXXFLAGS:-%{build_cxxflags}}" ; export CXXFLAGS ; \
-@@ -89,7 +105,9 @@
+@@ -89,7 +109,9 @@
    LDFLAGS="${LDFLAGS:-%{build_ldflags}}" ; export LDFLAGS ; \
    LT_SYS_LIBRARY_PATH="${LT_SYS_LIBRARY_PATH:-%_libdir:}" ; export LT_SYS_LIBRARY_PATH ; \
    CC="${CC:-%{__cc}}" ; export CC ; \
@@ -63,16 +73,16 @@ index d10fa49..16cc825 100644
  
  # Automatically use set_build_flags macro for build, check, and
  # install phases.
-@@ -253,6 +271,8 @@ print(result)
+@@ -253,6 +275,8 @@ print(result)
  %__brp_mangle_shebangs /usr/lib/rpm/redhat/brp-mangle-shebangs %{?__brp_mangle_shebangs_exclude:--shebangs "%{?__brp_mangle_shebangs_exclude}"} %{?__brp_mangle_shebangs_exclude_file:--shebangs-from "%{__brp_mangle_shebangs_exclude_file}"} %{?__brp_mangle_shebangs_exclude_from:--files "%{?__brp_mangle_shebangs_exclude_from}"} %{?__brp_mangle_shebangs_exclude_from_file:--files-from "%{__brp_mangle_shebangs_exclude_from_file}"}
  
  %__brp_llvm_compile_lto_elf /usr/lib/rpm/redhat/brp-llvm-compile-lto-elf %{build_cflags} %{build_ldflags}
-+%__copy_profraw %[ "%{_toolchain_profile_subpackages}" == "1" ? "mkdir -pv %{buildroot}/usr/lib/profraw && cp -v %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw" : "%{nil}" ]
++%__copy_profraw mkdir -pv %{buildroot}/usr/lib/profraw && cp -v %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw"
 +
  
  # note: %%__os_install_post_python is defined in python-srpm-macros and contains several policies
  # redhat-rpm-config maintainers, don't remove it from %%__os_install_post unless coordinating the change with Python maintainers
-@@ -271,6 +291,7 @@ print(result)
+@@ -271,6 +295,7 @@ print(result)
      %{?__brp_mangle_shebangs} \
      %{?__brp_remove_la_files} \
      %{__os_install_post_python} \
@@ -80,7 +90,7 @@ index d10fa49..16cc825 100644
  %{nil}
  
  %__spec_install_post\
-@@ -281,6 +302,7 @@ print(result)
+@@ -281,6 +306,7 @@ print(result)
  %{nil}
  
  %install %{?_enable_debug_packages:%{?buildsubdir:%{debug_package}}}\

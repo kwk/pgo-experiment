@@ -1,5 +1,8 @@
 # Disable PGO data generation
-%global _toolchain_profile_subpackages 0
+%global _toolchain_profile_subpackages %{nil}
+# Disable debuginfo packages because we don't have any ;)
+# https://docs.fedoraproject.org/en-US/packaging-guidelines/Debuginfo/#_useless_or_incomplete_debuginfo_packages_due_to_other_reasons
+%global debug_package %{nil}
 
 Name: llvm-merged-profdata
 Version: 1.0.0

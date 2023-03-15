@@ -15,14 +15,15 @@ RUN sudo dnf install -y \
 # Install packages to build and package "myapp"
 RUN dnf install -y cmake fedora-packager git
 
+# Install packages required to build redhat-rpm-config
+RUN dnf install -y perl-generators
+
 WORKDIR /root
 RUN useradd --create-home tester
 COPY entrypoint.sh /root/entrypoint.sh
 COPY ./myapp /home/tester/myapp
 RUN chown -Rfv  tester:tester /home/tester/myapp
 
-# Install packages required to build redhat-rpm-config
-RUN dnf install -y perl-generators
 # Copy the patches we need for a modified redhat-rpm-config package that we
 # smuggle into the container.
 COPY redhat-rpm-config.patch /root

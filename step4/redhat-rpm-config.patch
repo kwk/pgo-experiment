@@ -1,4 +1,4 @@
-From 53578afefa3cd02d29962cb042a0adafc814e364 Mon Sep 17 00:00:00 2001
+From 9adf6ae224df81ac6e9a4d5694cf9b774428edb0 Mon Sep 17 00:00:00 2001
 From: Konrad Kleine <kkleine@redhat.com>
 Date: Wed, 1 Mar 2023 22:32:26 +0100
 Subject: [PATCH] Create <package>-<toolchain>-profdata subpackage
@@ -18,7 +18,7 @@ https://src.fedoraproject.org/fork/tstellar/rpms/redhat-rpm-config/c/a62cbcf1d23
  2 files changed, 32 insertions(+), 2 deletions(-)
 
 diff --git a/macros b/macros
-index d10fa49..2acb129 100644
+index d10fa49..8b9eceb 100644
 --- a/macros
 +++ b/macros
 @@ -26,6 +26,11 @@
@@ -77,7 +77,7 @@ index d10fa49..2acb129 100644
  %__brp_mangle_shebangs /usr/lib/rpm/redhat/brp-mangle-shebangs %{?__brp_mangle_shebangs_exclude:--shebangs "%{?__brp_mangle_shebangs_exclude}"} %{?__brp_mangle_shebangs_exclude_file:--shebangs-from "%{__brp_mangle_shebangs_exclude_file}"} %{?__brp_mangle_shebangs_exclude_from:--files "%{?__brp_mangle_shebangs_exclude_from}"} %{?__brp_mangle_shebangs_exclude_from_file:--files-from "%{__brp_mangle_shebangs_exclude_from_file}"}
  
  %__brp_llvm_compile_lto_elf /usr/lib/rpm/redhat/brp-llvm-compile-lto-elf %{build_cflags} %{build_ldflags}
-+%__copy_profraw mkdir -pv %{buildroot}/usr/lib/profraw && cp -v %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw"
++%__copy_profraw mkdir -pv %{buildroot}/usr/lib/profraw && cp -v %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw
 +
  
  # note: %%__os_install_post_python is defined in python-srpm-macros and contains several policies

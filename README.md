@@ -23,7 +23,7 @@ For the [Fedora Linux](https://getfedora.org/) distribution we build a ton of pa
 
 The question is: How can we tap in the RPM build pipeline using [Fedora Copr](https://copr.fedorainfracloud.org/) and build RPM packages without modifying their `*.spec` files manually?
 
-I've created a 7 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile`s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run `make build-stepX` where $X \in \lbrace 0,1,2,...,6 \rbrace$. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.
+I've created a 8 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile`s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run `make build-stepX` where $X \in \lbrace 0,1,2,...,7 \rbrace$. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.
 
 NOTE: The `Containerfile`s run as `root` to allow packages to be installed and have a `tester` account for regular user interaction. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites. 
 
@@ -471,7 +471,7 @@ copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_us
 
 Any package that will be built after `redhat-rpm-config` in the [kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/) Copr project will automatically have a `<package>-clang-profdata` subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.
 
-## Step 6 - Build PGO optimized LLVM
+## Step 6 - Merge Raw Profiles
 
 In order to optimize LLVM with the raw profile data that we've collected before we need to make it available to the Copr build of LLVM and we need to [merge](https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge) it using `llvm-profdata merge`.
 
@@ -482,11 +482,21 @@ The `<PACKAGE>-clang-profdata` packages that we've build so far should be instal
 The [`step6/llvm-merged-profdata/llvm-merged-profdata.spec`](step6/llvm-merged-profdata/llvm-merged-profdata.spec) contains this line:
 
 ```
-%global _toolchain_profile_subpackages 0
+%global _toolchain_profile_subpackages %{nil}
 ```
 
-This effectively disable the generation of raw profile data when we build `llvm-merged-profdata` in the [kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/) Copr project. Remember, there we have the modified `redhat-rpm-config` package that would immediately kick in an try to do it's job. But for the `llvm-merged-profdata` package we don't want that.
+This effectively disables the generation of raw profile data when we build `llvm-merged-profdata` in the [kkleine/profile-data-collection](https://copr.fedorainfracloud.org/coprs/kkleine/profile-data-collection/) Copr project. Remember, there we have the modified `redhat-rpm-config` package that would immediately kick in an try to do it's job. But for the `llvm-merged-profdata` package we don't want that.
+
+Essentially all the `llvm-merged-profdata` do is to merge all `<PACKAGE>-clang-profdata` files it can under `/usr/lib/profraw/` and store the result in `/usr/lib/profdata/llvm-merged.profdata`.
+
+## Step 7 - Build PGO optimized LLVM
+
+This step is similar to step 0 i which we've build the PGO instrumented LLVM. Here we're taking the `llvm-merged-profdata` and use the `/usr/lib/profdata/llvm-merged.profdata` file as input for the optimization of the `llvm`, `clang` and `lld` packages.
+
+`/usr/lib/profdata/llvm-merged.profdata`
 
 ## Open questions:
 
 * What happens to packages that don't use `%global toolchain clang`?
+* Outlook: Move redhat-rpm-config stuff into clang-instrument-macros or alike
+* Performance benefits: any profile is good. 

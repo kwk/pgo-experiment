@@ -15,6 +15,9 @@ build-step5:
 build-step6:
 	$(MAKE) -C step6 all
 
+build-step7:
+	$(MAKE) -C step7 all
+
 build-step%:
 	$(eval step:=$(subst build-,,$@))
 	podman build -t pgo-experiment-$(step) ./$(step)

@@ -1,0 +1,152 @@
+From d68a52c05dddad420ac33be54974845f1d82ffcf Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Fri, 10 Feb 2023 22:34:54 +0100
+Subject: [PATCH 1/2] Turn on PGO producing builds
+
+---
+ clang.spec | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/clang.spec b/clang.spec
+index 99329ae..2a23e76 100644
+--- a/clang.spec
++++ b/clang.spec
+@@ -2,6 +2,8 @@
+ 
+ %bcond_with compat_build
+ %bcond_without check
++# https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
++%bcond_without pgo_producing_build
+ 
+ %global maj_ver 15
+ %global min_ver 0
+@@ -41,7 +43,7 @@
+ 
+ Name:		%pkg_name
+ Version:	%{clang_version}%{?rc_ver:~rc%{rc_ver}}
+-Release:	1%{?dist}
++Release:	2%{?dist}
+ Summary:	A C language family front-end for LLVM
+ 
+ License:	NCSA
+@@ -137,6 +139,10 @@ BuildRequires: perl(Term::ANSIColor)
+ BuildRequires: perl(Text::ParseWords)
+ BuildRequires: perl(Sys::Hostname)
+ 
++%if %{with pgo_producing_build}
++BuildRequires: compiler-rt
++%endif
++
+ Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
+ 
+ # clang requires gcc, clang++ requires libstdc++-devel
+@@ -350,6 +356,13 @@ sed -i 's/\@FEDORA_LLVM_LIB_SUFFIX\@//g' test/lit.cfg.py
+ 	-DLLVM_ENABLE_EH=ON \
+ 	-DLLVM_ENABLE_RTTI=ON \
+ 	-DLLVM_BUILD_DOCS=ON \
++%if %{with pgo_producing_build}
++	-DLLVM_BUILD_INSTRUMENTED=IR \
++	-DLLVM_BUILD_RUNTIME=No \
++	-DCMAKE_C_COMPILER=/usr/bin/clang \
++	-DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
++	-DLLVM_VP_COUNTERS_PER_SITE=8 \
++%endif
+ 	-DLLVM_ENABLE_SPHINX=ON \
+ 	-DCLANG_LINK_CLANG_DYLIB=ON \
+ 	%{?abi_revision:-DLLVM_ABI_REVISION=%{abi_revision}} \
+@@ -598,6 +611,9 @@ false
+ 
+ %endif
+ %changelog
++* Fri Feb 10 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-2
++- Turn on production of PGO data for Clang itself
++
+ * Thu Jan 12 2023 Nikita Popov <npopov@redhat.com> - 15.0.7-1
+ - Update to LLVM 15.0.7
+ 
+-- 
+2.39.1
+
+
+From 04abb6385f88359f20eb45562242db75138c06de Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Wed, 15 Mar 2023 18:08:19 +0100
+Subject: [PATCH 2/2] Add pgo_instrumented and pgo_optimized_build build
+ conditions (both off by default)
+
+---
+ clang.spec | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/clang.spec b/clang.spec
+index 2a23e76..8b543ae 100644
+--- a/clang.spec
++++ b/clang.spec
+@@ -3,7 +3,13 @@
+ %bcond_with compat_build
+ %bcond_without check
+ # https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
+-%bcond_without pgo_producing_build
++%bcond_with pgo_instrumented_build
++%bcond_with pgo_optimized_build
++
++%if %{with pgo_instrumented_build} || %{with pgo_optimized_build}
++# Disable PGO data generation
++%global _toolchain_profile_subpackages %{nil}
++%endif
+ 
+ %global maj_ver 15
+ %global min_ver 0
+@@ -43,7 +49,7 @@
+ 
+ Name:		%pkg_name
+ Version:	%{clang_version}%{?rc_ver:~rc%{rc_ver}}
+-Release:	2%{?dist}
++Release:	3%{?dist}
+ Summary:	A C language family front-end for LLVM
+ 
+ License:	NCSA
+@@ -139,9 +145,12 @@ BuildRequires: perl(Term::ANSIColor)
+ BuildRequires: perl(Text::ParseWords)
+ BuildRequires: perl(Sys::Hostname)
+ 
+-%if %{with pgo_producing_build}
++%if %{with pgo_instrumented_build}
+ BuildRequires: compiler-rt
+ %endif
++%if %{with pgo_optimized_build}
++BuildRequires: llvm-merged-profdata
++%endif
+ 
+ Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
+ 
+@@ -356,12 +365,15 @@ sed -i 's/\@FEDORA_LLVM_LIB_SUFFIX\@//g' test/lit.cfg.py
+ 	-DLLVM_ENABLE_EH=ON \
+ 	-DLLVM_ENABLE_RTTI=ON \
+ 	-DLLVM_BUILD_DOCS=ON \
+-%if %{with pgo_producing_build}
++%if %{with pgo_instrumented_build}
+ 	-DLLVM_BUILD_INSTRUMENTED=IR \
+ 	-DLLVM_BUILD_RUNTIME=No \
+ 	-DCMAKE_C_COMPILER=/usr/bin/clang \
+ 	-DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+ 	-DLLVM_VP_COUNTERS_PER_SITE=8 \
++%endif
++%if %{with pgo_optimized_build}
++	-DLLVM_PROFDATA_FILE=/usr/lib/profdata/llvm-merged.profdata \
+ %endif
+ 	-DLLVM_ENABLE_SPHINX=ON \
+ 	-DCLANG_LINK_CLANG_DYLIB=ON \
+@@ -611,6 +623,9 @@ false
+ 
+ %endif
+ %changelog
++* Wed Feb 15 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-3
++- Add pgo_instrumented and pgo_optimized_build build conditions (both off by default)
++
+ * Fri Feb 10 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-2
+ - Turn on production of PGO data for Clang itself
+ 
+-- 
+2.39.1
+

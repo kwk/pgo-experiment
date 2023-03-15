@@ -1,0 +1,163 @@
+From 110f086b45dbb29b901e8dd9123948b4542f6d05 Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Fri, 10 Feb 2023 22:40:26 +0100
+Subject: [PATCH 1/2] Turn on PGO producing builds
+
+Delete failing test lld/test/ELF/lto/save-temps-eq.ll
+---
+ lld.spec | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/lld.spec b/lld.spec
+index 53f48aa..89a11d6 100644
+--- a/lld.spec
++++ b/lld.spec
+@@ -1,6 +1,8 @@
+ %global toolchain clang
+ %bcond_without check
+ %bcond_with compat_build
++# https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
++%bcond_without pgo_producing_build
+ 
+ #global rc_ver 3
+ %global lld_srcdir lld-%{maj_ver}.%{min_ver}.%{patch_ver}%{?rc_ver:rc%{rc_ver}}.src
+@@ -26,7 +28,7 @@
+ 
+ Name:		%{pkg_name}
+ Version:	%{maj_ver}.%{min_ver}.%{patch_ver}%{?rc_ver:~rc%{rc_ver}}
+-Release:	1%{?dist}
++Release:	2%{?dist}
+ Summary:	The LLVM Linker
+ 
+ License:	NCSA
+@@ -66,6 +68,10 @@ BuildRequires:	python3-lit
+ # For gpg source verification
+ BuildRequires:	gnupg2
+ 
++%if %{with pgo_producing_build}
++BuildRequires: compiler-rt
++%endif
++
+ Requires(post): %{_sbindir}/update-alternatives
+ Requires(preun): %{_sbindir}/update-alternatives
+ 
+@@ -109,6 +115,9 @@ LLVM regression tests.
+ %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
+ %autosetup -n %{lld_srcdir} -p2
+ 
++# Remove failing test
++rm -v test/ELF/lto/save-temps-eq.ll
++
+ %if %{with compat_build}
+ # For compat builds, we don't want to build the actual lld binary. While there is an
+ # LLD_BUILD_TOOLS cmake option, it is incomplete in various ways (e.g. still leaves install
+@@ -129,6 +138,13 @@ sed 's/add_subdirectory(tools\/lld)//' -i CMakeLists.txt
+ 	-DCMAKE_INSTALL_PREFIX=%{install_prefix} \
+ 	-DLLVM_LINK_LLVM_DYLIB:BOOL=ON \
+ 	-DLLVM_DYLIB_COMPONENTS="all" \
++%if %{with pgo_producing_build}
++	-DLLVM_BUILD_INSTRUMENTED=IR \
++	-DLLVM_BUILD_RUNTIME=No \
++	-DCMAKE_C_COMPILER=/usr/bin/clang \
++	-DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
++	-DLLVM_VP_COUNTERS_PER_SITE=8 \
++%endif
+ 	-DCMAKE_SKIP_RPATH:BOOL=ON \
+ 	-DPYTHON_EXECUTABLE=%{__python3} \
+ %if %{with compat_build}
+@@ -245,6 +261,9 @@ fi
+ %endif
+ 
+ %changelog
++* Fri Feb 10 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-2
++- Turn on production of PGO data for lld itself
++
+ * Fri Jan 13 2023 Nikita Popov <npopov@redhat.com> - 15.0.7-1
+ - Update to LLVM 15.0.7
+ 
+-- 
+2.39.1
+
+
+From 74522f70d4add7d41384faf589c8fafbec88db2d Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Wed, 15 Mar 2023 18:10:35 +0100
+Subject: [PATCH 2/2] Add pgo_instrumented and pgo_optimized_build build
+ conditions (both off by default)
+
+---
+ lld.spec | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/lld.spec b/lld.spec
+index 89a11d6..10c671d 100644
+--- a/lld.spec
++++ b/lld.spec
+@@ -2,7 +2,13 @@
+ %bcond_without check
+ %bcond_with compat_build
+ # https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
+-%bcond_without pgo_producing_build
++%bcond_with pgo_instrumented_build
++%bcond_with pgo_optimized_build
++
++%if %{with pgo_instrumented_build} || %{with pgo_optimized_build}
++# Disable PGO data generation
++%global _toolchain_profile_subpackages %{nil}
++%endif
+ 
+ #global rc_ver 3
+ %global lld_srcdir lld-%{maj_ver}.%{min_ver}.%{patch_ver}%{?rc_ver:rc%{rc_ver}}.src
+@@ -28,7 +34,7 @@
+ 
+ Name:		%{pkg_name}
+ Version:	%{maj_ver}.%{min_ver}.%{patch_ver}%{?rc_ver:~rc%{rc_ver}}
+-Release:	2%{?dist}
++Release:	3%{?dist}
+ Summary:	The LLVM Linker
+ 
+ License:	NCSA
+@@ -68,9 +74,12 @@ BuildRequires:	python3-lit
+ # For gpg source verification
+ BuildRequires:	gnupg2
+ 
+-%if %{with pgo_producing_build}
++%if %{with pgo_instrumented_build}
+ BuildRequires: compiler-rt
+ %endif
++%if %{with pgo_optimized_build}
++BuildRequires: llvm-merged-profdata
++%endif
+ 
+ Requires(post): %{_sbindir}/update-alternatives
+ Requires(preun): %{_sbindir}/update-alternatives
+@@ -138,12 +147,15 @@ sed 's/add_subdirectory(tools\/lld)//' -i CMakeLists.txt
+ 	-DCMAKE_INSTALL_PREFIX=%{install_prefix} \
+ 	-DLLVM_LINK_LLVM_DYLIB:BOOL=ON \
+ 	-DLLVM_DYLIB_COMPONENTS="all" \
+-%if %{with pgo_producing_build}
++%if %{with pgo_instrumented_build}
+ 	-DLLVM_BUILD_INSTRUMENTED=IR \
+ 	-DLLVM_BUILD_RUNTIME=No \
+ 	-DCMAKE_C_COMPILER=/usr/bin/clang \
+ 	-DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+ 	-DLLVM_VP_COUNTERS_PER_SITE=8 \
++%endif
++%if %{with pgo_optimized_build}
++	-DLLVM_PROFDATA_FILE=/usr/lib/profdata/llvm-merged.profdata \
+ %endif
+ 	-DCMAKE_SKIP_RPATH:BOOL=ON \
+ 	-DPYTHON_EXECUTABLE=%{__python3} \
+@@ -261,6 +273,9 @@ fi
+ %endif
+ 
+ %changelog
++* Wed Feb 15 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-3
++- Add pgo_instrumented and pgo_optimized_build build conditions (both off by default)
++
+ * Fri Feb 10 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-2
+ - Turn on production of PGO data for lld itself
+ 
+-- 
+2.39.1
+

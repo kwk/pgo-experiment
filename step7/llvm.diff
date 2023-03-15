@@ -1,0 +1,166 @@
+From 4d7900a03b67bbb9de64845c198e9cb5fd62fa94 Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Fri, 10 Feb 2023 17:13:19 +0100
+Subject: [PATCH 1/2] Turn on production of PGO data for LLVM itself
+
+bcond pgo_instrumented_build: LLVM artifacts produce profile data when run
+
+Fix broken tests because of the warning below.
+
+Error: LLVM Profile Warning: Unable to track new values: Running out of static counters. Consider using option -mllvm -vp-counters-per-site=<n> to allocate more value profile counters at compile time.
+Solution: Add --vp-counters-per-site option
+
+Error: clang (LLVM option parsing): for the --vp-counters-per-site option: may only occur zero or one times!
+Solution: Modify -vp-counters-per-site option instead of adding it
+
+Error: The same as the one above
+Solution: Try to use the optflags in %cmake call as -DDCMAKE_C_FLAGS_RELWITHDEBINFO
+
+Try setting vp-counters-per-site through LLVM_VP_COUNTERS_PER_SITE
+---
+ llvm.spec | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/llvm.spec b/llvm.spec
+index 0262b6a..70ecfc8 100644
+--- a/llvm.spec
++++ b/llvm.spec
+@@ -12,6 +12,8 @@
+ 
+ %bcond_with compat_build
+ %bcond_without check
++# https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
++%bcond_without pgo_producing_build
+ 
+ #global rc_ver 3
+ %global maj_ver 15
+@@ -72,7 +74,7 @@
+ 
+ Name:		%{pkg_name}
+ Version:	%{maj_ver}.%{min_ver}.%{patch_ver}%{?rc_ver:~rc%{rc_ver}}
+-Release:	1%{?dist}
++Release:	2%{?dist}
+ Summary:	The Low Level Virtual Machine
+ 
+ License:	NCSA
+@@ -126,6 +128,10 @@ BuildRequires:	python3-setuptools
+ # For origin certification
+ BuildRequires:	gnupg2
+ 
++%if %{with pgo_producing_build}
++BuildRequires: compiler-rt
++%endif
++
+ 
+ Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
+ 
+@@ -294,6 +300,13 @@ mv %{cmake_srcdir} cmake
+ 	\
+ %if %{without compat_build}
+ 	-DLLVM_VERSION_SUFFIX='' \
++%endif
++%if %{with pgo_producing_build}
++	-DLLVM_BUILD_INSTRUMENTED=IR \
++	-DLLVM_BUILD_RUNTIME=No \
++	-DCMAKE_C_COMPILER=/usr/bin/clang \
++	-DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
++	-DLLVM_VP_COUNTERS_PER_SITE=8 \
+ %endif
+ 	-DLLVM_BUILD_LLVM_DYLIB:BOOL=ON \
+ 	-DLLVM_LINK_LLVM_DYLIB:BOOL=ON \
+@@ -565,6 +578,9 @@ fi
+ %endif
+ 
+ %changelog
++* Fri Feb 10 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-2
++- Turn on production of PGO data for LLVM itself
++
+ * Thu Jan 12 2023 Nikita Popov <npopov@redhat.com> - 15.0.7-1
+ - Update to LLVM 15.0.7
+ 
+-- 
+2.39.1
+
+
+From 8018abff42fbd9eaededea7fb0a61b2542baab68 Mon Sep 17 00:00:00 2001
+From: Konrad Kleine <kkleine@redhat.com>
+Date: Wed, 15 Mar 2023 16:13:50 +0100
+Subject: [PATCH 2/2] Add pgo_instrumented and pgo_optimized_build build
+ conditions (both off by default)
+
+---
+ llvm.spec | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/llvm.spec b/llvm.spec
+index 70ecfc8..9f40997 100644
+--- a/llvm.spec
++++ b/llvm.spec
+@@ -13,7 +13,13 @@
+ %bcond_with compat_build
+ %bcond_without check
+ # https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
+-%bcond_without pgo_producing_build
++%bcond_with pgo_instrumented_build
++%bcond_with pgo_optimized_build
++
++%if %{with pgo_instrumented_build} || %{with pgo_optimized_build}
++# Disable PGO data generation
++%global _toolchain_profile_subpackages %{nil}
++%endif
+ 
+ #global rc_ver 3
+ %global maj_ver 15
+@@ -74,7 +80,7 @@
+ 
+ Name:		%{pkg_name}
+ Version:	%{maj_ver}.%{min_ver}.%{patch_ver}%{?rc_ver:~rc%{rc_ver}}
+-Release:	2%{?dist}
++Release:	3%{?dist}
+ Summary:	The Low Level Virtual Machine
+ 
+ License:	NCSA
+@@ -128,9 +134,12 @@ BuildRequires:	python3-setuptools
+ # For origin certification
+ BuildRequires:	gnupg2
+ 
+-%if %{with pgo_producing_build}
++%if %{with pgo_instrumented_build}
+ BuildRequires: compiler-rt
+ %endif
++%if %{with pgo_optimized_build}
++BuildRequires: llvm-merged-profdata
++%endif
+ 
+ 
+ Requires:	%{name}-libs%{?_isa} = %{version}-%{release}
+@@ -301,12 +310,15 @@ mv %{cmake_srcdir} cmake
+ %if %{without compat_build}
+ 	-DLLVM_VERSION_SUFFIX='' \
+ %endif
+-%if %{with pgo_producing_build}
++%if %{with pgo_instrumented_build}
+ 	-DLLVM_BUILD_INSTRUMENTED=IR \
+ 	-DLLVM_BUILD_RUNTIME=No \
+ 	-DCMAKE_C_COMPILER=/usr/bin/clang \
+ 	-DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+ 	-DLLVM_VP_COUNTERS_PER_SITE=8 \
++%endif
++%if %{with pgo_optimized_build}
++	-DLLVM_PROFDATA_FILE=/usr/lib/profdata/llvm-merged.profdata \
+ %endif
+ 	-DLLVM_BUILD_LLVM_DYLIB:BOOL=ON \
+ 	-DLLVM_LINK_LLVM_DYLIB:BOOL=ON \
+@@ -578,6 +590,9 @@ fi
+ %endif
+ 
+ %changelog
++* Wed Feb 15 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-3
++- Add pgo_instrumented and pgo_optimized_build build conditions (both off by default)
++
+ * Fri Feb 10 2023 Konrad Kleine <kkleine@redhat.com> - 15.0.7-2
+ - Turn on production of PGO data for LLVM itself
+ 
+-- 
+2.39.1
+

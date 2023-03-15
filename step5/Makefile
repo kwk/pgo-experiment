@@ -47,10 +47,3 @@ chromium:
 	-copr add-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)
 	copr edit-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)	
 	copr build-package --name chromium --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)
-
-# Just for fun build firefox
-.PHONY: firefox
-firefox:
-	-copr add-package-scm --name firefox --clone-url https://src.fedoraproject.org/rpms/firefox.git --commit f37 $(fas_user)/$(copr_project)
-	copr edit-package-scm --name firefox --clone-url https://src.fedoraproject.org/rpms/firefox.git --commit f37 $(fas_user)/$(copr_project)	
-	copr build-package --name firefox --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)

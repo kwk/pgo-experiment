@@ -2,6 +2,10 @@
 
 In this experiment I try to show the steps I take to generate PGO profile data from compiling unmodified RPM packages and feeding those profiles into a PGO optimized rebuild of LLVM.
 
+I create an instrumented LLVM toolchain in a Copr project called `llvm-pgo-instrumented`. In another Copr project called `profile-data-collection` I build a modified `redhat-rpm-config` package. Every package that gets built in that project will automatically produce a subpackage `<PACKAGE>-clang-profdata` with raw profile data. I demonstrate this with a simple "Hello, World!" application that is called `myapp`. I then collect all those subpackages through `BuildRequires:` tags in another packaed called `llvm-merged-profdata`. During the build of that package, all raw profiles are merged into an indexed profile data file. The final `llvm-merged-profdata` RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called `llvm-pgo-optimized`.
+
+![process-overview](process-overview.png?raw=true "process-overview")
+
 ## Non-goal
 
 It is NOT a goal to get a perfectly tweaked PGO optimization build of LLVM. Instead we want to just show a way how to setup a pipeline in [Copr](https://copr.fedorainfracloud.org/) for further tweaking and experimentation.
@@ -491,9 +495,9 @@ Essentially all the `llvm-merged-profdata` do is to merge all `<PACKAGE>-clang-p
 
 ## Step 7 - Build PGO optimized LLVM
 
-This step is similar to step 0 i which we've build the PGO instrumented LLVM. Here we're taking the `llvm-merged-profdata` and use the `/usr/lib/profdata/llvm-merged.profdata` file as input for the optimization of the `llvm`, `clang` and `lld` packages.
+This step is similar to step 0 in which we've build the PGO instrumented LLVM. Here we're adding a buil requirement for `llvm-merged-profdata` and use the `/usr/lib/profdata/llvm-merged.profdata` file as input for the optimization of the `llvm`, `clang` and `lld` packages.
 
-`/usr/lib/profdata/llvm-merged.profdata`
+The resulting PGO optimized packages will be available on [kkleine/llvm-pgo-optimized](https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-optimized/)
 
 ## Open questions:
 

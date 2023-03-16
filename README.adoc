@@ -1,7 +1,7 @@
 = Compiling a PGO optimized LLVM toolchain for Fedora
 Konrad Kleine <kkleine@redhat.com>;
 :toc:
-:toc-placement: preamble
+:toc-placement!:
 :sectnums:
 :experimental:
 :showtitle:
@@ -10,6 +10,8 @@ Konrad Kleine <kkleine@redhat.com>;
 In this experiment I try to show the steps I take to generate PGO profile data from compiling unmodified RPM packages and feeding those profiles into a PGO optimized rebuild of LLVM.
 
 I create an instrumented LLVM toolchain in a Copr project called `llvm-pgo-instrumented`. In another Copr project called `profile-data-collection` I build a modified `redhat-rpm-config` package. Every package that gets built in that project will automatically produce a subpackage `<PACKAGE>-clang-profdata` with raw profile data. I demonstrate this with a simple "Hello, World!" application that is called `myapp`. I then collect all those subpackages through `BuildRequires:` tags in another packaed called `llvm-merged-profdata`. During the build of that package, all raw profiles are merged into an indexed profile data file. The final `llvm-merged-profdata` RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called `llvm-pgo-optimized`.
+
+toc::[]
 
 image::process-overview.png?raw=true[]
 

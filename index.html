@@ -551,16 +551,16 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <li><a href="#_build_redhat_rpm_config_package">4.6.3. Build redhat-rpm-config package</a></li>
 </ul>
 </li>
-<li><a href="#_step_5_build_unmodified_packages_on_copr">4.7. Step 5 - Build unmodified packages on Copr</a>
-<ul class="sectlevel3">
-<li><a href="#_optional_build_from_distgit">4.7.1. Optional: Build from distgit</a></li>
+<li><a href="#_step_5_build_unmodified_packages_on_copr">4.7. Step 5 - Build unmodified packages on Copr</a></li>
 </ul>
 </li>
-<li><a href="#_step_6_merge_raw_profiles">4.8. Step 6 - Merge Raw Profiles</a></li>
-<li><a href="#_step_7_build_pgo_optimized_llvm">4.9. Step 7 - Build PGO optimized LLVM</a></li>
+<li><a href="#_optional_build_from_distgit">5. Optional: Build from distgit</a>
+<ul class="sectlevel2">
+<li><a href="#_step_6_merge_raw_profiles">5.1. Step 6 - Merge Raw Profiles</a></li>
+<li><a href="#_step_7_build_pgo_optimized_llvm">5.2. Step 7 - Build PGO optimized LLVM</a></li>
 </ul>
 </li>
-<li><a href="#_conclusion">5. Conclusion</a></li>
+<li><a href="#_conclusion">6. Conclusion</a></li>
 </ul>
 </div>
 </div>
@@ -1330,16 +1330,28 @@ You don&#8217;t need to run this step manually. It has already been run and the 
 <div class="paragraph">
 <p>Any package that will be built after <code>redhat-rpm-config</code> in the <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> Copr project will automatically have a <code>&lt;package&gt;-clang-profdata</code> subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.</p>
 </div>
-<div class="sect3">
-<h4 id="_optional_build_from_distgit"><a class="anchor" href="#_optional_build_from_distgit"></a><a class="link" href="#_optional_build_from_distgit">4.7.1. Optional: Build from distgit</a></h4>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_optional_build_from_distgit"><a class="anchor" href="#_optional_build_from_distgit"></a><a class="link" href="#_optional_build_from_distgit">5. Optional: Build from distgit</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>If you&#8217;re curious, you can build any project from Fedora&#8217;s distigt by doing</p>
+<p>If you want, you can build any project from Fedora&#8217;s distigt by doing</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span><span class="tok-nb">cd</span> step5/
-<span class="tok-gp">$ </span>make distgit-retsnoop</code></pre>
+<span class="tok-gp">$ </span>make distgit-&lt;PACKAGE&gt; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Replace <code>&lt;PACKAGE&gt;</code> with a real package name, e.g. <code>retsnoop</code>.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>This is backed by this special target in the <a href="step5/Makefile"><code>step5/Makefile</code></a>:</p>
@@ -1380,10 +1392,8 @@ You might wonder why we first add and then edit a package. This is because we do
 </tr>
 </table>
 </div>
-</div>
-</div>
 <div class="sect2">
-<h3 id="_step_6_merge_raw_profiles"><a class="anchor" href="#_step_6_merge_raw_profiles"></a><a class="link" href="#_step_6_merge_raw_profiles">4.8. Step 6 - Merge Raw Profiles</a></h3>
+<h3 id="_step_6_merge_raw_profiles"><a class="anchor" href="#_step_6_merge_raw_profiles"></a><a class="link" href="#_step_6_merge_raw_profiles">5.1. Step 6 - Merge Raw Profiles</a></h3>
 <div class="paragraph">
 <p>In order to optimize LLVM with the raw profile data that we&#8217;ve collected before we need to make it available to the Copr build of LLVM and we need to <a href="https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge">merge</a> it using <code>llvm-profdata merge</code>.</p>
 </div>
@@ -1440,7 +1450,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </div>
 <div class="sect2">
-<h3 id="_step_7_build_pgo_optimized_llvm"><a class="anchor" href="#_step_7_build_pgo_optimized_llvm"></a><a class="link" href="#_step_7_build_pgo_optimized_llvm">4.9. Step 7 - Build PGO optimized LLVM</a></h3>
+<h3 id="_step_7_build_pgo_optimized_llvm"><a class="anchor" href="#_step_7_build_pgo_optimized_llvm"></a><a class="link" href="#_step_7_build_pgo_optimized_llvm">5.2. Step 7 - Build PGO optimized LLVM</a></h3>
 <div class="paragraph">
 <p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code> and use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> as input to <code>LLVM_PROFDATA_FILE</code> for the optimization of the <code>llvm</code>, <code>clang</code> and <code>lld</code> packages.</p>
 </div>
@@ -1451,7 +1461,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </div>
 <div class="sect1">
-<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a><a class="link" href="#_conclusion">5. Conclusion</a></h2>
+<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a><a class="link" href="#_conclusion">6. Conclusion</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>We&#8217;ve seen how we can gather PGO profile data and feed it into a PGO optimized recompilation of LLVM. I hope you liked this article and follow us exploring the possibilities ahead of us! Don&#8217;t forget to leave a comment ;)</p>
@@ -1461,7 +1471,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-21 19:59:54 +0100
+Last updated 2023-03-21 20:04:44 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

@@ -1,16 +1,16 @@
 FROM fedora:37
-
-LABEL author="Konrad Kleine <kkleine@redhat.com>"
 LABEL description="Manually generate sub-package with PGO data"
 
 # Install the PGO instrumented (not PGO optimized!) clang and llvm (for the
 # llvm-profdata tool).
 # https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
+# tag::install_pgo_instrumented[]
 RUN dnf install -y 'dnf-command(copr)'
 RUN dnf copr enable -y kkleine/llvm-pgo-instrumented
 RUN sudo dnf install -y \
     llvm \
     clang
+# end::install_pgo_instrumented[]
 
 # Install packages to build and package "myapp"
 RUN dnf install -y cmake fedora-packager git

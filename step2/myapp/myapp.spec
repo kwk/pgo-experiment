@@ -23,25 +23,33 @@ A simple "Hello, World!" application.
 #-----------------------------------------------------------------------
 # We want to generalize and automate this sub-package creation
 #-----------------------------------------------------------------------
-%package -n myapp-clang-profdata
+# tag::manually_add_package[]
+%package -n myapp-clang-pgo-profdata
 
-Summary: clang profile data from myapp package
+Summary: Indexed PGO profile data from myapp package
 
-%description -n myapp-clang-profdata 
+%description -n myapp-clang-pgo-profdata 
 This package contains profiledata for clang that was generated while
 compiling myapp. This can be used for doing Profile Guided Optimizations
 (PGO) builds of clang.
 
-%files -n myapp-clang-profdata
-/usr/lib/profraw/myapp.clang.profraw
+%files -n myapp-clang-pgo-profdata
+/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata # <1>
+# end::manually_add_package[]
 #-----------------------------------------------------------------------
 
 %build
+# tag::llvm_profile_file[]
 #-----------------------------------------------------------------------
-# We want the profile data to be written to a specific file that will later land
-# in the sub-package "myapp-clang-profdata".
-# See https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
-export LLVM_PROFILE_FILE="myapp.clang.profraw"
+# We want the profile data to be written to specific files that will
+# later land in the sub-package "myapp-clang-raw-pgo-profdata". See
+# https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
+TMPDIR="%{_builddir}/raw-pgo-profdata"
+export TMPDIR
+mkdir -pv $TMPDIR
+LLVM_PROFILE_FILE="%t/myapp.clang.%m.profraw"
+export LLVM_PROFILE_FILE
+# end::llvm_profile_file[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
@@ -51,9 +59,22 @@ export LLVM_PROFILE_FILE="myapp.clang.profraw"
 #-----------------------------------------------------------------------
 # Must be generatlized and automated as well.
 #-----------------------------------------------------------------------
-mkdir -pv %{buildroot}/usr/lib/profraw
-cp -v %{_builddir}/myapp-1.0.0/%{_vpath_builddir}/myapp.clang.profraw \
-      %{buildroot}/usr/lib/profraw/myapp.clang.profraw
+# tag::find_profiles[]
+mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
+find %{_builddir}/raw-pgo-profdata \
+  -type f \
+  -name "myapp.clang.*.profraw" \
+  > %{_builddir}/pgo-profiles
+
+# end::find_profiles[]
+
+# tag::merge_profiles[]
+llvm-profdata merge \
+  --debug-info-correlate \
+  --enable-name-compression \
+  -sparse $(cat %{_builddir}/pgo-profiles) \
+  -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
+# end::merge_profiles[]
 #-----------------------------------------------------------------------
 
 %check
@@ -66,7 +87,7 @@ test "`%{buildroot}/%{_bindir}/myapp`" = "Hello, World!"
 %changelog
 * Wed Mar 1 2023 Konrad Kleine <kkleine@redhat.com> - 1.0.0-2
 - Building step2
-- Manually added "myapp-clang-profdata" subpackage
+- Manually added "myapp-clang-raw-pgo-profdata" subpackage
 
 * Wed Mar 1 2023 Konrad Kleine <kkleine@redhat.com> - 1.0.0-1
 - Building step1

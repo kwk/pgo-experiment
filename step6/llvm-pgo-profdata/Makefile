@@ -1,9 +1,9 @@
 # Prepare variables
 TMP = $(CURDIR)/tmp
-VERSION = $(shell grep ^Version llvm-merged-profdata.spec | sed 's/.* //')
-PACKAGE = llvm-merged-profdata-$(VERSION)
+VERSION = $(shell grep ^Version llvm-pgo-profdata.spec | sed 's/.* //')
+PACKAGE = llvm-pgo-profdata-$(VERSION)
 FILES = LICENSE \
-		llvm-merged-profdata.spec
+		llvm-pgo-profdata.spec
 
 .PHONY: source, tarball, rpm, srpm, clean
 
@@ -14,8 +14,8 @@ source:
 tarball: source
 	cd $(TMP) && tar vcfj ../$(PACKAGE).tar.bz2 $(PACKAGE)
 rpm: tarball
-	fedpkg --release f37 --name llvm-merged-profdata local -- --noclean
+	fedpkg --release f37 --name llvm-pgo-profdata local -- --noclean
 srpm: tarball
-	fedpkg --release f37 --name llvm-merged-profdata srpm
+	fedpkg --release f37 --name llvm-pgo-profdata srpm
 clean:
 	rm -rf $(TMP) $(PACKAGE)*

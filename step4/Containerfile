@@ -1,6 +1,4 @@
 FROM fedora:37
-
-LABEL author="Konrad Kleine <kkleine@redhat.com>"
 LABEL description="Manually generate sub-package with PGO data"
 
 # Install the PGO instrumented (not PGO optimized!) clang and llvm (for the
@@ -24,9 +22,9 @@ COPY entrypoint.sh /root/entrypoint.sh
 COPY ./myapp /home/tester/myapp
 RUN chown -Rfv  tester:tester /home/tester/myapp
 
-# Copy the patches we need for a modified redhat-rpm-config package that we
-# smuggle into the container.
-COPY redhat-rpm-config.patch /root
+# Copy the modified redhat-rpm-config package that we smuggle into the
+# container.
+COPY ./redhat-rpm-config /root/redhat-rpm-config
 # Make git happy
 RUN git config --global user.email "you@example.com"
 RUN git config --global user.name "Your Name"

@@ -1,6 +1,4 @@
 FROM fedora:37
-
-LABEL author="Konrad Kleine <kkleine@redhat.com>"
 LABEL description="Manually generate sub-package with PGO data"
 
 # Install the PGO instrumented (not PGO optimized!) clang and llvm (for the

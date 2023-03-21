@@ -11,9 +11,6 @@ create-copr-project:
 	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
 	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
 
-redhat-rpm-config.patch: ../step4/redhat-rpm-config.patch
-	-cp -fv ../step4/redhat-rpm-config.patch .
-
 .PHONY: clean
 clean:
 	rm -fv *.copr_build_id
@@ -21,7 +18,8 @@ clean:
 # We delete any redhat-rpm-config package first because we don't want to apply
 # an older version of it when building a new. This can cause weird results.
 .ONESHELL:
-redhat-rpm-config.copr_build_id: redhat-rpm-config.patch
+redhat-rpm-config.copr_build_id:
+	-cp -fv ../step4/redhat-rpm-config.patch .
 	[[ ! -d redhat-rpm-config ]] && fedpkg clone --anonymous -b f37 redhat-rpm-config
 	cd redhat-rpm-config
 	git reset --hard origin/f37
@@ -41,9 +39,10 @@ myapp.copr_build_id: redhat-rpm-config.copr_build_id
 	copr build --after-build-id $(shell cat redhat-rpm-config.copr_build_id) --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project) myapp-1.0.0-1.fc37.src.rpm | tee build.log
 	grep -Po 'Created builds: \K(\d+)' build.log > ../myapp.copr_build_id
 
-# Just for fun build chromium
-.PHONY: chromium
-chromium:
-	-copr add-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)
-	copr edit-package-scm --name chromium --clone-url https://src.fedoraproject.org/rpms/chromium.git --commit f37 $(fas_user)/$(copr_project)	
-	copr build-package --name chromium --after-build-id 5647168 --timeout 1728000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)
+# Build an arbitrary package from dist-git
+distgit-%:
+	$(eval package:=$(subst distgit-,,$@))
+	-copr add-package-distgit --name $(package) --distgit fedora --commit f37 $(fas_user)/$(copr_project)
+	copr edit-package-distgit --name $(package) --distgit fedora --commit f37 $(fas_user)/$(copr_project)
+	copr build-package --name $(package) --timeout 1728000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project)
+

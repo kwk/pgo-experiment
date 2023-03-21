@@ -13,6 +13,7 @@ Source0: myapp-%{version}.tar.bz2
 BuildRequires:	clang
 BuildRequires:	cmake
 BuildRequires:	git
+BuildRequires:	llvm
 
 %description
 A simple "Hello, World!" application.
@@ -23,25 +24,33 @@ A simple "Hello, World!" application.
 #-----------------------------------------------------------------------
 # Generalize the naming and description of the profdata subpackage
 #-----------------------------------------------------------------------
-%package -n %{name}-%{toolchain}-profdata
+# tag::generalize_add_package[]
+%package -n %{name}-%{toolchain}-raw-pgo-profdata
 
-Summary: %{toolchain} profile data from %{name} package
+Summary: Indexed PGO profile data from %{name} package
 
-%description -n %{name}-%{toolchain}-profdata 
+%description -n %{name}-%{toolchain}-raw-pgo-profdata 
 This package contains profiledata for %{toolchain} that was generated while
 compiling %{name}. This can be used for doing Profile Guided Optimizations
 (PGO) builds of %{toolchain}.
 
-%files -n %{name}-%{toolchain}-profdata
-/usr/lib/profraw/%{name}.%{toolchain}.profraw
+%files -n %{name}-%{toolchain}-raw-pgo-profdata
+%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata
+# end::generalize_add_package[]
 #-----------------------------------------------------------------------
 
 %build
 #-----------------------------------------------------------------------
-# We want the profile data to be written to a specific file that will later land
-# in the sub-package "myapp-clang-profdata".
-# See https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
-export LLVM_PROFILE_FILE="%{name}.%{toolchain}.profraw"
+# We want the profile data to be written to specific files that will
+# later land in the sub-package "myapp-clang-raw-pgo-profdata". See
+# https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
+# tag::llvm_profile_file[]
+TMPDIR="%{_builddir}/raw-pgo-profdata"
+export TMPDIR
+mkdir -pv $TMPDIR
+LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.profraw"
+export LLVM_PROFILE_FILE
+# end::llvm_profile_file[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
@@ -51,9 +60,23 @@ export LLVM_PROFILE_FILE="%{name}.%{toolchain}.profraw"
 #-----------------------------------------------------------------------
 # Generalized
 #-----------------------------------------------------------------------
-mkdir -pv %{buildroot}/usr/lib/profraw
-cp -v %{_builddir}/%{name}-%{version}/%{_vpath_builddir}/%{name}.%{toolchain}.profraw \
-      %{buildroot}/usr/lib/profraw/%{name}.%{toolchain}.profraw
+# tag::find_profiles[]
+mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}
+find %{_builddir}/raw-pgo-profdata \
+  -type f \
+  -name "%{name}.%{toolchain}.*.profraw" \
+  > %{_builddir}/pgo-profiles
+
+# end::find_profiles[]
+
+# tag::merge_profiles[]
+llvm-profdata merge \
+  --debug-info-correlate \
+  --enable-name-compression \
+  -sparse $(cat %{_builddir}/pgo-profiles) \
+  -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata
+# end::merge_profiles[]
+
 #-----------------------------------------------------------------------
 
 %check

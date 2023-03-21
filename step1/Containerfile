@@ -1,6 +1,4 @@
 FROM fedora:37
-
-LABEL author="Konrad Kleine <kkleine@redhat.com>"
 LABEL description="A basic specfile-to-RPM process demo"
 
 # Install packages to build and package "myapp"

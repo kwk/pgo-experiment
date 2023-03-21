@@ -31,7 +31,7 @@ It is NOT a goal to get a perfectly tweaked PGO optimization build of LLVM. Inst
 
 == Resources
 
-Here's a list of places to find out more about PGO.
+Here's a list of places to find out more about PGO and RPM Package building.
 
 .Documentation
 * For building LLVM with PGO: https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo

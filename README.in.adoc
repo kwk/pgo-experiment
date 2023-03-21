@@ -1,10 +1,11 @@
+// Process this file with "make docs" before viewing
 = Compiling a PGO optimized LLVM toolchain for Fedora
-Konrad Kleine <kkleine@redhat.com>;
-:toc:
-:toc-placement!:
+Konrad Kleine;
+:toc: left
 :sectnums:
 :experimental:
 :showtitle:
+:stem:
 :source-highlighter: pygments
 :homepage: https://github.com/kwk/pgo-experiment
 :link-copr: https://copr.fedorainfracloud.org/[Copr]
@@ -15,13 +16,11 @@ Konrad Kleine <kkleine@redhat.com>;
 :link-llvm-pgo-documentation: link:https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official documentation]
 
 [.lead]
-In this experiment I try to show the steps I take to generate PGO profile data from compiling unmodified RPM packages and feeding those profiles into a PGO optimized rebuild of LLVM.
+In this experiment I show the steps I took to generate PGO profile data from compiling unmodified RPM packages and feeding those profiles into a PGO optimized rebuild of LLVM.
 
-I create an instrumented LLVM toolchain in a Copr project called `llvm-pgo-instrumented`. In another Copr project called `profile-data-collection` I build a modified `redhat-rpm-config` package. Every package that gets built in that project will automatically produce a subpackage `<PACKAGE>-clang-profdata` with PGO profile data. I demonstrate this with a simple "Hello, World!" application that is called `myapp`. I then collect all those subpackages through `BuildRequires:` tags in another packaed called `llvm-pgo-profdata`. During the build of that package, all profiles are merged into an indexed profile data file. The final `llvm-pgo-profdata` RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called `llvm-pgo-optimized`.
+I created an instrumented LLVM toolchain in a Copr project called {link-llvm-pgo-instrumented}. In another Copr project called {link-profile-data-collection} I build a modified `redhat-rpm-config` package. Every package that gets built in that project will automatically produce a subpackage `<PACKAGE>-clang-profdata` with PGO profile data. I demonstrate this with a simple "Hello, World!" application that is called `myapp`. I then collect all those subpackages through `BuildRequires:` tags in another packaed called `llvm-pgo-profdata`. During the build of that package, all profiles are merged into an indexed profile data file. The final `llvm-pgo-profdata` RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called {link-llvm-pgo-optimized}.
 
-toc::[]
-
-image::process-overview.png?raw=true[]
+image::process-overview.png[]
 
 == Non-goal
 
@@ -32,7 +31,7 @@ It is NOT a goal to get a perfectly tweaked PGO optimization build of LLVM. Inst
 * For building LLVM with PGO: https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
 * PGO in general: https://clang.llvm.org/docs/UsersManual.html#profile-guided-optimization
 
-== Understanding what PGO can do
+== Understand what PGO can do
 
 > PGO (Profile-Guided Optimization) allows your compiler to better optimize code for how it actually runs. Users report that applying this to Clang and LLVM can decrease overall compile time by 20%.
 (link:https://llvm.org/docs/HowToBuildWithPGO.html#introduction[Source])
@@ -44,7 +43,7 @@ For the {link-fedora} distribution we build a ton of packages with LLVM. The afo
 
 The question is: How can we tap in the RPM build pipeline using {link-copr} and build RPM packages without modifying their `*.spec` files manually?
 
-I've created a 8 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile`s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run `make build-stepX` where $X \in \lbrace 0,1,2,...,7 \rbrace$. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.
+I've created a 8 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile` s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run `make build-stepX` where stem:[X \in {0,1,2,...,7}]. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.
 
 NOTE: The `Containerfile`s run as `root` to allow packages to be installed and have a `tester` account for regular user interaction. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites. 
 
@@ -67,7 +66,7 @@ In this step, we're essentially following the {link-llvm-pgo-documentation} for 
 
 The resulting `clang` will generate profile data upon execution and we're trying to collect, bundle, and merge it for optimizing a rebuild of `clang` later. 
 
-== Step 1 - Build a simple "Hello, World!" RPM
+== Step 1 - Build "Hello, World!" RPM
 
 In this step we set the foundation for our experiment.
 
@@ -123,7 +122,7 @@ include::step1/entrypoint.sh[]
 ----
 
 
-== Step 2 - Manually add profile data subpackage
+== Step 2 - Manually add subpackage
 
 In this step we manually add a `myapp-clang-pgo-profdata` subpackage which contains PGO profile data from LLVM. This data is generated by executing a PGO instrumented `clang` from the Copr repo {link-llvm-pgo-instrumented} which we've built in step 0.
 
@@ -144,7 +143,7 @@ include::step2/myapp/myapp.spec[tag=manually_add_package]
 ----
 <1> Notice that the added `myapp-clang-pgo-profdata` subpackage requires this file `/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata`. It is a file that we have to create manually by invoking the PGO instrumented `clang`.
 
-=== Setting the LLVM_PROFILE_FILE
+=== Set LLVM_PROFILE_FILE
 
 By specifying `export LLVM_PROFILE_FILE="%t/myapp.clang.%m.profraw"` we instruct `clang` to create a raw profile file for each invocation under `TMPDIR` (see `%t` in link:https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program[the docs]).
 
@@ -153,7 +152,7 @@ By specifying `export LLVM_PROFILE_FILE="%t/myapp.clang.%m.profraw"` we instruct
 include::step2/myapp/myapp.spec[tag=llvm_profile_file]
 ----
 
-=== Finding and merging the profiles
+=== Find and merge the profiles
 
 We then find all raw profiles and merge them into the final `myapp.clang.profdata` under the buildroot to be picked up by the `%files` section of the `myapp-clang-pgo-profdata` subpackage:
 
@@ -170,28 +169,28 @@ Now, you may ask why we make the changes to the spec file at all when I promised
 
 In the next step we're generalizing the manual addition of the subpackage before we remove it entirely from the spec file again.
 
-== Step 3 - Generalize manually added profile data subpackage
+== Step 3 - Generalize subpackage
 
 In this step we generalize the `myapp-clang-pgo-profdata` subpackage from step 2 to
 `%{name}-%{toolchain}-clang-pgo-profdata`.
 
 The only changes from step2 to step3 is in the `myapp/myapp.spec` file:
 
-=== Genrealized subpackage definition
+=== Subpackage definition
 
 [source,spec]
 ----
 include::step3/myapp/myapp.spec[tags=generalize_add_package]
 ----
 
-=== Generalized LLVM_PROFILE_FILE
+=== Set LLVM_PROFILE_FILE
 
 [source,spec]
 ----
 include::step3/myapp/myapp.spec[tags=llvm_profile_file]
 ----
 
-=== Generalized finding and merging profiles
+=== Find and merge profiles
 
 [source,spec]
 ----
@@ -202,7 +201,7 @@ You should see that we've replaced all occurrences of `myapp` with the RPM specf
 
 NOTE: You can specify `%global toolchain clang` to have your code compile with clang and use all the right and sane defaults for compiler flags for clang. See https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros.
 
-== Step 4 - Automatically add profile data subpackage
+== Step 4 - Automatically add subpackage
 
 In this step we use the `myapp` directory from `step1` that doesn't contain any information about the subpackage at all. And yet we're still gonna get our subpackage with profile data. We do this by patching, compiling and installing another package that is always present on Fedora: `redhat-rpm-config`. This package is the home of many useful build-flags and macros but it also allows us to tap into the build process by.
 
@@ -226,7 +225,7 @@ The subpackage can be generalized with the following template.
 include::step4/redhat-rpm-config/macros[tags=subpackage_template]
 ----
 
-=== Setting LLVM_PROFILE_FILE
+=== Set LLVM_PROFILE_FILE
 
 We export the `LLVM_PROFILE_FILE` environment variable at the right place.
 
@@ -235,7 +234,7 @@ We export the `LLVM_PROFILE_FILE` environment variable at the right place.
 include::step4/redhat-rpm-config/macros[tags=set_build_flags]
 ----
 
-=== Finding and merging profiles
+=== Find and merge profiles
 
 We tap in the post-`%install` step to find and merge the profiles into the buildroot location.
 
@@ -244,7 +243,7 @@ We tap in the post-`%install` step to find and merge the profiles into the build
 include::step4/redhat-rpm-config/macros[tags=find_and_merge_profiles;post_install]
 ----
 
-=== Building patched redhat-rpm-config package
+=== Build redhat-rpm-config package
 
 In order to build the `redhat-rpm-config` we build the package using `fedpkg local`. Then we can simply imstall the resulting RPM using `dnf`:
 
@@ -271,19 +270,38 @@ Copr will become the storage for our profile data subpackages with all the rest 
 
 After running this step using `make build-step5`, we're gonna have a project called: {link-profile-data-collection}.
 
-In that project, there will be the patched `redhat-rpm-config` package and the
-`myapp` package with the additional subpackage inside:
+In that project, there will be the patched `redhat-rpm-config` package and the `myapp` package with the additional subpackage inside:
 
-image::profile-data-collection.png?raw=true[]
+image::profile-data-collection.png[]
 
-In order for the Copr project to use our PGO instrumented LLVM we've made the repo available in the link:step5/Makefile[`step5/Makefile`] using the `--repo` option.
+In order for the Copr project to use our PGO instrumented LLVM we've made the repo available in the link:step5/Makefile[`step5/Makefile`] using the `--repo` option:
 
-[source,Makefile]
+[source,make,linenums]
 ----
-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
+include::step5/Makefile[tags=create_copr_project]
 ----
 
-Any package that will be built after `redhat-rpm-config` in the {{link-profile-data-collection} Copr project will automatically have a `<package>-clang-profdata` subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.
+Any package that will be built after `redhat-rpm-config` in the {link-profile-data-collection} Copr project will automatically have a `<package>-clang-profdata` subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.
+
+=== Optional: Build from distgit
+
+If you're curious, you can build any project from Fedora's distigt by doing
+
+[source,console]
+----
+$ cd step5/
+$ make distgit-retsnoop
+----
+
+This is backed by this special target in the link:step5/Makefile[`step5/Makefile`]:
+
+[source,make,linenums]
+----
+include::step5/Makefile[tags=build_from_disgit]
+----
+
+NOTE: You might wonder why we first add and then edit a package. This is because we don't know if the package has already been added before. And to overwrite with the desired values we simply edit an added project right away. So, nothing really special.  
+
 
 == Step 6 - Merge Raw Profiles
 

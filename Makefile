@@ -29,4 +29,4 @@ build-step%:
 docs:
 	# sudo dnf install asciidoctor
 	# gem install pygments.rb
-	asciidoctor --safe README.in.adoc -o README.html
+	asciidoctor --safe README.in.adoc --doctype article -o index.html

@@ -31,8 +31,22 @@ It is NOT a goal to get a perfectly tweaked PGO optimization build of LLVM. Inst
 
 == Resources
 
+Here's a list of places to find out more about PGO.
+
+.Documentation
 * For building LLVM with PGO: https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
 * PGO in general: https://clang.llvm.org/docs/UsersManual.html#profile-guided-optimization
+* `llvm-profdata`: https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge
+* Source-based coverage: https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
+
+.RPM Specfiles
+* Macros: https://docs.fedoraproject.org/en-US/packaging-guidelines/RPMMacros/
+
+.Presentations:
+* PGO Instrumentation: Example of CallSite-Aware Profiling:
+** Video: https://www.youtube.com/watch?v=GBtQrYx_Jbc
+** PDF: https://llvm.org/devmtg/2020-09/slides/PGO_Instrumentation.pdf
+* Source-based Code Coverage for Embedded Use Cases: https://llvm.org/devmtg/2020-09/slides/PhippsAlan_EmbeddedCodeCoverage_LLVM_Conf_Talk_final.pdf
 
 == Understand what PGO can do
 

@@ -1,5 +1,5 @@
 // Process this file with "make docs" before viewing
-= Compiling a PGO optimized LLVM toolchain for Fedora
+= A PGO optimized LLVM toolchain for Fedora
 Konrad Kleine;
 :toc: left
 :sectnums:

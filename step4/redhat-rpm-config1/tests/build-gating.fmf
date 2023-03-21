@@ -1,0 +1,16 @@
+summary: Tests
+discover:
+  - name: redhat-rpm-config-tests
+    how: fmf
+  - name: gcc-fedora-flags
+    how: fmf
+    url: https://src.fedoraproject.org/rpms/gcc.git
+    ref: rawhide
+    test: fedora-flags
+  - name: clang-fedora-flags
+    how: fmf
+    url: https://src.fedoraproject.org/rpms/clang.git
+    ref: rawhide
+    test: fedora-flags
+execute:
+  how: tmt

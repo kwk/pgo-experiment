@@ -1,0 +1,12 @@
+coreutils
+dwz
+rpm
+zip
+/bin/sh
+/usr/bin/bash
+/usr/bin/file
+/usr/bin/find
+/usr/bin/grep
+/usr/bin/sed
+/usr/bin/sh
+/usr/bin/xargs

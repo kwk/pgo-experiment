@@ -1,0 +1,4 @@
+*.noarch.rpm
+*.src.rpm
+results_redhat-rpm-config/
+.build-*.log

@@ -1,0 +1,8 @@
+summary: Test that we don't accidently introduce any new dependencies.
+
+require:
+  - diffutils
+  - grep
+  - redhat-rpm-config
+  - rpm
+test: ./runtest.sh

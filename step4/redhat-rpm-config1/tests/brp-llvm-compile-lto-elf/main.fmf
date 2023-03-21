@@ -1,0 +1,8 @@
+Summary: Test that the brp-llvm-compile-lto-elf script is working correctly
+
+require:
+  - dnf-plugins-core
+  - redhat-rpm-config
+  - rpm-build
+
+test: ./runtest.sh

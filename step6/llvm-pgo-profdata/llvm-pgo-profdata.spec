@@ -25,6 +25,7 @@ BuildRequires: git
 # tag::build_requires[]
 BuildRequires: myapp-clang-pgo-profdata
 BuildRequires: retsnoop-clang-pgo-profdata
+BuildRequires: chromium-clang-pgo-profdata
 # end::build_requires[]
 
 %description

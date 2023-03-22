@@ -34,7 +34,7 @@ compiling myapp. This can be used for doing Profile Guided Optimizations
 (PGO) builds of clang.
 
 %files -n myapp-clang-pgo-profdata
-/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata # <1>
+/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
 # end::manually_add_package[]
 #-----------------------------------------------------------------------
 
@@ -70,7 +70,6 @@ find %{_builddir}/raw-pgo-profdata \
 
 # tag::merge_profiles[]
 llvm-profdata merge \
-  --debug-info-correlate \
   --enable-name-compression \
   -sparse $(cat %{_builddir}/pgo-profiles) \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata

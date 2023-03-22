@@ -71,7 +71,6 @@ find %{_builddir}/raw-pgo-profdata \
 
 # tag::merge_profiles[]
 llvm-profdata merge \
-  --debug-info-correlate \
   --enable-name-compression \
   -sparse $(cat %{_builddir}/pgo-profiles) \
   -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata

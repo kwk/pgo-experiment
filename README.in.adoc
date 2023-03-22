@@ -137,7 +137,8 @@ We add the subpackage manually in link:step2/myapp/myapp.spec[step2/myapp/myapp.
 ----
 include::step2/myapp/myapp.spec[tag=manually_add_package]
 ----
-<1> Notice that the added `myapp-clang-pgo-profdata` subpackage requires this file `/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata`. It is a file that we have to create manually by invoking the PGO instrumented `clang`.
+
+Notice that the added `myapp-clang-pgo-profdata` subpackage requires this file `/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata`. It is a file that we have to create manually by invoking the PGO instrumented `clang`.
 
 ==== Set LLVM_PROFILE_FILE
 

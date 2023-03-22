@@ -282,7 +282,7 @@ print(result)
 
 %__brp_llvm_compile_lto_elf /usr/lib/rpm/redhat/brp-llvm-compile-lto-elf %{build_cflags} %{build_ldflags}
 # tag::find_and_merge_profiles[]
-%__copy_profraw %[ 0%{_toolchain_profile_subpackages} > 0 ? "mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} && find %{_builddir}/raw-pgo-profdata -type f -name '%{name}.%{toolchain}.*.profraw' > %{_builddir}/pgo-profiles && llvm-profdata merge --enable-name-compression -sparse $(cat %{_builddir}/pgo-profiles) -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata" : "%{nil}" ]
+%__copy_profraw %[ 0%{_toolchain_profile_subpackages} > 0 ? "mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} && find %{_builddir}/raw-pgo-profdata -type f -name '%{name}.%{toolchain}.*.profraw' > %{_builddir}/pgo-profiles && LLVM_PROFILE_FILE='llvm-profdata.%{toolchain}.%p.profdata' llvm-profdata merge --enable-name-compression -sparse $(cat %{_builddir}/pgo-profiles) -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata" : "%{nil}" ]
 
 # end::find_and_merge_profiles[]
 

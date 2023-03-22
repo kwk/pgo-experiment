@@ -70,6 +70,10 @@ find %{_builddir}/raw-pgo-profdata \
 # end::find_profiles[]
 
 # tag::merge_profiles[]
+# llvm-profdata itself is instrumented and wants to write profile data itself,
+# hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
+# to a non existing location coming from when llvm-profdata was built.  
+LLVM_PROFILE_FILE="llvm-profdata.clang.%p.profraw"
 llvm-profdata merge \
   --enable-name-compression \
   -sparse $(cat %{_builddir}/pgo-profiles) \

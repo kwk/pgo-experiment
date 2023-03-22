@@ -168,6 +168,57 @@ Now, you may ask why we make the changes to the spec file at all when I promised
 
 In the next step we're generalizing the manual addition of the subpackage before we remove it entirely from the spec file again.
 
+==== Try it out yourself
+
+I encourage you to run this step yourself and follow along these steps to get a feeling for what the profile data does provide.
+
+[source,console]
+----
+$ make build-step2 # <1>
+[...]
+Wrote: /home/tester/myapp/myapp-1.0.0-2.fc37.src.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-2.fc37.x86_64.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-2.fc37.x86_64.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-2.fc37.x86_64.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm
+[...]
+# dnf install -y --disablerepo=* /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm <2>
+# llvm-profdata show --topn=10 /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata | c++filt <3>
+Instrumentation level: IR  entry_first = 0
+Total functions: 22243
+Maximum function count: 156465725
+Maximum internal block count: 25709548
+Top 10 functions with the largest internal block counts: 
+  llvm::SmallVectorTemplateBase<unsigned int, true>::push_back(unsigned int), max count = 156465725
+  llvm::BumpPtrAllocatorImpl<llvm::MallocAllocator, 4096ul, 4096ul, 128ul>::Allocate(unsigned long, llvm::Align), max count = 94266378
+  llvm::hashing::detail::hash_combine_recursive_helper::hash_combine_recursive_helper(), max count = 36883602
+  clang::SourceManager::getSLocEntryByID(int, bool*) const, max count = 34883434
+  llvm::SmallPtrSetImplBase::insert_imp(void const*), max count = 29731602
+  llvm::MVT::getVectorElementType() const, max count = 25709548
+  llvm::SmallPtrSetImplBase::find_imp(void const*) const, max count = 16374270
+  llvm::SmallVectorTemplateBase<llvm::cl::OptionCategory*, true>::push_back(llvm::cl::OptionCategory*), max count = 15480760
+  llvm::cl::Option::Option(llvm::cl::NumOccurrencesFlag, llvm::cl::OptionHidden), max count = 15480760
+  llvm::APInt::APInt(unsigned int, unsigned long, bool), max count = 11292172
+
+----
+<1> Build the step2 in a container and remain in the bash shell of that container.
+<2> Install the resulting merged PGO file right into the container.
+<3> Show the top 10 hottest functions demangled by `c++filt`.
+
+// How many jobs does cmake configure to spawn clang processes? Does clang thread itself? 
+
+[CAUTION]
+=====
+When experimenting with different templates I noticed that `%Nm` (e.g.`%2m`) causes `counter overflow` messages. The reason for this was discussed in link:https://bugs.chromium.org/p/chromium/issues/detail?id=801362[this thread]. That's why I've switched to using `%p` instead of `%Nm` but I wonder if this causes problems for multithreaded workloads. To recap, this is what `%Nm` does in the `LLVM_PROFILE_FILE`:
+
+> `%Nm` expands out to the instrumented binary's signature. When this pattern is specified, the runtime creates a pool of `N`` raw profiles which are used for on-line profile merging. The runtime takes care of selecting a raw profile from the pool, locking it, and updating it before the program exits. If N is not specified (i.e the pattern is “%m”), it’s assumed that N = 1. N must be between 1 and 9. The merge pool specifier can only occur once per filename pattern. (link:https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program[Source])
+
+Afterall, how can a function call be counted in a thread-safe manner? Let's suppose you have four threads that all call a specific function `foo()` once. After merging the counters using `llvm-profdata merge` the value is obviously `1+1+1+1=4`. But with `%2m` you get very weird results.
+
+// TOOD(kwk): Show Results here for an example not done with clang but with the hello world app itself.
+
+=====
+
 === Step 3 - Generalize subpackage
 
 In this step we generalize the `myapp-clang-pgo-profdata` subpackage from step 2 to
@@ -375,12 +426,13 @@ Here's a list of places to find out more about PGO and RPM Package building.
 ** PDF: https://llvm.org/devmtg/2020-09/slides/PGO_Instrumentation.pdf
 * Source-based Code Coverage for Embedded Use Cases: https://llvm.org/devmtg/2020-09/slides/PhippsAlan_EmbeddedCodeCoverage_LLVM_Conf_Talk_final.pdf
 
-
 == Conclusion
 
-We've seen how we can gather PGO profile data and feed it into a PGO optimized recompilation of LLVM. I hope you liked this article and follow us exploring the possibilities ahead of us! Don't forget to leave a comment ;)
+We've seen how we can gather PGO profile data and feed it into a PGO optimized recompilation of LLVM.
 
+In the future we'll probably explore link:https://reviews.llvm.org/D115693[lightweight instrumentation] by correlating debug information to the instrumentation. But as fascinating as this sounds I'm skeptic that brings any benefit apart from smaller profiles.
 
+I hope you liked this article and follow us exploring the possibilities ahead of us! Don't forget to leave a comment ;)
 // == Open questions:
 // 
 // * What happens to packages that don't use `%global toolchain clang`? - Not important right now

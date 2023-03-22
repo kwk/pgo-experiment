@@ -47,7 +47,7 @@ compiling myapp. This can be used for doing Profile Guided Optimizations
 TMPDIR="%{_builddir}/raw-pgo-profdata"
 export TMPDIR
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/myapp.clang.%m.profraw"
+LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
 export LLVM_PROFILE_FILE
 # end::llvm_profile_file[]
 #-----------------------------------------------------------------------
@@ -69,6 +69,11 @@ find %{_builddir}/raw-pgo-profdata \
 # end::find_profiles[]
 
 # tag::merge_profiles[]
+# llvm-profdata itself is instrumented and wants to write profile data itself,
+# hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
+# to a non existing location coming from when llvm-profdata was built.  
+LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
+export LLVM_PROFILE_FILE
 llvm-profdata merge \
   --enable-name-compression \
   -sparse $(cat %{_builddir}/pgo-profiles) \

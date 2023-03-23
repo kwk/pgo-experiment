@@ -1,5 +1,0 @@
-summary: Test to ensure there aren't extraneous characters in build flags
-require:
-  - redhat-rpm-config
-test: ./runtest.sh
-

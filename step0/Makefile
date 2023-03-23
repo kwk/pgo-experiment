@@ -6,9 +6,13 @@ copr_project ?= llvm-pgo-instrumented
 .PHONY: all
 all: create-copr-project llvm.copr_build_id clang.copr_build_id lld.copr_build_id
 
+# tag::create_copr_project[]
 .PHONY: create-copr-project
 create-copr-project:
 	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on $(copr_project)
+	-copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on $(copr_project)
+	copr edit-chroot --rpmbuild-with pgo_instrumented_build  $(fas_user)/$(copr_project)/fedora-37-x86_64
+# end::create_copr_project[]
 
 .ONESHELL:
 llvm.copr_build_id:

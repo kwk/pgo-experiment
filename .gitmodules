@@ -2,3 +2,7 @@
 	path = step4/redhat-rpm-config
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/redhat-rpm-config.git
 	branch = pgo-experiment
+[submodule "step0/llvm"]
+	path = step0/llvm
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git
+	branch = pgo-experiment

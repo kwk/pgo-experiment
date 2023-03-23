@@ -6,3 +6,7 @@
 	path = step0/llvm
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git
 	branch = pgo-experiment
+[submodule "step0/clang"]
+	path = step0/clang
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/clang.git
+	branch = pgo-experiment

@@ -54,16 +54,16 @@ Here's a good starting point for preparing your system if you want to follow alo
 [source,console]
 ----
 $ sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation # <1>
-$ git clone https://github.com/kwk/pgo-experiment.git # <2>
+$ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <2>
 $ cd pgo-experiment # <3>
-$ git submodule init # <4>
-$ git submodule update # <5>
+$ git fetch --recurse-submodules # <4>
+$ git submodule foreach 'git reset --hard origin/pgo-experiment' # <5>
 ----
 <1> Install packages that you need in order to build the <<steps>>. Maybe this list is not capturing everything you need but at least most of it.
-<2> Clone the project.
+<2> Clone the project including submodules.
 <3> Navigate to the project's root directory.
-<4> Update local configuration file.
-<5> Fetch data from the submodule projects.
+<4> In order to update the submodules we have to first fetch information from their remotes (`origin`).
+<5> Then walk over each submodule directory and reset it to the `origin/pgp-experiment` branch.
 
 [#steps]
 == Steps

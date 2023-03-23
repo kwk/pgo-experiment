@@ -10,3 +10,7 @@
 	path = step0/clang
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/clang.git
 	branch = pgo-experiment
+[submodule "step0/lld"]
+	path = step0/lld
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
+	branch = pgo-experiment

@@ -53,17 +53,19 @@ Here's a good starting point for preparing your system if you want to follow alo
 
 [source,console]
 ----
-$ sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation # <1>
-$ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <2>
-$ cd pgo-experiment # <3>
-$ git fetch --recurse-submodules # <4>
-$ git submodule foreach 'git reset --hard origin/pgo-experiment' # <5>
+$ sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation asciidoctor # <1>
+$ gem install pygments.rb <2>
+$ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <3>
+$ cd pgo-experiment # <4>
+$ git fetch --recurse-submodules # <5>
+$ git submodule foreach 'git reset --hard origin/pgo-experiment' # <6>
 ----
-<1> Install packages that you need in order to build the <<steps>>. Maybe this list is not capturing everything you need but at least most of it.
-<2> Clone the project including submodules.
-<3> Navigate to the project's root directory.
-<4> In order to update the submodules we have to first fetch information from their remotes (`origin`).
-<5> Then walk over each submodule directory and reset it to the `origin/pgp-experiment` branch.
+<1> Install packages that you need in order to build the <<steps>>. Maybe this list is not capturing everything you need but at least most of it. `asciidoctor` is optional for building this documentation using `make docs`.
+<2> Optional: Installing this ruby gem is only for building these docs using `make docs`.
+<3> Clone the project including submodules.
+<4> Navigate to the project's root directory.
+<5> In order to update the submodules we have to first fetch information from their remotes (`origin`).
+<6> Then walk over each submodule directory and reset it to the `origin/pgp-experiment` branch.
 
 [#steps]
 == Steps

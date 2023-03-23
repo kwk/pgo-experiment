@@ -526,7 +526,7 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 </li>
 <li><a href="#steps">3. Steps</a>
 <ul class="sectlevel2">
-<li><a href="#_step_0_build_a_pgo_instrumented_llvm">3.1. Step 0 - Build a PGO instrumented LLVM</a></li>
+<li><a href="#step0">3.1. Step 0 - Build a PGO instrumented LLVM</a></li>
 <li><a href="#_step_1_build_hello_world_rpm">3.2. Step 1 - Build "Hello, World!" RPM</a></li>
 <li><a href="#_step_2_manually_add_subpackage">3.3. Step 2 - Manually add subpackage</a>
 <ul class="sectlevel3">
@@ -555,13 +555,13 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <li><a href="#_build_redhat_rpm_config_package">3.6.3. Build redhat-rpm-config package</a></li>
 </ul>
 </li>
-<li><a href="#_step_5_build_unmodified_packages_on_copr">3.7. Step 5 - Build unmodified packages on Copr</a></li>
+<li><a href="#step5">3.7. Step 5 - Build unmodified packages on Copr</a></li>
 </ul>
 </li>
 <li><a href="#_optional_build_from_distgit">4. Optional: Build from distgit</a>
 <ul class="sectlevel2">
-<li><a href="#_step_6_merge_raw_profiles">4.1. Step 6 - Merge Raw Profiles</a></li>
-<li><a href="#_step_7_build_pgo_optimized_llvm">4.2. Step 7 - Build PGO optimized LLVM</a></li>
+<li><a href="#step6">4.1. Step 6 - Merge Raw Profiles</a></li>
+<li><a href="#step7">4.2. Step 7 - Build PGO optimized LLVM</a></li>
 </ul>
 </li>
 <li><a href="#_resources">5. Resources</a></li>
@@ -577,6 +577,26 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 </div>
 <div class="paragraph">
 <p>We create an instrumented LLVM toolchain in a Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a>. In another Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> we build a modified <code>redhat-rpm-config</code> package. Every package that gets built in that project will automatically produce a subpackage <code>&lt;PACKAGE&gt;-clang-profdata</code> with PGO profile data. We demonstrate this with a simple "Hello, World!" application that is called <code>myapp</code>. We then collect all those subpackages through <code>BuildRequires:</code> tags in another package called <code>llvm-pgo-profdata</code>. During the build of that package, all profiles are merged into an indexed profile data file. The final <code>llvm-pgo-profdata</code> RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><pre><span></span><span class="tok-cp">%if</span> %{with pgo_instrumented_build}
+	-DLLVM_BUILD_INSTRUMENTED=IR \
+	-DLLVM_BUILD_RUNTIME=No \
+	-DLLVM_VP_COUNTERS_PER_SITE=8 \
+<span class="tok-cp">%endif</span>
+<span class="tok-cp">%if</span> %{with pgo_optimized_build}
+	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata \
+<span class="tok-cp">%endif</span>
+</pre></td></tr></table></code></pre>
+</div>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -645,7 +665,9 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation <i class="conum" data-value="1"></i><b>(1)</b>
 <span class="tok-gp">$ </span>git clone https://github.com/kwk/pgo-experiment.git <i class="conum" data-value="2"></i><b>(2)</b>
-<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment <i class="conum" data-value="3"></i><b>(3)</b>
+<span class="tok-gp">$ </span>git submodule init <i class="conum" data-value="4"></i><b>(4)</b>
+<span class="tok-gp">$ </span>git submodule update <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -662,6 +684,14 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 <td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>Navigate to the project&#8217;s root directory.</td>
 </tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Update local configuration file.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Fetch data from the submodule projects.</td>
+</tr>
 </table>
 </div>
 </div>
@@ -671,7 +701,7 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 <h2 id="steps"><a class="anchor" href="#steps"></a><a class="link" href="#steps">3. Steps</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_step_0_build_a_pgo_instrumented_llvm"><a class="anchor" href="#_step_0_build_a_pgo_instrumented_llvm"></a><a class="link" href="#_step_0_build_a_pgo_instrumented_llvm">3.1. Step 0 - Build a PGO instrumented LLVM</a></h3>
+<h3 id="step0"><a class="anchor" href="#step0"></a><a class="link" href="#step0">3.1. Step 0 - Build a PGO instrumented LLVM</a></h3>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1344,7 +1374,7 @@ sudo dnf install -y --disablerepo<span class="tok-o">=</span>* noarch/redhat-rpm
 </div>
 </div>
 <div class="sect2">
-<h3 id="_step_5_build_unmodified_packages_on_copr"><a class="anchor" href="#_step_5_build_unmodified_packages_on_copr"></a><a class="link" href="#_step_5_build_unmodified_packages_on_copr">3.7. Step 5 - Build unmodified packages on Copr</a></h3>
+<h3 id="step5"><a class="anchor" href="#step5"></a><a class="link" href="#step5">3.7. Step 5 - Build unmodified packages on Copr</a></h3>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1453,7 +1483,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </table>
 </div>
 <div class="sect2">
-<h3 id="_step_6_merge_raw_profiles"><a class="anchor" href="#_step_6_merge_raw_profiles"></a><a class="link" href="#_step_6_merge_raw_profiles">4.1. Step 6 - Merge Raw Profiles</a></h3>
+<h3 id="step6"><a class="anchor" href="#step6"></a><a class="link" href="#step6">4.1. Step 6 - Merge Raw Profiles</a></h3>
 <div class="paragraph">
 <p>In order to optimize LLVM with the raw profile data that we&#8217;ve collected before we need to make it available to the Copr build of LLVM and we need to <a href="https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge">merge</a> it using <code>llvm-profdata merge</code>.</p>
 </div>
@@ -1511,7 +1541,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </div>
 <div class="sect2">
-<h3 id="_step_7_build_pgo_optimized_llvm"><a class="anchor" href="#_step_7_build_pgo_optimized_llvm"></a><a class="link" href="#_step_7_build_pgo_optimized_llvm">4.2. Step 7 - Build PGO optimized LLVM</a></h3>
+<h3 id="step7"><a class="anchor" href="#step7"></a><a class="link" href="#step7">4.2. Step 7 - Build PGO optimized LLVM</a></h3>
 <div class="paragraph">
 <p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code> and use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> as input to <code>LLVM_PROFDATA_FILE</code> for the optimization of the <code>llvm</code>, <code>clang</code> and <code>lld</code> packages.</p>
 </div>
@@ -1589,7 +1619,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-23 11:30:27 +0100
+Last updated 2023-03-23 12:15:37 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

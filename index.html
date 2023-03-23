@@ -578,26 +578,6 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <div class="paragraph">
 <p>We create an instrumented LLVM toolchain in a Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a>. In another Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> we build a modified <code>redhat-rpm-config</code> package. Every package that gets built in that project will automatically produce a subpackage <code>&lt;PACKAGE&gt;-clang-profdata</code> with PGO profile data. We demonstrate this with a simple "Hello, World!" application that is called <code>myapp</code>. We then collect all those subpackages through <code>BuildRequires:</code> tags in another package called <code>llvm-pgo-profdata</code>. During the build of that package, all profiles are merged into an indexed profile data file. The final <code>llvm-pgo-profdata</code> RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><pre><span></span><span class="tok-cp">%if</span> %{with pgo_instrumented_build}
-	-DLLVM_BUILD_INSTRUMENTED=IR \
-	-DLLVM_BUILD_RUNTIME=No \
-	-DLLVM_VP_COUNTERS_PER_SITE=8 \
-<span class="tok-cp">%endif</span>
-<span class="tok-cp">%if</span> %{with pgo_optimized_build}
-	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata \
-<span class="tok-cp">%endif</span>
-</pre></td></tr></table></code></pre>
-</div>
-</div>
 <div class="imageblock">
 <div class="content">
 <img src="process-overview.png" alt="process overview">
@@ -663,34 +643,39 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation <i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-gp">$ </span>git clone https://github.com/kwk/pgo-experiment.git <i class="conum" data-value="2"></i><b>(2)</b>
-<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment <i class="conum" data-value="3"></i><b>(3)</b>
-<span class="tok-gp">$ </span>git submodule init <i class="conum" data-value="4"></i><b>(4)</b>
-<span class="tok-gp">$ </span>git submodule update <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation asciidoctor <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-gp">$ </span>gem install pygments.rb <i class="conum" data-value="2"></i><b>(2)</b>
+<span class="tok-gp">$ </span>git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git <i class="conum" data-value="3"></i><b>(3)</b>
+<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment <i class="conum" data-value="4"></i><b>(4)</b>
+<span class="tok-gp">$ </span>git fetch --recurse-submodules <i class="conum" data-value="5"></i><b>(5)</b>
+<span class="tok-gp">$ </span>git submodule foreach <span class="tok-s1">&#39;git reset --hard origin/pgo-experiment&#39;</span> <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Install packages that you need in order to build the <a href="#steps">Steps</a>. Maybe this list is not capturing everything you need but at least most of it.</td>
+<td>Install packages that you need in order to build the <a href="#steps">Steps</a>. Maybe this list is not capturing everything you need but at least most of it. <code>asciidoctor</code> is optional for building this documentation using <code>make docs</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Clone the project.</td>
+<td>Optional: Installing this ruby gem is only for building these docs using <code>make docs</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Navigate to the project&#8217;s root directory.</td>
+<td>Clone the project including submodules.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Update local configuration file.</td>
+<td>Navigate to the project&#8217;s root directory.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Fetch data from the submodule projects.</td>
+<td>In order to update the submodules we have to first fetch information from their remotes (<code>origin</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Then walk over each submodule directory and reset it to the <code>origin/pgp-experiment</code> branch.</td>
 </tr>
 </table>
 </div>
@@ -1619,7 +1604,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-23 12:15:37 +0100
+Last updated 2023-03-23 14:27:42 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

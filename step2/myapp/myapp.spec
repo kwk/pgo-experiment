@@ -75,8 +75,9 @@ find %{_builddir}/raw-pgo-profdata \
 LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
 export LLVM_PROFILE_FILE
 llvm-profdata merge \
-  --enable-name-compression \
-  -sparse $(cat %{_builddir}/pgo-profiles) \
+  --compress-all-sections \
+  -sparse \
+  $(cat %{_builddir}/pgo-profiles) \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
 # end::merge_profiles[]
 #-----------------------------------------------------------------------

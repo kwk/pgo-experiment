@@ -48,7 +48,7 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations
 TMPDIR="%{_builddir}/raw-pgo-profdata"
 export TMPDIR
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.profraw"
+LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
 export LLVM_PROFILE_FILE
 # end::llvm_profile_file[]
 #-----------------------------------------------------------------------
@@ -73,10 +73,11 @@ find %{_builddir}/raw-pgo-profdata \
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.  
-LLVM_PROFILE_FILE="llvm-profdata.clang.%p.profraw"
+LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
 llvm-profdata merge \
-  --enable-name-compression \
-  -sparse $(cat %{_builddir}/pgo-profiles) \
+  --compress-all-sections \
+  -sparse \
+  $(cat %{_builddir}/pgo-profiles) \
   -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata
 # end::merge_profiles[]
 

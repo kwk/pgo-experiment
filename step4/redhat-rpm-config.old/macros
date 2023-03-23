@@ -116,7 +116,7 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
   CC="${CC:-%{__cc}}" ; export CC ; \
   CXX="${CXX:-%{__cxx}}" ; export CXX ; \
   [ "%_toolchain_profile_subpackages" = 1 ] && TMPDIR="%{_builddir}/raw-pgo-profdata" && export TMPDIR && mkdir -pv $TMPDIR && \
-  LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.profraw" && export LLVM_PROFILE_FILE ;
+  LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw" && export LLVM_PROFILE_FILE ;
 # end::set_build_flags[]
 
 # Automatically use set_build_flags macro for build, check, and
@@ -282,7 +282,7 @@ print(result)
 
 %__brp_llvm_compile_lto_elf /usr/lib/rpm/redhat/brp-llvm-compile-lto-elf %{build_cflags} %{build_ldflags}
 # tag::find_and_merge_profiles[]
-%__copy_profraw %[ 0%{_toolchain_profile_subpackages} > 0 ? "mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} && find %{_builddir}/raw-pgo-profdata -type f -name '%{name}.%{toolchain}.*.profraw' > %{_builddir}/pgo-profiles && LLVM_PROFILE_FILE='llvm-profdata.%{toolchain}.%p.profdata' llvm-profdata merge --enable-name-compression -sparse $(cat %{_builddir}/pgo-profiles) -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata" : "%{nil}" ]
+%__copy_profraw %[ 0%{_toolchain_profile_subpackages} > 0 ? "mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} && find %{_builddir}/raw-pgo-profdata -type f -name '%{name}.%{toolchain}.*.profraw' > %{_builddir}/pgo-profiles && LLVM_PROFILE_FILE='llvm-profdata.%{toolchain}.%m.%p.profdata' llvm-profdata merge --compress-all-sections -sparse $(cat %{_builddir}/pgo-profiles) -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata" : "%{nil}" ]
 
 # end::find_and_merge_profiles[]
 

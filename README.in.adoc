@@ -45,14 +45,36 @@ I've created a 8 step experiment that shows how this can be achieved. For educat
 
 NOTE: The `Containerfile` s run as `root` to allow packages to be installed and have a `tester` account for regular user interaction. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites.
 
+=== How to follow along?
+
+I've been writing and testing everything on a {link-fedora} 37 laptop with `make`, `git`, `fedpkg`, and `podman` installed.
+
+Here's a good starting point for preparing your system if you want to follow along. Don't worry we don't install any custom RPM on your system. Everything is build either in a podman container or on {link-copr}.
+
+[source,console]
+----
+$ sudo dnf install -y git make fedpkg podman fedora-developer krb5-workstation # <1>
+$ git clone https://github.com/kwk/pgo-experiment.git # <2>
+$ cd pgo-experiment # <3>
+$ git submodule init # <4>
+$ git submodule update # <5>
+----
+<1> Install packages that you need in order to build the <<steps>>. Maybe this list is not capturing everything you need but at least most of it.
+<2> Clone the project.
+<3> Navigate to the project's root directory.
+<4> Update local configuration file.
+<5> Fetch data from the submodule projects.
+
+[#steps]
 == Steps
 
+[#step0]
 === Step 0 - Build a PGO instrumented LLVM
 
 NOTE: This step mainly exists for documentation purposes. If you *do* build this step on your own, make sure to walk through the files where there's a reference to {link-llvm-pgo-instrumented} and change it to your project. I don't see a need to consider this part of this excersise.
 
 In this step we're going to create PGO instrumented LLVM packages and host them
-for later consumption on a Copr project. 
+for later consumption on a Copr project.
 
 If you want to build this yourself, you need to have a valid Kerberos ticket. Try running:
 
@@ -64,7 +86,7 @@ But rest assured, you don't need to run this on your own. The {link-llvm-pgo-ins
 
 In this step, we're essentially following the {link-llvm-pgo-documentation} for how to build a PGO instumented clang.
 
-The resulting `clang` will generate profile data upon execution and we're trying to collect, bundle, and merge it for optimizing a rebuild of `clang` later. 
+The resulting `clang` will generate profile data upon execution and we're trying to collect, bundle, and merge it for optimizing a rebuild of `clang` later.
 
 === Step 1 - Build "Hello, World!" RPM
 
@@ -166,7 +188,7 @@ TIP: You can call `llvm-profdata merge` on already merged profiles!
 
 Now, you may ask why we make the changes to the spec file at all when I promised that we get profile data from unmodified packages. The honest answer is that I didn't know how to do it when I started out this experiment and I found the manual way much more easy to follow along compared to presenting the solution right away. This way we make transparent what needs to be generalized and automated.
 
-In the next step we're generalizing the manual addition of the subpackage before we remove it entirely from the spec file again.
+In the next step we're going to generalize the manual addition of the subpackage before we remove it entirely from the spec file again.
 
 ==== Try it out yourself
 
@@ -318,6 +340,7 @@ NOTICE: There's no `step4/myapp` directory. This is because we copy it from step
 include::Makefile[tags=build_step_4]
 ----
 
+[#step5]
 === Step 5 - Build unmodified packages on Copr
 
 NOTE: You don't need to run this step manually. It has already been run and the results are in the Copr project
@@ -365,6 +388,7 @@ include::step5/Makefile[tags=build_from_disgit]
 
 NOTE: You might wonder why we first add and then edit a package. This is because we don't know if the package has already been added before. And to overwrite with the desired values we simply edit an added project right away. So, nothing really special.
 
+[#step6]
 === Step 6 - Merge Raw Profiles
 
 In order to optimize LLVM with the raw profile data that we've collected before we need to make it available to the Copr build of LLVM and we need to link:https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge[merge] it using `llvm-profdata merge`.
@@ -400,6 +424,7 @@ include::step6/llvm-pgo-profdata/llvm-pgo-profdata.spec[tags=disable_pgo_data_ge
 
 In Fedora as well as RHEL and CentOS Stream we use a mode call "standalone-build". That means, we're building each sub-project of LLVM (e.g. `clang`, `llvm`, `lld`) with its own specfile. To avoid merging the PGO profile data into an indexed profile data file more than once we're offloading the merge process into its own RPM. We call it `llvm-pgo-profdata`. 
 
+[#step7]
 === Step 7 - Build PGO optimized LLVM
 
 This step is similar to step 0 in which we've build the PGO instrumented LLVM. Here we're adding a build requirement for `llvm-pgo-profdata` and use the file `%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata` as input to `LLVM_PROFDATA_FILE` for the optimization of the `llvm`, `clang` and `lld` packages.

@@ -564,8 +564,8 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <li><a href="#step7">3.10. Step 7 - Build PGO optimized LLVM</a></li>
 </ul>
 </li>
-<li><a href="#_resources">4. Resources</a></li>
-<li><a href="#_conclusion">5. Conclusion</a></li>
+<li><a href="#_conclusion">4. Conclusion</a></li>
+<li><a href="#_resources">5. Resources</a></li>
 </ul>
 </div>
 </div>
@@ -1630,13 +1630,1143 @@ You might wonder why we first add and then edit a package. This is because we do
 </table>
 </div>
 <div class="paragraph">
-<p>In Fedora as well as RHEL and CentOS Stream we use a mode call "standalone-build". That means, we&#8217;re building each sub-project of LLVM (e.g. <code>clang</code>, <code>llvm</code>, <code>lld</code>) with its own specfile. To avoid merging the PGO profile data into an indexed profile data file more than once we&#8217;re offloading the merge process into its own RPM. We call it <code>llvm-pgo-profdata</code>.</p>
+<p>In Fedora as well as RHEL and CentOS Stream we use a build mode called "standalone-build". That means, we&#8217;re building each sub-project of LLVM (e.g. <code>clang</code>, <code>llvm</code>, <code>lld</code>) with its own specfile. To avoid merging the PGO profile data into an indexed profile data file more than once we&#8217;re offloading the merge process into its own RPM. We call it <code>llvm-pgo-profdata</code>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="step7"><a class="anchor" href="#step7"></a><a class="link" href="#step7">3.10. Step 7 - Build PGO optimized LLVM</a></h3>
 <div class="paragraph">
-<p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code> and use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> as input to <code>LLVM_PROFDATA_FILE</code> for the optimization of the <code>llvm</code>, <code>clang</code> and <code>lld</code> packages.</p>
+<p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code></p>
+</div>
+<div class="listingblock">
+<div class="title">step7/llvm/llvm.spec</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> llvm-pgo-profdata
+<span class="tok-cp">%endif</span>
+
+
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span>-libs<span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+
+<span class="tok-gh">Provides</span><span class="tok-p">:</span>	llvm(major) = <span class="tok-kc">%{maj_ver}</span>
+
+<span class="tok-nd">%description</span>
+LLVM is a compiler infrastructure designed for compile-time, link-time,
+runtime, and idle-time optimization of programs from arbitrary programming
+languages. The compiler infrastructure includes mirror sets of programming
+tools as well as libraries with equivalent functionality.
+
+<span class="tok-nd">%package</span> devel
+<span class="tok-gh">Summary</span><span class="tok-p">:</span>	Libraries and header files for LLVM
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span><span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span>-libs<span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+<span class="tok-c"># The installed LLVM cmake files will add -ledit to the linker flags for any</span>
+<span class="tok-c"># app that requires the libLLVMLineEditor, so we need to make sure</span>
+<span class="tok-c"># libedit-devel is available.</span>
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	libedit-devel
+<span class="tok-c"># The installed cmake files reference binaries from llvm-test and llvm-static.</span>
+<span class="tok-c"># We tried in the past to split the cmake exports for these binaries out into</span>
+<span class="tok-c"># separate files, so that llvm-devel would not need to Require these packages,</span>
+<span class="tok-c"># but this caused bugs (rhbz#1773678) and forced us to carry two non-upstream</span>
+<span class="tok-c"># patches.</span>
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span>-static<span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span>-test<span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+<span class="tok-cp">%endif</span>
+
+
+<span class="tok-gh">Requires(post)</span><span class="tok-p">:</span>	<span class="tok-kp">%{_sbindir}</span>/alternatives
+<span class="tok-gh">Requires(postun)</span><span class="tok-p">:</span>	<span class="tok-kp">%{_sbindir}</span>/alternatives
+
+<span class="tok-gh">Provides</span><span class="tok-p">:</span>	llvm-devel(major) = <span class="tok-kc">%{maj_ver}</span>
+
+<span class="tok-nd">%description</span> devel
+This package contains library and header files needed to develop new native
+programs that use the LLVM infrastructure.
+
+<span class="tok-nd">%package</span> doc
+<span class="tok-gh">Summary</span><span class="tok-p">:</span>	Documentation for LLVM
+<span class="tok-gh">BuildArch</span><span class="tok-p">:</span>	noarch
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+
+<span class="tok-nd">%description</span> doc
+Documentation for the LLVM compiler infrastructure.
+
+<span class="tok-nd">%package</span> libs
+<span class="tok-gh">Summary</span><span class="tok-p">:</span>	LLVM shared libraries
+
+<span class="tok-nd">%description</span> libs
+Shared libraries for the LLVM compiler infrastructure.
+
+<span class="tok-nd">%package</span> static
+<span class="tok-gh">Summary</span><span class="tok-p">:</span>	LLVM static libraries
+<span class="tok-gh">Conflicts</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span>-devel &lt; 8
+
+<span class="tok-gh">Provides</span><span class="tok-p">:</span>	llvm-static(major) = <span class="tok-kc">%{maj_ver}</span>
+
+<span class="tok-nd">%description</span> static
+Static libraries for the LLVM compiler infrastructure.
+
+%if %{without compat_build}
+
+<span class="tok-nd">%package</span> test
+<span class="tok-gh">Summary</span><span class="tok-p">:</span>	LLVM regression tests
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span><span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+<span class="tok-gh">Requires</span><span class="tok-p">:</span>	<span class="tok-kc">%{name}</span>-libs<span class="tok-nv">%{?_isa}</span> = <span class="tok-kc">%{version}</span>-<span class="tok-kc">%{release}</span>
+
+<span class="tok-gh">Provides</span><span class="tok-p">:</span>	llvm-test(major) = <span class="tok-kc">%{maj_ver}</span>
+
+<span class="tok-nd">%description</span> test
+LLVM regression tests.
+
+<span class="tok-nd">%package</span> googletest
+<span class="tok-gh">Summary</span><span class="tok-p">:</span> LLVM&#39;s modified googletest sources
+
+<span class="tok-nd">%description</span> googletest
+LLVM&#39;s modified googletest sources.
+
+%endif
+
+<span class="tok-nd">%prep</span>
+<span class="tok-kc">%{gpgverify}</span> --keyring=<span class="tok-s1">&#39;%{SOURCE4}&#39;</span> --signature=<span class="tok-s1">&#39;%{SOURCE1}&#39;</span> --data=<span class="tok-s1">&#39;%{SOURCE0}&#39;</span>
+<span class="tok-kc">%{gpgverify}</span> --keyring=<span class="tok-s1">&#39;%{SOURCE4}&#39;</span> --signature=<span class="tok-s1">&#39;%{SOURCE3}&#39;</span> --data=<span class="tok-s1">&#39;%{SOURCE2}&#39;</span>
+<span class="tok-k">%setup</span> -T -q -b 2 -n <span class="tok-kc">%{cmake_srcdir}</span>
+<span class="tok-c"># TODO: It would be more elegant to set -DLLVM_COMMON_CMAKE_UTILS=%{_builddir}/%{cmake_srcdir},</span>
+<span class="tok-c"># but this is not a CACHED variable, so we can&#39;t actually set it externally :(</span>
+cd ..
+mv <span class="tok-kc">%{cmake_srcdir}</span> cmake
+%autosetup -n <span class="tok-kc">%{llvm_srcdir}</span> -p2
+
+%py3_shebang_fix \
+	test/BugPoint/compile-custom.ll.py \
+	tools/opt-viewer/*.py \
+	utils/update_cc_test_checks.py
+
+<span class="tok-nd">%build</span>
+
+<span class="tok-cp">%ifarch</span> s390 s390x
+<span class="tok-c"># Fails with &quot;exceeded PCRE&#39;s backtracking limit&quot;</span>
+%global _lto_cflags %nil
+<span class="tok-cp">%else</span>
+%global _lto_cflags -flto=thin
+<span class="tok-cp">%endif</span>
+
+<span class="tok-cp">%ifarch</span> s390 s390x %{arm} %ix86
+<span class="tok-c"># Decrease debuginfo verbosity to reduce memory consumption during final library linking</span>
+%global optflags %(echo <span class="tok-kc">%{optflags}</span> | sed <span class="tok-s1">&#39;s/-g /-g1 /&#39;</span>)
+<span class="tok-cp">%endif</span>
+
+<span class="tok-c"># force off shared libs as cmake macros turns it on.</span>
+%cmake	-G Ninja \
+	-DBUILD_SHARED_LIBS:BOOL=OFF \
+	-DLLVM_PARALLEL_LINK_JOBS=1 \
+	-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+	-DCMAKE_SKIP_RPATH:BOOL=ON \
+<span class="tok-cp">%ifarch</span> s390 %{arm} %ix86
+	-DCMAKE_C_FLAGS_RELWITHDEBINFO=<span class="tok-s2">&quot;</span><span class="tok-kc">%{optflags}</span><span class="tok-s2"> -DNDEBUG&quot;</span> \
+	-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=<span class="tok-s2">&quot;</span><span class="tok-kc">%{optflags}</span><span class="tok-s2"> -DNDEBUG&quot;</span> \
+<span class="tok-cp">%endif</span>
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-cp">%if</span> 0%{?__isa_bits} == 64
+	-DLLVM_LIBDIR_SUFFIX=64 \
+<span class="tok-cp">%else</span>
+	-DLLVM_LIBDIR_SUFFIX= \
+<span class="tok-cp">%endif</span>
+<span class="tok-cp">%endif</span>
+	\
+	-DLLVM_TARGETS_TO_BUILD=<span class="tok-kc">%{targets_to_build}</span> \
+	-DLLVM_ENABLE_LIBCXX:BOOL=OFF \
+	-DLLVM_ENABLE_ZLIB:BOOL=ON \
+	-DLLVM_ENABLE_FFI:BOOL=ON \
+	-DLLVM_ENABLE_RTTI:BOOL=ON \
+	-DLLVM_USE_PERF:BOOL=ON \
+<span class="tok-cp">%if</span> %{with gold}
+	-DLLVM_BINUTILS_INCDIR=<span class="tok-kp">%{_includedir}</span> \
+<span class="tok-cp">%endif</span>
+	-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=<span class="tok-kc">%{experimental_targets_to_build}</span> \
+	\
+	-DLLVM_BUILD_RUNTIME:BOOL=ON \
+	\
+	-DLLVM_INCLUDE_TOOLS:BOOL=ON \
+	-DLLVM_BUILD_TOOLS:BOOL=ON \
+	\
+	-DLLVM_INCLUDE_TESTS:BOOL=ON \
+	-DLLVM_BUILD_TESTS:BOOL=ON \
+	-DLLVM_LIT_ARGS=-v \
+	\
+	-DLLVM_INCLUDE_EXAMPLES:BOOL=ON \
+	-DLLVM_BUILD_EXAMPLES:BOOL=OFF \
+	\
+	-DLLVM_INCLUDE_UTILS:BOOL=ON \
+<span class="tok-cp">%if</span> %{with compat_build}
+	-DLLVM_INSTALL_UTILS:BOOL=OFF \
+<span class="tok-cp">%else</span>
+	-DLLVM_INSTALL_UTILS:BOOL=ON \
+	-DLLVM_UTILS_INSTALL_DIR:PATH=<span class="tok-kp">%{_bindir}</span> \
+	-DLLVM_TOOLS_INSTALL_DIR:PATH=bin \
+<span class="tok-cp">%endif</span>
+	\
+	-DLLVM_INCLUDE_DOCS:BOOL=ON \
+	-DLLVM_BUILD_DOCS:BOOL=ON \
+	-DLLVM_ENABLE_SPHINX:BOOL=ON \
+	-DLLVM_ENABLE_DOXYGEN:BOOL=OFF \
+	\
+<span class="tok-cp">%if</span> %{without compat_build}
+	-DLLVM_VERSION_SUFFIX=<span class="tok-s1">&#39;&#39;</span> \
+<span class="tok-cp">%endif</span>
+<span class="tok-cp">%if</span> %{with pgo_instrumented_build}
+	-DLLVM_BUILD_INSTRUMENTED=IR \
+	-DLLVM_BUILD_RUNTIME=No \
+	-DLLVM_VP_COUNTERS_PER_SITE=8 \
+<span class="tok-cp">%endif</span>
+<span class="tok-cp">%if</span> %{with pgo_optimized_build}
+	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata \
+<span class="tok-cp">%endif</span>
+	-DLLVM_BUILD_LLVM_DYLIB:BOOL=ON \
+	-DLLVM_LINK_LLVM_DYLIB:BOOL=ON \
+	-DLLVM_BUILD_EXTERNAL_COMPILER_RT:BOOL=ON \
+	-DLLVM_INSTALL_TOOLCHAIN_ONLY:BOOL=OFF \
+	%{?abi_revision:-DLLVM_ABI_REVISION=<span class="tok-kc">%{abi_revision}</span>} \
+	\
+	-DLLVM_DEFAULT_TARGET_TRIPLE=<span class="tok-kc">%{llvm_triple}</span> \
+	-DSPHINX_WARNINGS_AS_ERRORS=OFF \
+	-DCMAKE_INSTALL_PREFIX=<span class="tok-kc">%{install_prefix}</span> \
+	-DLLVM_INSTALL_SPHINX_HTML_DIR=<span class="tok-kp">%{_pkgdocdir}</span>/html \
+	-DSPHINX_EXECUTABLE=<span class="tok-kp">%{_bindir}</span>/sphinx-build-3 \
+	-DLLVM_INCLUDE_BENCHMARKS=OFF
+
+<span class="tok-c"># Build libLLVM.so first.  This ensures that when libLLVM.so is linking, there</span>
+<span class="tok-c"># are no other compile jobs running.  This will help reduce OOM errors on the</span>
+<span class="tok-c"># builders without having to artificially limit the number of concurrent jobs.</span>
+%cmake_build --target LLVM
+%cmake_build
+
+<span class="tok-nd">%install</span>
+%cmake_install
+
+mkdir -p <span class="tok-kc">%{buildroot}</span>/<span class="tok-kp">%{_bindir}</span>
+
+<span class="tok-cp">%if</span> %{without compat_build}
+
+<span class="tok-c"># Fix some man pages</span>
+ln -s llvm-config.1 <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_mandir}</span>/man1/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span>.1
+
+<span class="tok-c"># Install binaries needed for lit tests</span>
+%global test_binaries llvm-isel-fuzzer llvm-opt-fuzzer
+
+for f in <span class="tok-kc">%{test_binaries}</span>
+do
+    install -m 0755 <span class="tok-kp">%{_vpath_builddir}</span>/bin/$f <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_bindir}</span>
+done
+
+<span class="tok-c"># Remove testing of update utility tools</span>
+rm -rf test/tools/UpdateTestChecks
+
+%multilib_fix_c_header --file <span class="tok-kp">%{_includedir}</span>/llvm/Config/llvm-config.h
+
+<span class="tok-c"># Install libraries needed for unittests</span>
+<span class="tok-cp">%if</span> 0%{?__isa_bits} == 64
+%global build_libdir <span class="tok-kp">%{_vpath_builddir}</span>/lib64
+<span class="tok-cp">%else</span>
+%global build_libdir <span class="tok-kp">%{_vpath_builddir}</span>/lib
+<span class="tok-cp">%endif</span>
+
+install <span class="tok-kc">%{build_libdir}</span>/libLLVMTestingSupport.a <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>
+
+%global install_srcdir <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_datadir}</span>/llvm/src
+
+<span class="tok-c"># Install gtest sources so clang can use them for gtest</span>
+install -d <span class="tok-kc">%{install_srcdir}</span>
+install -d <span class="tok-kc">%{install_srcdir}</span>/utils/
+cp -R utils/unittest <span class="tok-kc">%{install_srcdir}</span>/utils/
+
+<span class="tok-c"># Clang needs these for running lit tests.</span>
+cp utils/update_cc_test_checks.py <span class="tok-kc">%{install_srcdir}</span>/utils/
+cp -R utils/UpdateTestChecks <span class="tok-kc">%{install_srcdir}</span>/utils/
+
+<span class="tok-cp">%if</span> %{with gold}
+<span class="tok-c"># Add symlink to lto plugin in the binutils plugin directory.</span>
+<span class="tok-nf">%{__mkdir_p}</span> <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/bfd-plugins/
+ln -s -t <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/bfd-plugins/ ../LLVMgold.so
+<span class="tok-cp">%endif</span>
+
+<span class="tok-cp">%else</span>
+
+<span class="tok-c"># Add version suffix to binaries</span>
+for f in <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{install_bindir}</span>/*; do
+  filename=`basename $f`
+  ln -s ../../../<span class="tok-kc">%{install_bindir}</span>/$filename <span class="tok-kc">%{buildroot}</span>/<span class="tok-kp">%{_bindir}</span>/$filename<span class="tok-kc">%{exec_suffix}</span>
+done
+
+<span class="tok-c"># Move header files</span>
+mkdir -p <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_includedir}</span>
+ln -s ../../../<span class="tok-kc">%{install_includedir}</span>/llvm <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_includedir}</span>/llvm
+ln -s ../../../<span class="tok-kc">%{install_includedir}</span>/llvm-c <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_includedir}</span>/llvm-c
+
+<span class="tok-c"># Fix multi-lib</span>
+%multilib_fix_c_header --file <span class="tok-kc">%{install_includedir}</span>/llvm/Config/llvm-config.h
+
+<span class="tok-c"># Create ld.so.conf.d entry</span>
+mkdir -p <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_sysconfdir}</span>/ld.so.conf.d
+cat &gt;&gt; <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_sysconfdir}</span>/ld.so.conf.d/<span class="tok-kc">%{name}</span>-%{_arch}.conf &lt;&lt; EOF
+<span class="tok-kc">%{pkg_libdir}</span>
+EOF
+
+<span class="tok-c"># Add version suffix to man pages and move them to mandir.</span>
+mkdir -p <span class="tok-kc">%{buildroot}</span>/<span class="tok-kp">%{_mandir}</span>/man1
+for f in <span class="tok-kc">%{build_install_prefix}</span>/share/man/man1/*; do
+  filename=`basename $f | cut -f 1 -d <span class="tok-s1">&#39;.&#39;</span>`
+  mv $f <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_mandir}</span>/man1/$filename<span class="tok-kc">%{exec_suffix}</span>.1
+done
+
+<span class="tok-c"># Remove opt-viewer, since this is just a compatibility package.</span>
+rm -Rf <span class="tok-kc">%{build_install_prefix}</span>/share/opt-viewer
+
+<span class="tok-cp">%endif</span>
+
+<span class="tok-c"># llvm-config special casing. llvm-config is managed by update-alternatives.</span>
+<span class="tok-c"># the original file must remain available for compatibility with the CMake</span>
+<span class="tok-c"># infrastructure. Without compat, cmake points to the symlink, with compat it</span>
+<span class="tok-c"># points to the original file.</span>
+
+<span class="tok-cp">%if</span> %{without compat_build}
+
+mv <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_bindir}</span>/llvm-config <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-c"># We still maintain a versionned symlink for consistency across llvm versions.</span>
+<span class="tok-c"># This is specific to the non-compat build and matches the exec prefix for</span>
+<span class="tok-c"># compat builds. An isa-agnostic versionned symlink is also maintained in the (un)install</span>
+<span class="tok-c"># steps.</span>
+(cd <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_bindir}</span> ; ln -s llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span> llvm-config-<span class="tok-kc">%{maj_ver}</span>-<span class="tok-nf">%{__isa_bits}</span> )
+<span class="tok-c"># ghost presence</span>
+touch <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_bindir}</span>/llvm-config-<span class="tok-kc">%{maj_ver}</span>
+
+<span class="tok-cp">%else</span>
+
+rm <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>
+(cd <span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_bindir}</span> ; ln -s llvm-config llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span> )
+
+<span class="tok-cp">%endif</span>
+
+<span class="tok-c"># ghost presence</span>
+touch <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>
+
+<span class="tok-cp">%if</span> %{without compat_build}
+cp -Rv ../cmake/Modules/* <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/cmake/llvm
+<span class="tok-cp">%endif</span>
+
+
+<span class="tok-nd">%check</span>
+<span class="tok-c"># Disable check section on arm due to some kind of memory related failure.</span>
+<span class="tok-c"># Possibly related to https://bugzilla.redhat.com/show_bug.cgi?id=1920183</span>
+<span class="tok-cp">%ifnarch</span> %{arm}
+
+<span class="tok-c"># TODO: Fix the failures below</span>
+<span class="tok-cp">%ifarch</span> %{arm}
+rm test/tools/llvm-readobj/ELF/dependent-libraries.test
+<span class="tok-cp">%endif</span>
+
+<span class="tok-c"># non reproducible errors</span>
+rm test/tools/dsymutil/X86/swift-interface.test
+
+<span class="tok-cp">%if</span> %{with check}
+<span class="tok-c"># FIXME: use %%cmake_build instead of %%__ninja</span>
+LD_LIBRARY_PATH=<span class="tok-kc">%{buildroot}</span>/<span class="tok-kc">%{pkg_libdir}</span>  <span class="tok-nf">%{__ninja}</span> check-all -C <span class="tok-kp">%{_vpath_builddir}</span>
+<span class="tok-cp">%endif</span>
+
+<span class="tok-cp">%endif</span>
+
+%ldconfig_scriptlets libs
+
+<span class="tok-nd">%post</span> devel
+<span class="tok-kp">%{_sbindir}</span>/update-alternatives --install <span class="tok-kp">%{_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span> llvm-config<span class="tok-kc">%{exec_suffix}</span> <span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span> <span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-kp">%{_sbindir}</span>/update-alternatives --install <span class="tok-kp">%{_bindir}</span>/llvm-config-<span class="tok-kc">%{maj_ver}</span> llvm-config-<span class="tok-kc">%{maj_ver}</span> <span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span> <span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-cp">%endif</span>
+
+<span class="tok-nd">%postun</span> devel
+if [ $1 -eq 0 ]; then
+  <span class="tok-kp">%{_sbindir}</span>/update-alternatives --remove llvm-config<span class="tok-kc">%{exec_suffix}</span> <span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-cp">%if</span> %{without compat_build}
+  <span class="tok-kp">%{_sbindir}</span>/update-alternatives --remove llvm-config-<span class="tok-kc">%{maj_ver}</span> <span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-cp">%endif</span>
+fi
+
+<span class="tok-nd">%files</span>
+%license LICENSE.TXT
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_mandir}</span>/man1/llvm-config*
+<span class="tok-kp">%{_mandir}</span>/man1/*
+<span class="tok-kp">%{_bindir}</span>/*
+
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>
+<span class="tok-k">%exclude</span> <span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span>
+
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/llvm-config-<span class="tok-kc">%{maj_ver}</span>
+<span class="tok-k">%exclude</span> <span class="tok-kc">%{pkg_bindir}</span>/llvm-config-<span class="tok-kc">%{maj_ver}</span>-<span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/not
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/count
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/yaml-bench
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/lli-child-target
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/llvm-isel-fuzzer
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_bindir}</span>/llvm-opt-fuzzer
+<span class="tok-kp">%{_datadir}</span>/opt-viewer
+<span class="tok-cp">%else</span>
+<span class="tok-kc">%{pkg_bindir}</span>
+<span class="tok-cp">%endif</span>
+
+<span class="tok-nd">%files</span> libs
+%license LICENSE.TXT
+<span class="tok-kc">%{pkg_libdir}</span>/libLLVM-<span class="tok-kc">%{maj_ver}</span>.so
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-cp">%if</span> %{with gold}
+<span class="tok-kp">%{_libdir}</span>/LLVMgold.so
+<span class="tok-kp">%{_libdir}</span>/bfd-plugins/LLVMgold.so
+<span class="tok-cp">%endif</span>
+<span class="tok-kp">%{_libdir}</span>/libLLVM-<span class="tok-kc">%{maj_ver}</span>.<span class="tok-kc">%{min_ver}</span>*.so
+<span class="tok-kp">%{_libdir}</span>/libLLVM-<span class="tok-kc">%{maj_ver}</span>.so%{?abi_revision:.<span class="tok-kc">%{abi_revision}</span>}
+<span class="tok-kp">%{_libdir}</span>/libLTO.so*
+<span class="tok-cp">%else</span>
+<span class="tok-k">%config</span>(noreplace) <span class="tok-kp">%{_sysconfdir}</span>/ld.so.conf.d/<span class="tok-kc">%{name}</span>-%{_arch}.conf
+<span class="tok-cp">%if</span> %{with gold}
+<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{name}</span>/lib/LLVMgold.so
+<span class="tok-cp">%endif</span>
+<span class="tok-kc">%{pkg_libdir}</span>/libLLVM-<span class="tok-kc">%{maj_ver}</span>.<span class="tok-kc">%{min_ver}</span>*.so
+<span class="tok-kc">%{pkg_libdir}</span>/libLTO.so*
+<span class="tok-k">%exclude</span> <span class="tok-kc">%{pkg_libdir}</span>/libLTO.so
+<span class="tok-cp">%endif</span>
+<span class="tok-kc">%{pkg_libdir}</span>/libRemarks.so*
+
+<span class="tok-nd">%files</span> devel
+%license LICENSE.TXT
+
+<span class="tok-k">%ghost</span> <span class="tok-kp">%{_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>
+<span class="tok-kc">%{pkg_bindir}</span>/llvm-config<span class="tok-kc">%{exec_suffix}</span>-<span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-kp">%{_mandir}</span>/man1/llvm-config*
+
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-kp">%{_includedir}</span>/llvm
+<span class="tok-kp">%{_includedir}</span>/llvm-c
+<span class="tok-kp">%{_libdir}</span>/libLLVM.so
+<span class="tok-kp">%{_libdir}</span>/cmake/llvm
+<span class="tok-kc">%{pkg_bindir}</span>/llvm-config-<span class="tok-kc">%{maj_ver}</span>-<span class="tok-nf">%{__isa_bits}</span>
+<span class="tok-k">%ghost</span> <span class="tok-kp">%{_bindir}</span>/llvm-config-<span class="tok-kc">%{maj_ver}</span>
+<span class="tok-cp">%else</span>
+<span class="tok-kc">%{install_includedir}</span>/llvm
+<span class="tok-kc">%{install_includedir}</span>/llvm-c
+<span class="tok-kc">%{pkg_includedir}</span>/llvm
+<span class="tok-kc">%{pkg_includedir}</span>/llvm-c
+<span class="tok-kc">%{pkg_libdir}</span>/libLTO.so
+<span class="tok-kc">%{pkg_libdir}</span>/libLLVM.so
+<span class="tok-kc">%{pkg_libdir}</span>/cmake/llvm
+<span class="tok-cp">%endif</span>
+
+<span class="tok-nd">%files</span> doc
+%license LICENSE.TXT
+<span class="tok-k">%doc</span> <span class="tok-kp">%{_pkgdocdir}</span>/html
+
+<span class="tok-nd">%files</span> static
+%license LICENSE.TXT
+<span class="tok-cp">%if</span> %{without compat_build}
+<span class="tok-kp">%{_libdir}</span>/*.a
+<span class="tok-k">%exclude</span> <span class="tok-kp">%{_libdir}</span>/libLLVMTestingSupport.a
+<span class="tok-cp">%else</span>
+<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{name}</span>/lib/*.a
+<span class="tok-cp">%endif</span>
+
+<span class="tok-cp">%if</span> %{without compat_build}
+
+<span class="tok-nd">%files</span> test
+%license LICENSE.TXT
+<span class="tok-kp">%{_bindir}</span>/not
+<span class="tok-kp">%{_bindir}</span>/count
+<span class="tok-kp">%{_bindir}</span>/yaml-bench
+<span class="tok-kp">%{_bindir}</span>/lli-child-target
+<span class="tok-kp">%{_bindir}</span>/llvm-isel-fuzzer
+<span class="tok-kp">%{_bindir}</span>/llvm-opt-fuzzer
+
+<span class="tok-nd">%files</span> googletest
+%license LICENSE.TXT
+<span class="tok-kp">%{_datadir}</span>/llvm/src/utils
+<span class="tok-kp">%{_libdir}</span>/libLLVMTestingSupport.a
+
+<span class="tok-cp">%endif</span>
+
+<span class="tok-nd">%changelog</span>
+<span class="tok-gu">* Fri Feb 17 2023 Konrad Kleine &lt;kkleine@redhat.com&gt; - 15.0.7-2</span>
+- Add pgo_instrumented and pgo_optimized_build build conditions (both off by default)
+
+<span class="tok-gu">* Thu Jan 12 2023 Nikita Popov &lt;npopov@redhat.com&gt; - 15.0.7-1</span>
+- Update to LLVM 15.0.7
+
+<span class="tok-gu">* Mon Dec 05 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 15.0.6-1</span>
+- Update to LLVM 15.0.6
+
+<span class="tok-gu">* Mon Nov 07 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 15.0.4-1</span>
+- Update to LLVM 15.0.4
+
+<span class="tok-gu">* Tue Sep 06 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 15.0.0-1</span>
+- Update to LLVM 15.0.0
+
+<span class="tok-gu">* Thu Jul 21 2022 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 14.0.5-3</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+<span class="tok-gu">* Fri Jun 17 2022 Timm Bäder &lt;tbaeder@redhat.com&gt; - 14.0.5-2</span>
+- Release bump for new redhat-rpm-config
+
+<span class="tok-gu">* Mon Jun 13 2022 Timm Bäder &lt;tbaeder@redhat.com&gt; - 14.0.5-1</span>
+- 14.0.5 Release
+
+<span class="tok-gu">* Wed May 18 2022 Tom Stellard &lt;tstellar@redhat.com&gt; - 14.0.3-1</span>
+- 14.0.3 Release
+
+<span class="tok-gu">* Fri Apr 29 2022 Timm Bäder &lt;tbaeder@redhat.com&gt; - 14.0.0-2</span>
+- Remove llvm-cmake-devel package
+
+<span class="tok-gu">* Wed Mar 23 2022 Timm Bäder &lt;tbaeder@redhat.com&gt; - 14.0.0-1</span>
+- Update to LLVM 14.0.0
+
+<span class="tok-gu">* Wed Feb 02 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 13.0.1-1</span>
+- Update to LLVM 13.0.1 final
+
+<span class="tok-gu">* Tue Jan 25 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 13.0.1~rc3-1</span>
+- Update to LLVM 13.0.1rc3
+
+<span class="tok-gu">* Thu Jan 20 2022 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 13.0.1~rc2-2</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+<span class="tok-gu">* Thu Jan 13 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 13.0.1~rc2-1</span>
+- Update to LLVM 13.0.1rc2
+
+<span class="tok-gu">* Mon Jan 10 2022 Nikita Popov &lt;npopov@redhat.com&gt; - 13.0.1~rc1-1</span>
+- Upstream 13.0.1 rc1 release
+
+<span class="tok-gu">* Sat Jan 08 2022 Miro Hrončok &lt;mhroncok@redhat.com&gt; - 13.0.0-8</span>
+- Rebuilt for https://fedoraproject.org/wiki/Changes/LIBFFI34
+
+<span class="tok-gu">* Thu Nov 11 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-7</span>
+- Enable lto on s390x and arm
+
+<span class="tok-gu">* Mon Oct 25 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-6</span>
+- Build with Thin LTO
+
+<span class="tok-gu">* Mon Oct 18 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-5</span>
+- Build with clang
+
+<span class="tok-gu">* Fri Oct 08 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-4</span>
+- Fix default triple on arm
+
+<span class="tok-gu">* Wed Oct 06 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-3</span>
+- Set default triple
+
+<span class="tok-gu">* Mon Oct 04 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-2</span>
+- Drop abi_revision from soname
+
+<span class="tok-gu">* Thu Sep 30 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0-1</span>
+- 13.0.0 Release
+
+<span class="tok-gu">* Thu Sep 30 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0~rc4-2</span>
+- Restore config.guess for host triple detection
+
+<span class="tok-gu">* Fri Sep 24 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0~rc4-1</span>
+- 13.0.0-rc4 Release
+
+<span class="tok-gu">* Fri Sep 17 2021 Tom Stellard &lt;tstellar@redhta.com&gt; - 13.0.0~rc3-1</span>
+- 13.0.0-rc3 Release
+
+<span class="tok-gu">* Mon Sep 13 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0~rc1-3</span>
+- Pass LLVM_DEFAULT_TARGET_TRIPLE to cmake
+
+<span class="tok-gu">* Mon Sep 13 2021 Konrad Kleine &lt;kkleine@redhat.com&gt; - 13.0.0~rc1-2</span>
+- Add --without=check option
+
+<span class="tok-gu">* Wed Aug 04 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 13.0.0~rc1-1</span>
+- 13.0.0-rc1 Release
+
+<span class="tok-gu">* Thu Jul 22 2021 sguelton@redhat.com - 12.0.1-3</span>
+- Maintain versionned link to llvm-config
+
+<span class="tok-gu">* Thu Jul 22 2021 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 12.0.1-2</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+<span class="tok-gu">* Mon Jul 12 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 12.0.1-1</span>
+- 12.0.1 Release
+
+<span class="tok-gu">* Wed Jun 30 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - llvm-12.0.1~rc3-1</span>
+- 12.0.1-rc3 Release
+
+<span class="tok-gu">* Fri May 28 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 12.0.1~rc1-2</span>
+- Stop installing lit tests
+
+<span class="tok-gu">* Wed May 26 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - llvm-12.0.1~rc1-1</span>
+- 12.0.1-rc1 Release
+
+<span class="tok-gu">* Mon May 17 2021 sguelton@redhat.com - 12.0.0-7</span>
+- Fix handling of llvm-config
+
+<span class="tok-gu">* Mon May 03 2021 kkleine@redhat.com - 12.0.0-6</span>
+- More verbose builds thanks to python3-psutil
+
+<span class="tok-gu">* Sat May 01 2021 sguelton@redhat.com - 12.0.0-5</span>
+- Fix llvm-config install
+
+<span class="tok-gu">* Tue Apr 27 2021 sguelton@redhat.com - 12.0.0-4</span>
+- Provide default empty value for exec_suffix when not in compat mode
+
+<span class="tok-gu">* Tue Apr 27 2021 sguelton@redhat.com - 12.0.0-3</span>
+- Fix llvm-config install
+
+<span class="tok-gu">* Tue Apr 20 2021 sguelton@redhat.com - 12.0.0-2</span>
+- Backport compat package fix
+
+<span class="tok-gu">* Thu Apr 15 2021 Tom Stellard &lt;tstellar@redhat.com&gt; - 12.0.0-1</span>
+- 12.0.0 Release
+
+<span class="tok-gu">* Thu Apr 08 2021 sguelton@redhat.com - 12.0.0-0.11.rc5</span>
+- New upstream release candidate
+
+<span class="tok-gu">* Tue Apr 06 2021 sguelton@redhat.com - 12.0.0-0.10.rc4</span>
+- Patch test case for compatibility with llvm-test latout
+
+<span class="tok-gu">* Fri Apr 02 2021 sguelton@redhat.com - 12.0.0-0.9.rc4</span>
+- New upstream release candidate
+
+<span class="tok-gu">* Wed Mar 31 2021 Jonathan Wakely &lt;jwakely@redhat.com&gt; - 12.0.0-0.8.rc3</span>
+- Rebuilt for removed libstdc++ symbols (#1937698)
+
+<span class="tok-gu">* Thu Mar 11 2021 sguelton@redhat.com - 12.0.0-0.7.rc3</span>
+- LLVM 12.0.0 rc3
+
+<span class="tok-gu">* Wed Mar 10 2021 Kalev Lember &lt;klember@redhat.com&gt; - 12.0.0-0.6.rc2</span>
+- Add llvm-static(major) provides to the -static subpackage
+
+<span class="tok-gu">* Tue Mar 09 2021 sguelton@redhat.com - 12.0.0-0.5.rc2</span>
+- rebuilt
+
+<span class="tok-gu">* Tue Mar 02 2021 sguelton@redhat.com - 12.0.0-0.4.rc2</span>
+- Change CI working dir
+
+<span class="tok-gu">* Wed Feb 24 2021 sguelton@redhat.com - 12.0.0-0.3.rc2</span>
+- 12.0.0-rc2 release
+
+<span class="tok-gu">* Tue Feb 16 2021 Dave Airlie &lt;airlied@redhat.com&gt; - 12.0.0-0.2.rc1</span>
+- Enable LLVM_USE_PERF to allow perf integration
+
+<span class="tok-gu">* Tue Feb 2 2021 Serge Guelton - 12.0.0-0.1.rc1</span>
+- 12.0.0-rc1 release
+
+<span class="tok-gu">* Tue Jan 26 2021 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 11.1.0-0.3.rc2</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+<span class="tok-gu">* Fri Jan 22 2021 Serge Guelton - 11.1.0-0.2.rc2</span>
+- 11.1.0-rc2 release
+
+<span class="tok-gu">* Thu Jan 14 2021 Serge Guelton - 11.1.0-0.1.rc1</span>
+- 11.1.0-rc1 release
+
+<span class="tok-gu">* Tue Jan 05 2021 Serge Guelton - 11.0.1-3.rc2</span>
+- Waive extra test case
+
+<span class="tok-gu">* Sun Dec 20 2020 sguelton@redhat.com - 11.0.1-2.rc2</span>
+- 11.0.1-rc2 release
+
+<span class="tok-gu">* Tue Dec 01 2020 sguelton@redhat.com - 11.0.1-1.rc1</span>
+- 11.0.1-rc1 release
+
+<span class="tok-gu">* Sat Oct 31 2020 Jeff Law &lt;law@redhat.com&gt; - 11.0.0-2</span>
+- Fix missing #include for gcc-11
+
+<span class="tok-gu">* Wed Oct 14 2020 Josh Stone &lt;jistone@redhat.com&gt; - 11.0.0-1</span>
+- Fix coreos-installer test crash on s390x (rhbz#1883457)
+
+<span class="tok-gu">* Mon Oct 12 2020 sguelton@redhat.com - 11.0.0-0.11</span>
+- llvm 11.0.0 - final release
+
+<span class="tok-gu">* Thu Oct 08 2020 sguelton@redhat.com - 11.0.0-0.10.rc6</span>
+- 11.0.0-rc6
+
+<span class="tok-gu">* Fri Oct 02 2020 sguelton@redhat.com - 11.0.0-0.9.rc5</span>
+- 11.0.0-rc5 Release
+
+<span class="tok-gu">* Sun Sep 27 2020 sguelton@redhat.com - 11.0.0-0.8.rc3</span>
+- Fix NVR
+
+<span class="tok-gu">* Thu Sep 24 2020 sguelton@redhat.com - 11.0.0-0.2.rc3</span>
+- Obsolete patch for rhbz#1862012
+
+<span class="tok-gu">* Thu Sep 24 2020 sguelton@redhat.com - 11.0.0-0.1.rc3</span>
+- 11.0.0-rc3 Release
+
+<span class="tok-gu">* Wed Sep 02 2020 sguelton@redhat.com - 11.0.0-0.7.rc2</span>
+- Apply upstream patch for rhbz#1862012
+
+<span class="tok-gu">* Tue Sep 01 2020 sguelton@redhat.com - 11.0.0-0.6.rc2</span>
+- Fix source location
+
+<span class="tok-gu">* Fri Aug 21 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 11.0.0-0.5.rc2</span>
+- 11.0.0-rc2 Release
+
+<span class="tok-gu">* Wed Aug 19 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 11.0.0-0.4.rc1</span>
+- Fix regression-tests CI tests
+
+<span class="tok-gu">* Tue Aug 18 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 11.0.0-0.3.rc1</span>
+- Fix rust crash on ppc64le compiling firefox
+- rhbz#1862012
+
+<span class="tok-gu">* Tue Aug 11 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 11.0.0-0.2.rc1</span>
+- Install update_cc_test_checks.py script
+
+<span class="tok-gu">* Thu Aug 06 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 11.0.0-0.1-rc1</span>
+- LLVM 11.0.0-rc1 Release
+- Make llvm-devel require llvm-static and llvm-test
+
+<span class="tok-gu">* Tue Aug 04 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 10.0.0-10</span>
+- Backport upstream patch to fix build with -flto.
+- Disable LTO on s390x to work-around unit test failures.
+
+<span class="tok-gu">* Sat Aug 01 2020 sguelton@redhat.com - 10.0.0-9</span>
+- Fix update-alternative uninstall script
+
+<span class="tok-gu">* Sat Aug 01 2020 sguelton@redhat.com - 10.0.0-8</span>
+- Fix gpg verification and update macro usage.
+
+<span class="tok-gu">* Sat Aug 01 2020 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 10.0.0-7</span>
+- Second attempt - Rebuilt for
+  https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+<span class="tok-gu">* Tue Jul 28 2020 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 10.0.0-6</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+<span class="tok-gu">* Thu Jun 11 2020 sguelton@redhat.com - 10.0.0-5</span>
+- Make llvm-test.tar.gz creation reproducible.
+
+<span class="tok-gu">* Tue Jun 02 2020 sguelton@redhat.com - 10.0.0-4</span>
+- Instruct cmake not to generate RPATH
+
+<span class="tok-gu">* Thu Apr 30 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 10.0.0-3</span>
+- Install LLVMgold.so symlink in bfd-plugins directory
+
+<span class="tok-gu">* Tue Apr 07 2020 sguelton@redhat.com - 10.0.0-2</span>
+- Do not package UpdateTestChecks tests in llvm-tests
+- Apply upstream patch bab5908df to pass gating tests
+
+<span class="tok-gu">* Wed Mar 25 2020 sguelton@redhat.com - 10.0.0-1</span>
+- 10.0.0 final
+
+<span class="tok-gu">* Mon Mar 23 2020 sguelton@redhat.com - 10.0.0-0.6.rc6</span>
+- 10.0.0 rc6
+
+<span class="tok-gu">* Thu Mar 19 2020 sguelton@redhat.com - 10.0.0-0.5.rc5</span>
+- 10.0.0 rc5
+
+<span class="tok-gu">* Sat Mar 14 2020 sguelton@redhat.com - 10.0.0-0.4.rc4</span>
+- 10.0.0 rc4
+
+<span class="tok-gu">* Thu Mar 05 2020 sguelton@redhat.com - 10.0.0-0.3.rc3</span>
+- 10.0.0 rc3
+
+<span class="tok-gu">* Fri Feb 28 2020 sguelton@redhat.com - 10.0.0-0.2.rc2</span>
+- Remove <span class="tok-gu">*_finite support, see rhbz#1803203</span>
+
+<span class="tok-gu">* Fri Feb 14 2020 sguelton@redhat.com - 10.0.0-0.1.rc2</span>
+- 10.0.0 rc2
+
+<span class="tok-gu">* Fri Jan 31 2020 sguelton@redhat.com - 10.0.0-0.1.rc1</span>
+- 10.0.0 rc1
+
+<span class="tok-gu">* Wed Jan 29 2020 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 9.0.1-5</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+<span class="tok-gu">* Tue Jan 21 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.1-4</span>
+- Rebuild after previous build failed to strip binaries
+
+<span class="tok-gu">* Fri Jan 17 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.1-3</span>
+- Add explicit Requires from sub-packages to llvm-libs
+
+<span class="tok-gu">* Fri Jan 10 2020 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.1-2</span>
+- Fix crash with kernel bpf self-tests
+
+<span class="tok-gu">* Thu Dec 19 2019 tstellar@redhat.com - 9.0.1-1</span>
+- 9.0.1 Release
+
+<span class="tok-gu">* Mon Nov 25 2019 sguelton@redhat.com - 9.0.0-4</span>
+- Activate AVR on all architectures
+
+<span class="tok-gu">* Mon Sep 30 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.0-3</span>
+- Build libLLVM.so first to avoid OOM errors
+
+<span class="tok-gu">* Fri Sep 27 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.0-2</span>
+- Remove unneeded BuildRequires: libstdc++-static
+
+<span class="tok-gu">* Thu Sep 19 2019 sguelton@redhat.com - 9.0.0-1</span>
+- 9.0.0 Release
+
+<span class="tok-gu">* Wed Sep 18 2019 sguelton@redhat.com - 9.0.0-0.5.rc3</span>
+- Support avr target, see rhbz#1718492
+
+<span class="tok-gu">* Tue Sep 10 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.0-0.4.rc3</span>
+- Split out test executables into their own export file
+
+<span class="tok-gu">* Fri Sep 06 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.0-0.3.rc3</span>
+- Fix patch for splitting out static library exports
+
+<span class="tok-gu">* Fri Aug 30 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.0-0.2.rc3</span>
+- 9.0.0-rc3 Release
+
+<span class="tok-gu">* Thu Aug 01 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 9.0.0-0.1.rc2</span>
+- 9.0.0-rc2 Release
+
+<span class="tok-gu">* Tue Jul 30 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-9</span>
+- Sync with llvm8.0 spec file
+
+<span class="tok-gu">* Thu Jul 25 2019 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 8.0.0-8.1</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+<span class="tok-gu">* Wed Jul 17 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-8</span>
+- Add provides for the major version of sub-packages
+
+<span class="tok-gu">* Fri May 17 2019 sguelton@redhat.com - 8.0.0-7</span>
+- Fix conflicts between llvm-static = 8 and llvm-dev &lt; 8 around LLVMStaticExports.cmake
+
+<span class="tok-gu">* Wed Apr 24 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-6</span>
+- Make sure we aren&#39;t passing -g on s390x
+
+<span class="tok-gu">* Sat Mar 30 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-5</span>
+- Enable build rpath while keeping install rpath disabled
+
+<span class="tok-gu">* Wed Mar 27 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-4</span>
+- Backport r351577 from trunk to fix ninja check failures
+
+<span class="tok-gu">* Tue Mar 26 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-3</span>
+- Fix ninja check
+
+<span class="tok-gu">* Fri Mar 22 2019 Tom Stellard &lt;tstellar@redhat.com&gt; - 8.0.0-2</span>
+- llvm-test fixes
+
+<span class="tok-gu">* Wed Mar 20 2019 sguelton@redhat.com - 8.0.0-1</span>
+- 8.0.0 final
+
+<span class="tok-gu">* Fri Mar 15 2019 sguelton@redhat.com - 8.0.0-0.6.rc4</span>
+- Activate all backends (rhbz#1689031)
+
+<span class="tok-gu">* Tue Mar 12 2019 sguelton@redhat.com - 8.0.0-0.5.rc4</span>
+- 8.0.0 Release candidate 4
+
+<span class="tok-gu">* Mon Mar 4 2019 sguelton@redhat.com - 8.0.0-0.4.rc3</span>
+- Move some binaries to -test package, cleanup specfile
+
+<span class="tok-gu">* Mon Mar 4 2019 sguelton@redhat.com - 8.0.0-0.3.rc3</span>
+- 8.0.0 Release candidate 3
+
+<span class="tok-gu">* Fri Feb 22 2019 sguelton@redhat.com - 8.0.0-0.2.rc2</span>
+- 8.0.0 Release candidate 2
+
+<span class="tok-gu">* Sat Feb 9 2019 sguelton@redhat.com - 8.0.0-0.1.rc1</span>
+- 8.0.0 Release candidate 1
+
+<span class="tok-gu">* Fri Feb 01 2019 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 7.0.1-2.1</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+<span class="tok-gu">* Mon Jan 21 2019 Josh Stone &lt;jistone@redhat.com&gt; - 7.0.1-2</span>
+- Fix discriminators in metadata, rhbz#1668033
+
+<span class="tok-gu">* Mon Dec 17 2018 sguelton@redhat.com - 7.0.1-1</span>
+- 7.0.1 release
+
+<span class="tok-gu">* Tue Dec 04 2018 sguelton@redhat.com - 7.0.0-5</span>
+- Ensure rpmlint passes on specfile
+
+<span class="tok-gu">* Sat Nov 17 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-4</span>
+- Install testing libraries for unittests
+
+<span class="tok-gu">* Sat Oct 27 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-3</span>
+- Fix running unittests as not-root user
+
+<span class="tok-gu">* Thu Sep 27 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-2</span>
+- Fixes for llvm-test package:
+- Add some missing Requires
+- Add --threads option to run-lit-tests script
+- Set PATH so lit can find tools like count, not, etc.
+- Don&#39;t hardcode tools directory to /usr/lib64/llvm
+- Fix typo in yaml-bench define
+- Only print information about failing tests
+
+<span class="tok-gu">* Fri Sep 21 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-1</span>
+- 7.0.0 Release
+
+<span class="tok-gu">* Thu Sep 13 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.15.rc3</span>
+- Disable rpath on install LLVM and related sub-projects
+
+<span class="tok-gu">* Wed Sep 12 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.14.rc3</span>
+- Remove rpath from executables and libraries
+
+<span class="tok-gu">* Tue Sep 11 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.13.rc3</span>
+- Re-enable arm and aarch64 targets on x86_64
+
+<span class="tok-gu">* Mon Sep 10 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.12.rc3</span>
+- 7.0.0-rc3 Release
+
+<span class="tok-gu">* Fri Sep 07 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.11.rc2</span>
+- Use python3 shebang for opt-viewewr scripts
+
+<span class="tok-gu">* Thu Aug 30 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.10.rc2</span>
+- Drop all uses of python2 from lit tests
+
+<span class="tok-gu">* Thu Aug 30 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.9.rc2</span>
+- Build the gold plugin on all supported architectures
+
+<span class="tok-gu">* Wed Aug 29 2018 Kevin Fenzi &lt;kevin@scrye.com&gt; - 7.0.0-0.8.rc2</span>
+- Re-enable debuginfo to avoid 25x size increase.
+
+<span class="tok-gu">* Tue Aug 28 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.7.rc2</span>
+- 7.0.0-rc2 Release
+
+<span class="tok-gu">* Tue Aug 28 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.6.rc1</span>
+- Guard valgrind usage with valgrind_arches macro
+
+<span class="tok-gu">* Thu Aug 23 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.5.rc1</span>
+- Package lit tests and googletest sources.
+
+<span class="tok-gu">* Mon Aug 20 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.4.rc1</span>
+- Re-enable AMDGPU target on ARM rhbz#1618922
+
+<span class="tok-gu">* Mon Aug 13 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.3.rc1</span>
+- Drop references to TestPlugin.so from cmake files
+
+<span class="tok-gu">* Fri Aug 10 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.2.rc1</span>
+- Fixes for lit tests
+
+<span class="tok-gu">* Fri Aug 10 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 7.0.0-0.1.rc1</span>
+- 7.0.0-rc1 Release
+- Reduce number of enabled targets on all arches.
+- Drop s390 detection patch, LLVM does not support s390 codegen.
+
+<span class="tok-gu">* Mon Aug 06 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-6</span>
+- Backport some fixes needed by mesa and rust
+
+<span class="tok-gu">* Thu Jul 26 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-5</span>
+- Move libLLVM-6.0.so to llvm6.0-libs.
+
+<span class="tok-gu">* Mon Jul 23 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-4</span>
+- Rebuild because debuginfo stripping failed with the previous build
+
+<span class="tok-gu">* Fri Jul 13 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-3</span>
+- Sync specfile with llvm6.0 package
+
+<span class="tok-gu">* Fri Jul 13 2018 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 6.0.1-2</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+<span class="tok-gu">* Mon Jun 25 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-1</span>
+- 6.0.1 Release
+
+<span class="tok-gu">* Thu Jun 07 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-0.4.rc2</span>
+- 6.0.1-rc2
+
+<span class="tok-gu">* Wed Jun 06 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-0.3.rc1</span>
+- Re-enable all targets to avoid breaking the ABI.
+
+<span class="tok-gu">* Mon Jun 04 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-0.2.rc1</span>
+- Reduce the number of enabled targets based on the architecture
+
+<span class="tok-gu">* Thu May 10 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.1-0.1.rc1</span>
+- 6.0.1 rc1
+
+<span class="tok-gu">* Tue Mar 27 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-11</span>
+- Re-enable arm tests that used to hang
+
+<span class="tok-gu">* Thu Mar 22 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-10</span>
+- Fix testcase in backported patch
+
+<span class="tok-gu">* Tue Mar 20 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-9</span>
+- Prevent external projects from linking against both static and shared
+  libraries.  rhbz#1558657
+
+<span class="tok-gu">* Mon Mar 19 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-8</span>
+- Backport r327651 from trunk rhbz#1554349
+
+<span class="tok-gu">* Fri Mar 16 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-7</span>
+- Filter out cxxflags and cflags from llvm-config that aren&#39;t supported by clang
+- rhbz#1556980
+
+<span class="tok-gu">* Wed Mar 14 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-6</span>
+- Enable symbol versioning in libLLVM.so
+
+<span class="tok-gu">* Wed Mar 14 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-5</span>
+- Stop statically linking libstdc++.  This is no longer required by Steam
+  client, but the steam installer still needs a work-around which should
+  be handled in the steam package.
+<span class="tok-gu">* Wed Mar 14 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-4</span>
+- s/make check/ninja check/
+
+<span class="tok-gu">* Fri Mar 09 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-3</span>
+- Backport fix for compile time regression on rust rhbz#1552915
+
+<span class="tok-gu">* Thu Mar 08 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-2</span>
+- Build with Ninja: This reduces RPM build time on a 6-core x86_64 builder
+  from 82 min to 52 min.
+
+<span class="tok-gu">* Thu Mar 08 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-1</span>
+- 6.0.0 Release
+
+<span class="tok-gu">* Thu Mar 08 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-0.5.rc2</span>
+- Reduce debuginfo size on i686 to avoid OOM errors during linking
+
+<span class="tok-gu">* Fri Feb 09 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-0.4.rc2</span>
+- 6.0.1 rc2
+
+<span class="tok-gu">* Fri Feb 09 2018 Igor Gnatenko &lt;ignatenkobrain@fedoraproject.org&gt; - 6.0.0-0.3.rc1</span>
+- Escape macros in %%changelog
+
+<span class="tok-gu">* Thu Feb 08 2018 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 6.0.0-0.2.rc1</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+<span class="tok-gu">* Fri Jan 19 2018 Tom Stellard &lt;tstellar@redhat.com&gt; - 6.0.0-0.1.rc1</span>
+- 6.0.1 rc1
+
+<span class="tok-gu">* Tue Dec 19 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 5.0.1-1</span>
+- 5.0.1 Release
+
+<span class="tok-gu">* Mon Nov 20 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 5.0.0-5</span>
+- Backport debuginfo fix for rust
+
+<span class="tok-gu">* Fri Nov 03 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 5.0.0-4</span>
+- Reduce debuginfo size for ARM
+
+<span class="tok-gu">* Tue Oct 10 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 5.0.0-2</span>
+- Reduce memory usage on ARM by disabling debuginfo and some non-ARM targets.
+
+<span class="tok-gu">* Mon Sep 25 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 5.0.0-1</span>
+- 5.0.0 Release
+
+<span class="tok-gu">* Mon Sep 18 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.1-6</span>
+- Add Requires: libedit-devel for llvm-devel
+
+<span class="tok-gu">* Fri Sep 08 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.1-5</span>
+- Enable libedit backend for LineEditor API
+
+<span class="tok-gu">* Fri Aug 25 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.1-4</span>
+- Enable extra functionality when run the LLVM JIT under valgrind.
+
+<span class="tok-gu">* Thu Aug 03 2017 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 4.0.1-3</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+<span class="tok-gu">* Wed Jul 26 2017 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 4.0.1-2</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+<span class="tok-gu">* Wed Jun 21 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.1-1</span>
+- 4.0.1 Release
+
+<span class="tok-gu">* Thu Jun 15 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.0-6</span>
+- Install llvm utils
+
+<span class="tok-gu">* Thu Jun 08 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.0-5</span>
+- Fix docs-llvm-man target
+
+<span class="tok-gu">* Mon May 01 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.0-4</span>
+- Make cmake files no longer depend on static libs (rhbz 1388200)
+
+<span class="tok-gu">* Tue Apr 18 2017 Josh Stone &lt;jistone@redhat.com&gt; - 4.0.0-3</span>
+- Fix computeKnownBits for ARMISD::CMOV (rust-lang/llvm#67)
+
+<span class="tok-gu">* Mon Apr 03 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.0-2</span>
+- Simplify spec with rpm macros.
+
+<span class="tok-gu">* Thu Mar 23 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 4.0.0-1</span>
+- LLVM 4.0.0 Final Release
+
+<span class="tok-gu">* Wed Mar 22 2017 tstellar@redhat.com - 3.9.1-6</span>
+- Fix %%postun sep for -devel package.
+
+<span class="tok-gu">* Mon Mar 13 2017 Tom Stellard &lt;tstellar@redhat.com&gt; - 3.9.1-5</span>
+- Disable failing tests on ARM.
+
+<span class="tok-gu">* Sun Mar 12 2017 Peter Robinson &lt;pbrobinson@fedoraproject.org&gt; 3.9.1-4</span>
+- Fix missing mask on relocation for aarch64 (rhbz 1429050)
+
+<span class="tok-gu">* Wed Mar 01 2017 Dave Airlie &lt;airlied@redhat.com&gt; - 3.9.1-3</span>
+- revert upstream radeonsi breaking change.
+
+<span class="tok-gu">* Thu Feb 23 2017 Josh Stone &lt;jistone@redhat.com&gt; - 3.9.1-2</span>
+- disable sphinx warnings-as-errors
+
+<span class="tok-gu">* Fri Feb 10 2017 Orion Poplawski &lt;orion@cora.nwra.com&gt; - 3.9.1-1</span>
+- llvm 3.9.1
+
+<span class="tok-gu">* Fri Feb 10 2017 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 3.9.0-8</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+<span class="tok-gu">* Tue Nov 29 2016 Josh Stone &lt;jistone@redhat.com&gt; - 3.9.0-7</span>
+- Apply backports from rust-lang/llvm#55, #57
+
+<span class="tok-gu">* Tue Nov 01 2016 Dave Airlie &lt;airlied@gmail.com - 3.9.0-6</span>
+- rebuild for new arches
+
+<span class="tok-gu">* Wed Oct 26 2016 Dave Airlie &lt;airlied@redhat.com&gt; - 3.9.0-5</span>
+- apply the patch from -4
+
+<span class="tok-gu">* Wed Oct 26 2016 Dave Airlie &lt;airlied@redhat.com&gt; - 3.9.0-4</span>
+- add fix for lldb out-of-tree build
+
+<span class="tok-gu">* Mon Oct 17 2016 Josh Stone &lt;jistone@redhat.com&gt; - 3.9.0-3</span>
+- Apply backports from rust-lang/llvm#47, #48, #53, #54
+
+<span class="tok-gu">* Sat Oct 15 2016 Josh Stone &lt;jistone@redhat.com&gt; - 3.9.0-2</span>
+- Apply an InstCombine backport via rust-lang/llvm#51
+
+<span class="tok-gu">* Wed Sep 07 2016 Dave Airlie &lt;airlied@redhat.com&gt; - 3.9.0-1</span>
+- llvm 3.9.0
+- upstream moved where cmake files are packaged.
+- upstream dropped CppBackend
+
+<span class="tok-gu">* Wed Jul 13 2016 Adam Jackson &lt;ajax@redhat.com&gt; - 3.8.1-1</span>
+- llvm 3.8.1
+- Add mips target
+- Fix some shared library mispackaging
+
+<span class="tok-gu">* Tue Jun 07 2016 Jan Vcelak &lt;jvcelak@fedoraproject.org&gt; - 3.8.0-2</span>
+- fix color support detection on terminal
+
+<span class="tok-gu">* Thu Mar 10 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.8.0-1</span>
+- llvm 3.8.0 release
+
+<span class="tok-gu">* Wed Mar 09 2016 Dan Horák &lt;dan[at][danny.cz&gt; 3.8.0-0.3</span>
+- install back memory consumption workaround for s390
+
+<span class="tok-gu">* Thu Mar 03 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.8.0-0.2</span>
+- llvm 3.8.0 rc3 release
+
+<span class="tok-gu">* Fri Feb 19 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.8.0-0.1</span>
+- llvm 3.8.0 rc2 release
+
+<span class="tok-gu">* Tue Feb 16 2016 Dan Horák &lt;dan[at][danny.cz&gt; 3.7.1-7</span>
+- recognize s390 as SystemZ when configuring build
+
+<span class="tok-gu">* Sat Feb 13 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.7.1-6</span>
+- export C++ API for mesa.
+
+<span class="tok-gu">* Sat Feb 13 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.7.1-5</span>
+- reintroduce llvm-static, clang needs it currently.
+
+<span class="tok-gu">* Fri Feb 12 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.7.1-4</span>
+- jump back to single llvm library, the split libs aren&#39;t working very well.
+
+<span class="tok-gu">* Fri Feb 05 2016 Dave Airlie &lt;airlied@redhat.com&gt; 3.7.1-3</span>
+- add missing obsoletes (#1303497)
+
+<span class="tok-gu">* Thu Feb 04 2016 Fedora Release Engineering &lt;releng@fedoraproject.org&gt; - 3.7.1-2</span>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+<span class="tok-gu">* Thu Jan 07 2016 Jan Vcelak &lt;jvcelak@fedoraproject.org&gt; 3.7.1-1</span>
+- new upstream release
+- enable gold linker
+
+<span class="tok-gu">* Wed Nov 04 2015 Jan Vcelak &lt;jvcelak@fedoraproject.org&gt; 3.7.0-100</span>
+- fix Requires for subpackages on the main package
+
+<span class="tok-gu">* Tue Oct 06 2015 Jan Vcelak &lt;jvcelak@fedoraproject.org&gt; 3.7.0-100</span>
+- initial version using cmake build system</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> as input to <code>LLVM_PROFDATA_FILE</code> for the optimization of the <code>llvm</code>, <code>clang</code> and <code>lld</code> packages.</p>
 </div>
 <div class="paragraph">
 <p>The resulting PGO optimized packages are available on <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
@@ -1645,7 +2775,18 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </div>
 <div class="sect1">
-<h2 id="_resources"><a class="anchor" href="#_resources"></a><a class="link" href="#_resources">4. Resources</a></h2>
+<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a><a class="link" href="#_conclusion">4. Conclusion</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We&#8217;ve seen how we can gather PGO profile data from building unmodified RPM packages and feed this data into a PGO-optimized recompilation of LLVM.</p>
+</div>
+<div class="paragraph">
+<p>I hope you liked this article and follow us exploring the possibilities ahead of us! Don&#8217;t forget to leave a comment ;)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_resources"><a class="anchor" href="#_resources"></a><a class="link" href="#_resources">5. Resources</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Here&#8217;s a list of places to find out more about PGO and RPM Package building.</p>
@@ -1698,21 +2839,10 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </div>
 </div>
-<div class="sect1">
-<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a><a class="link" href="#_conclusion">5. Conclusion</a></h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>We&#8217;ve seen how we can gather PGO profile data and feed it into a PGO optimized recompilation of LLVM.</p>
-</div>
-<div class="paragraph">
-<p>I hope you liked this article and follow us exploring the possibilities ahead of us! Don&#8217;t forget to leave a comment ;)</p>
-</div>
-</div>
-</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-24 14:49:25 +0100
+Last updated 2023-03-24 15:12:07 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

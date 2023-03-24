@@ -1636,7 +1636,7 @@ You might wonder why we first add and then edit a package. This is because we do
 <div class="sect2">
 <h3 id="step7"><a class="anchor" href="#step7"></a><a class="link" href="#step7">3.10. Step 7 - Build PGO optimized LLVM</a></h3>
 <div class="paragraph">
-<p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code></p>
+<p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code>:</p>
 </div>
 <div class="listingblock">
 <div class="title">step7/llvm/llvm.spec</div>
@@ -1647,7 +1647,28 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </div>
 <div class="paragraph">
-<p>and use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> as input to <code>LLVM_PROFDATA_FILE</code> for the optimization of the <code>llvm</code>, <code>clang</code> and <code>lld</code> packages.</p>
+<p>We then use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> provided by our <code>llvm-prog-profdata</code> package as input to <code>LLVM_PROFDATA_FILE</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">step7/llvm/llvm.spec</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
+	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata \
+<span class="tok-cp">%endif</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Together with the proper <code>--with pgo_optimized_build</code> <a href="https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html">build-conditional</a>, we&#8217;re building the optimized <code>llvm</code>, <code>clang</code> and <code>lld</code> packages:</p>
+</div>
+<div class="listingblock">
+<div class="title">step7/Makefile</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
+<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
+	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr  modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-chroot --rpmbuild-with pgo_optimized_build <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-37-x86_64</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>The resulting PGO optimized packages are available on <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
@@ -1660,6 +1681,36 @@ You might wonder why we first add and then edit a package. This is because we do
 <div class="sectionbody">
 <div class="paragraph">
 <p>We&#8217;ve seen how we can gather PGO profile data from building unmodified RPM packages and feed this data into a PGO-optimized recompilation of LLVM.</p>
+</div>
+<div class="paragraph">
+<p>Next on our list is:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Maybe move our additional code from <code>redhat-rpm-config</code> to some LLVM subpackage.</p>
+</li>
+<li>
+<p>Build for more architectures.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exist but are not considered here (for now). Leave a comment if you would like to see this.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Benchmark a PGO-optimized LLVM toolchain with CTMark on <a href="http://llvm-compile-time-tracker.com/" class="bare">http://llvm-compile-time-tracker.com/</a>.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p>I hope you liked this article and follow us exploring the possibilities ahead of us! Don&#8217;t forget to leave a comment ;)</p>
@@ -1723,7 +1774,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-24 15:12:07 +0100
+Last updated 2023-03-24 15:41:38 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

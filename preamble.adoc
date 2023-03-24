@@ -5,6 +5,7 @@ Konrad Kleine;
 :toc:
 :toclevels: 4
 :showtitle:
+:experimental:
 :sectnums:
 :stem:
 :sectlinks:
@@ -19,3 +20,4 @@ Konrad Kleine;
 :link-llvm-pgo-optimized: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized]
 :link-llvm-pgo-documentation: link:https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official documentation]
 :link-build-conditional: link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]
+

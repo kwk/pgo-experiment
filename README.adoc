@@ -5,6 +5,7 @@ Konrad Kleine;
 :toc:
 :toclevels: 4
 :showtitle:
+:experimental:
 :sectnums:
 :stem:
 :sectlinks:
@@ -18,7 +19,9 @@ Konrad Kleine;
 :link-profile-data-collection: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/profile-data-collection]
 :link-llvm-pgo-optimized: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized]
 :link-llvm-pgo-documentation: link:https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official documentation]
-:link-build-conditional: link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]In this experiment we generate PGO profile data from compiling
+:link-build-conditional: link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]
+
+In this experiment we generate PGO profile data from compiling
 unmodified RPM packages and feed those profiles into a PGO optimized
 rebuild of LLVM.
 

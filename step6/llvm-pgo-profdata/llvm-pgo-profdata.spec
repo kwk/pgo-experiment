@@ -41,6 +41,7 @@ cd %{_builddir}
 llvm-profdata merge \
       %{_libdir}/%{toolchain}-pgo-profdata/myapp/* \
       %{_libdir}/%{toolchain}-pgo-profdata/retsnoop/* \
+      %{_libdir}/%{toolchain}-pgo-profdata/chromium/* \
       -output llvm-pgo.profdata
 # end::merge_profiles[]
 

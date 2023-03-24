@@ -1,24 +1,5 @@
 // Process this file with "make docs" before viewing
-= A PGO optimized LLVM toolchain for Fedora
-Konrad Kleine;
-// :toc: left
-:toc:
-:toclevels: 4
-:showtitle:
-:sectnums:
-:stem:
-:sectlinks:
-:sectanchors:
-// :icons: font
-:source-highlighter: pygments
-:homepage: https://github.com/kwk/pgo-experiment
-:link-copr: https://copr.fedorainfracloud.org/[Copr]
-:link-fedora: https://getfedora.org/[Fedora Linux]
-:link-llvm-pgo-instrumented: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented]
-:link-profile-data-collection: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/profile-data-collection]
-:link-llvm-pgo-optimized: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized]
-:link-llvm-pgo-documentation: link:https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official documentation]
-:link-build-conditional: link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]
+include::preamble.adoc[]
 
 [.lead]
 In this experiment we generate PGO profile data from compiling unmodified RPM packages and feed those profiles into a PGO optimized rebuild of LLVM.
@@ -57,7 +38,7 @@ Here's a good starting point for preparing your system if you want to follow alo
 
 [source,console]
 ----
-$ sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor # <1>
+$ sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor pandoc # <1>
 $ gem install pygments.rb asciimath <2> 
 $ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <3>
 $ cd pgo-experiment # <4>

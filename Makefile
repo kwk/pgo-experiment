@@ -25,10 +25,11 @@ build-step%:
 
 .PHONY: docs
 docs:
-	# sudo dnf install asciidoctor
-	# gem install pygments.rb
 	asciidoctor README.in.adoc --doctype article -o index.html
 	asciidoctor README.in.adoc --doctype article --backend docbook -o README.xml
+	pandoc --from=docbook --to=asciidoc -o README.adoc.tmp README.xml
+	echo "include::preamble.adoc[]" > README.adoc
+	cat README.adoc.tmp >> README.adoc
 
 .PHONY: update-submodules
 update-submodules:

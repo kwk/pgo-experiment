@@ -14,8 +14,6 @@ It is not a goal to get a perfectly tweaked PGO optimization build of LLVM. Inst
 
 The only operating system that we build for in this experiment is Fedora 37 on x86_64.
 
-toc::[]
-
 == Understand what PGO can do
 
 > PGO (Profile-Guided Optimization) allows your compiler to better optimize code for how it actually runs. Users report that applying this to Clang and LLVM can decrease overall compile time by 20%.

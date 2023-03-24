@@ -51,3 +51,4 @@ docs:
 	pandoc --from=docbook --to=asciidoc -o README.adoc.tmp README.xml
 	cat preamble.adoc > README.adoc
 	cat README.adoc.tmp >> README.adoc
+	rm README.adoc.tmp README.xml

@@ -119,7 +119,7 @@ Then we're modifying the the CMake arguments according to the {link-llvm-pgo-doc
 .step0/llvm/llvm.spec
 [source,spec]
 ----
-include::step0/llvm/llvm.spec[lines=319..323]
+include::step0/llvm/llvm.spec[lines=321..325]
 ----
 
 [TIP]
@@ -481,7 +481,7 @@ In Fedora as well as RHEL and CentOS Stream we use a build mode called "standalo
 [#step7]
 === Step 7 - Build PGO optimized LLVM
 
-This step is similar to step 0 in which we've build the PGO instrumented LLVM. Here we're adding a build requirement for `llvm-pgo-profdata`:
+This step is similar to <<step0>> in which we've build the PGO instrumented LLVM. Here we're adding a build requirement for `llvm-pgo-profdata`:
 
 .step7/llvm/llvm.spec
 [source,spec]
@@ -520,7 +520,7 @@ Next on our list is:
 +
 [NOTE]
 ====
-By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exist but are not considered here (for now). Leave a comment if you would like to see this.
+By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exists but are not considered here (for now).
 ==== 
 * Benchmark a PGO-optimized LLVM toolchain with CTMark on http://llvm-compile-time-tracker.com/.
 

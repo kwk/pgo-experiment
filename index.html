@@ -772,11 +772,11 @@ When building the monorepo all at once you probably don&#8217;t notice this depe
 <div class="listingblock">
 <div class="title">step0/llvm/llvm.spec</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>	-DLLVM_VERSION_SUFFIX=<span class="tok-s1">&#39;&#39;</span> \
-<span class="tok-cp">%endif</span>
-<span class="tok-cp">%if</span> %{with pgo_instrumented_build}
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_instrumented_build}
 	-DLLVM_BUILD_INSTRUMENTED=IR \
-	-DLLVM_BUILD_RUNTIME=No \</code></pre>
+	-DLLVM_BUILD_RUNTIME=No \
+	-DLLVM_VP_COUNTERS_PER_SITE=8 \
+<span class="tok-cp">%endif</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -1636,7 +1636,7 @@ You might wonder why we first add and then edit a package. This is because we do
 <div class="sect2">
 <h3 id="step7"><a class="anchor" href="#step7"></a><a class="link" href="#step7">3.10. Step 7 - Build PGO optimized LLVM</a></h3>
 <div class="paragraph">
-<p>This step is similar to step 0 in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code>:</p>
+<p>This step is similar to <a href="#step0">Step 0 - Build a PGO instrumented LLVM</a> in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code>:</p>
 </div>
 <div class="listingblock">
 <div class="title">step7/llvm/llvm.spec</div>
@@ -1700,7 +1700,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </td>
 <td class="content">
 <div class="paragraph">
-<p>By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exist but are not considered here (for now). Leave a comment if you would like to see this.</p>
+<p>By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exists but are not considered here (for now).</p>
 </div>
 </td>
 </tr>
@@ -1774,7 +1774,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-24 15:41:38 +0100
+Last updated 2023-03-24 16:37:25 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

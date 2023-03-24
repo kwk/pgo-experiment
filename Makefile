@@ -28,3 +28,9 @@ docs:
 	# sudo dnf install asciidoctor
 	# gem install pygments.rb
 	asciidoctor README.in.adoc --doctype article -o index.html
+	asciidoctor README.in.adoc --doctype article --backend docbook -o README.xml
+
+.PHONY: update-submodules
+update-submodules:
+	git fetch --recurse-submodules
+	git submodule foreach 'git reset --hard origin/pgo-experiment' 

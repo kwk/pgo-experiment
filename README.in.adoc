@@ -1,14 +1,15 @@
 // Process this file with "make docs" before viewing
 = A PGO optimized LLVM toolchain for Fedora
 Konrad Kleine;
-:toc: left
+// :toc: left
+:toc:
 :toclevels: 4
 :showtitle:
 :sectnums:
 :stem:
 :sectlinks:
 :sectanchors:
-:icons: font
+// :icons: font
 :source-highlighter: pygments
 :homepage: https://github.com/kwk/pgo-experiment
 :link-copr: https://copr.fedorainfracloud.org/[Copr]
@@ -56,20 +57,16 @@ Here's a good starting point for preparing your system if you want to follow alo
 [source,console]
 ----
 $ sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor # <1>
-$ gem install pygments.rb <2>
+$ gem install pygments.rb asciimath <2> 
 $ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <3>
 $ cd pgo-experiment # <4>
-$ git fetch --recurse-submodules # <5>
-$ git submodule foreach 'git reset --hard origin/pgo-experiment' # <6>
-$ kinit <FAS_USER>@FEDORAPROJECT.ORG # <7>
+$ kinit <FAS_USER>@FEDORAPROJECT.ORG # <5>
 ----
 <1> Install packages that you need in order to build the <<steps>>. Maybe this list is not capturing everything you need but at least most of it. `asciidoctor` is optional for building this documentation using `make docs`.
-<2> OPTIONAL: Installing this ruby gem is only for building these docs using `make docs`.
+<2> OPTIONAL: Installing these ruby gems is only for building these docs using `make docs`.
 <3> Clone the project including submodules.
 <4> Navigate to the project's root directory.
-<5> In order to update the submodules we have to first fetch information from their remotes (`origin`).
-<6> Then walk over each submodule directory and reset it to the `origin/pgp-experiment` branch.
-<7> OPTIONAL: If you want to build the steps that involve the `copr` CLI, you need to have a valid Kerberos ticket. Replace `<FAS_USER>` with the your own Fedora FAS user name.
+<5> OPTIONAL: If you want to build the steps that involve the `copr` CLI, you need to have a valid Kerberos ticket. Replace `<FAS_USER>` with the your own Fedora FAS user name.
 
 [#steps]
 == Steps
@@ -83,18 +80,18 @@ In this step, we're essentially following the {link-llvm-pgo-documentation} for 
 
 ==== Spec file modifications
 
-I've set up `pgo-experiment` branches in each of those package git repositories on the Fedora Source:
+I've set up `pgo-experiment` branches in each of the following package repositories on the Fedora Source:
 
-1. link:https://src.fedoraproject.org/fork/kkleine/rpms/llvm/tree/pgo-experiment[llvm]
-2. link:https://src.fedoraproject.org/fork/kkleine/rpms/clang/tree/pgo-experiment[clang]
-3. link:https://src.fedoraproject.org/fork/kkleine/rpms/lld/tree/pgo-experiment[lld]
+1. https://src.fedoraproject.org/fork/kkleine/rpms/llvm/tree/pgo-experiment
+2. https://src.fedoraproject.org/fork/kkleine/rpms/clang/tree/pgo-experiment
+3. https://src.fedoraproject.org/fork/kkleine/rpms/lld/tree/pgo-experiment
 
-In all of these repositries I've essentially done the same changes. At first I've added link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditionals] that are off by default:
+In all of these repositries I've essentially done the same changes. At first I've added a link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional] that is off by default:
 
 .step0/llvm/llvm.spec
 [source,spec]
 ----
-include::step0/llvm/llvm.spec[tags=pgo_build_conditions]
+include::step0/llvm/llvm.spec[tags=pgo_bcond_instrumented;pgo_bcond_optimized]
 ----
 
 As you can see, one is for building an instrumented package and one is for building an optimized package. In <<step7>> we're using the `pgo_optimized_build` but here we're only turning on `pgo_instrumented_build` in our `Makefile`:

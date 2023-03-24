@@ -436,7 +436,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 #footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
 pre.pygments .hll { background-color: #ffffcc }
 pre.pygments { background: #f8f8f8; }
@@ -509,13 +508,13 @@ pre.pygments .tok-vm { color: #19177C } /* Name.Variable.Magic */
 pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 </style>
 </head>
-<body class="article toc2 toc-left">
+<body class="article">
 <div id="header">
 <h1>A PGO optimized LLVM toolchain for Fedora</h1>
 <div class="details">
 <span id="author" class="author">Konrad Kleine</span><br>
 </div>
-<div id="toc" class="toc2">
+<div id="toc" class="toc">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_non_goal">1. Non-goal</a></li>
@@ -629,7 +628,7 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<div class="title">Note</div>
 </td>
 <td class="content">
 The <code>Containerfile</code> s run as <code>root</code> to allow packages to be installed and have a <code>tester</code> account for regular user interaction. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites.
@@ -647,46 +646,31 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor <i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-gp">$ </span>gem install pygments.rb <i class="conum" data-value="2"></i><b>(2)</b>
-<span class="tok-gp">$ </span>git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git <i class="conum" data-value="3"></i><b>(3)</b>
-<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment <i class="conum" data-value="4"></i><b>(4)</b>
-<span class="tok-gp">$ </span>git fetch --recurse-submodules <i class="conum" data-value="5"></i><b>(5)</b>
-<span class="tok-gp">$ </span>git submodule foreach <span class="tok-s1">&#39;git reset --hard origin/pgo-experiment&#39;</span> <i class="conum" data-value="6"></i><b>(6)</b>
-<span class="tok-gp">$ </span>kinit &lt;FAS_USER&gt;@FEDORAPROJECT.ORG <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor # <b class="conum">(1)</b>
+<span class="tok-gp">$ </span>gem install pygments.rb asciimath <b class="conum">(2)</b>
+<span class="tok-gp">$ </span>git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <b class="conum">(3)</b>
+<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment # <b class="conum">(4)</b>
+<span class="tok-gp">$ </span>kinit &lt;FAS_USER&gt;@FEDORAPROJECT.ORG # <b class="conum">(5)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Install packages that you need in order to build the <a href="#steps">Steps</a>. Maybe this list is not capturing everything you need but at least most of it. <code>asciidoctor</code> is optional for building this documentation using <code>make docs</code>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>OPTIONAL: Installing this ruby gem is only for building these docs using <code>make docs</code>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Clone the project including submodules.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Navigate to the project&#8217;s root directory.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>In order to update the submodules we have to first fetch information from their remotes (<code>origin</code>).</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>Then walk over each submodule directory and reset it to the <code>origin/pgp-experiment</code> branch.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>OPTIONAL: If you want to build the steps that involve the <code>copr</code> CLI, you need to have a valid Kerberos ticket. Replace <code>&lt;FAS_USER&gt;</code> with the your own Fedora FAS user name.</td>
-</tr>
-</table>
+<ol>
+<li>
+<p>Install packages that you need in order to build the <a href="#steps">Steps</a>. Maybe this list is not capturing everything you need but at least most of it. <code>asciidoctor</code> is optional for building this documentation using <code>make docs</code>.</p>
+</li>
+<li>
+<p>OPTIONAL: Installing these ruby gems is only for building these docs using <code>make docs</code>.</p>
+</li>
+<li>
+<p>Clone the project including submodules.</p>
+</li>
+<li>
+<p>Navigate to the project&#8217;s root directory.</p>
+</li>
+<li>
+<p>OPTIONAL: If you want to build the steps that involve the <code>copr</code> CLI, you need to have a valid Kerberos ticket. Replace <code>&lt;FAS_USER&gt;</code> with the your own Fedora FAS user name.</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
@@ -700,7 +684,7 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<div class="title">Note</div>
 </td>
 <td class="content">
 This step mainly exists for documentation purposes. If you <strong>do</strong> build this step on your own, make sure to walk through the files where there&#8217;s a reference to <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a> and change it to your project. I don&#8217;t see a need to consider this part of this excersise. All we have to do is really pass along a few CMake flags when building the LLVM RPM packages: <code>llvm</code>, <code>clang</code>, and <code>lld</code>.
@@ -714,18 +698,18 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <div class="sect3">
 <h4 id="_spec_file_modifications"><a class="anchor" href="#_spec_file_modifications"></a><a class="link" href="#_spec_file_modifications">3.1.1. Spec file modifications</a></h4>
 <div class="paragraph">
-<p>I&#8217;ve set up <code>pgo-experiment</code> branches in each of those package git repositories on the Fedora Source:</p>
+<p>I&#8217;ve set up <code>pgo-experiment</code> branches in each of the following package repositories on the Fedora Source:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><a href="https://src.fedoraproject.org/fork/kkleine/rpms/llvm/tree/pgo-experiment">llvm</a></p>
+<p><a href="https://src.fedoraproject.org/fork/kkleine/rpms/llvm/tree/pgo-experiment" class="bare">https://src.fedoraproject.org/fork/kkleine/rpms/llvm/tree/pgo-experiment</a></p>
 </li>
 <li>
-<p><a href="https://src.fedoraproject.org/fork/kkleine/rpms/clang/tree/pgo-experiment">clang</a></p>
+<p><a href="https://src.fedoraproject.org/fork/kkleine/rpms/clang/tree/pgo-experiment" class="bare">https://src.fedoraproject.org/fork/kkleine/rpms/clang/tree/pgo-experiment</a></p>
 </li>
 <li>
-<p><a href="https://src.fedoraproject.org/fork/kkleine/rpms/lld/tree/pgo-experiment">lld</a></p>
+<p><a href="https://src.fedoraproject.org/fork/kkleine/rpms/lld/tree/pgo-experiment" class="bare">https://src.fedoraproject.org/fork/kkleine/rpms/lld/tree/pgo-experiment</a></p>
 </li>
 </ol>
 </div>
@@ -781,7 +765,7 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
+<div class="title">Tip</div>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -828,7 +812,7 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
+<div class="title">Tip</div>
 </td>
 <td class="content">
 This step does NOT depend on <a href="#step0">Step 0 - Build a PGO instrumented LLVM</a>. So you should be good to just run <code>make build-step1</code>.
@@ -1152,7 +1136,7 @@ llvm-profdata merge \
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<div class="title">Important</div>
 </td>
 <td class="content">
 Why not store the raw profiles? In the first incarnation of this experiment I did store the raw profiles and I noticed that the final <code>myapp-clang-pgo-profdata</code> RPM was 128MB in size. When we first merge the profiles we get it down to ~900KB. I did a similar experiment for the <code>retsnoop</code> project and there the effect was also very big: ~1,4GB for raw profile data down to ~1,6MB for merged one.
@@ -1164,7 +1148,7 @@ Why not store the raw profiles? In the first incarnation of this experiment I di
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
+<div class="title">Tip</div>
 </td>
 <td class="content">
 You can call <code>llvm-profdata merge</code> on already merged profiles!
@@ -1186,7 +1170,7 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>make build-step2 <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>make build-step2 # <b class="conum">(1)</b>
 <span class="tok-go">[...]</span>
 <span class="tok-go">Wrote: /home/tester/myapp/myapp-1.0.0-2.fc37.src.rpm</span>
 <span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-2.fc37.x86_64.rpm</span>
@@ -1194,8 +1178,8 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 <span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-2.fc37.x86_64.rpm</span>
 <span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm</span>
 <span class="tok-go">[...]</span>
-<span class="tok-gp"># </span>dnf install -y --disablerepo<span class="tok-o">=</span>* /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm <i class="conum" data-value="2"></i><b>(2)</b>
-<span class="tok-gp"># </span>llvm-profdata show --topn<span class="tok-o">=</span><span class="tok-m">10</span> /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata <span class="tok-p">|</span> c++filt <i class="conum" data-value="3"></i><b>(3)</b>
+<span class="tok-gp"># </span>dnf install -y --disablerepo<span class="tok-o">=</span>* /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm <b class="conum">(2)</b>
+<span class="tok-gp"># </span>llvm-profdata show --topn<span class="tok-o">=</span><span class="tok-m">10</span> /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata <span class="tok-p">|</span> c++filt <b class="conum">(3)</b>
 <span class="tok-go">Instrumentation level: IR  entry_first = 0</span>
 <span class="tok-go">Total functions: 22243</span>
 <span class="tok-go">Maximum function count: 156465725</span>
@@ -1214,26 +1198,23 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 </div>
 </div>
 <div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Build the step2 in a container and remain in the bash shell of that container.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Install the resulting merged PGO file right into the container.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Show the top 10 hottest functions demangled by <code>c++filt</code>.</td>
-</tr>
-</table>
+<ol>
+<li>
+<p>Build the step2 in a container and remain in the bash shell of that container.</p>
+</li>
+<li>
+<p>Install the resulting merged PGO file right into the container.</p>
+</li>
+<li>
+<p>Show the top 10 hottest functions demangled by <code>c++filt</code>.</p>
+</li>
+</ol>
 </div>
 <div class="admonitionblock caution">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
+<div class="title">Caution</div>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -1325,7 +1306,7 @@ llvm-profdata merge \
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<div class="title">Note</div>
 </td>
 <td class="content">
 You can specify <code>%global toolchain clang</code> to have your code compile with clang and use all the right and sane defaults for compiler flags for clang. See <a href="https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros" class="bare">https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros</a>.
@@ -1355,7 +1336,7 @@ You can specify <code>%global toolchain clang</code> to have your code compile w
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<div class="title">Important</div>
 </td>
 <td class="content">
 Currently there&#8217;s no sanity checking of whether or not a package can even produce PGO profiles. If there&#8217;s no compiler or the compiler is not clang, my patch doesn&#8217;t work. But right now we don&#8217;t care so much about this and consider it an optimization for later. I just wanted to let you know.
@@ -1471,7 +1452,7 @@ sudo dnf install -y --disablerepo<span class="tok-o">=</span>* noarch/redhat-rpm
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<div class="title">Note</div>
 </td>
 <td class="content">
 You don&#8217;t need to run this step manually. It has already been run and the results are in the Copr project
@@ -1521,16 +1502,15 @@ You don&#8217;t need to run this step manually. It has already been run and the 
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span><span class="tok-nb">cd</span> step5/
-<span class="tok-gp">$ </span>make distgit-&lt;PACKAGE&gt; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<span class="tok-gp">$ </span>make distgit-&lt;PACKAGE&gt; # <b class="conum">(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Replace <code>&lt;PACKAGE&gt;</code> with a real package name, e.g. <code>retsnoop</code>.</td>
-</tr>
-</table>
+<ol>
+<li>
+<p>Replace <code>&lt;PACKAGE&gt;</code> with a real package name, e.g. <code>retsnoop</code>.</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
 <p>This is backed by this special target in the <a href="step5/Makefile"><code>step5/Makefile</code></a>:</p>
@@ -1563,7 +1543,7 @@ You don&#8217;t need to run this step manually. It has already been run and the 
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<div class="title">Note</div>
 </td>
 <td class="content">
 You might wonder why we first add and then edit a package. This is because we don&#8217;t know if the package has already been added before. And to overwrite with the desired values we simply edit an added project right away. So, nothing really special.
@@ -1610,7 +1590,7 @@ You might wonder why we first add and then edit a package. This is because we do
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
+<div class="title">Caution</div>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -1709,7 +1689,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-23 15:35:15 +0100
+Last updated 2023-03-24 14:26:22 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

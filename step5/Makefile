@@ -4,7 +4,7 @@ fas_user ?= ${USER}
 copr_project ?= profile-data-collection
 
 .PHONY: all
-all: create-copr-project redhat-rpm-config.copr_build_id myapp.copr_build_id
+all: clean create-copr-project redhat-rpm-config.copr_build_id myapp.copr_build_id
 
 # tag::create_copr_project[]
 .PHONY: create-copr-project
@@ -25,7 +25,7 @@ redhat-rpm-config.copr_build_id:
 	-rm -rf redhat-rpm-config
 	-cp -rf ../step4/redhat-rpm-config .
 	cd redhat-rpm-config
-	fedpkg srpm
+	fedpkg --release f37 srpm
 	-copr delete-package --name redhat-rpm-config $(copr_project)
 	copr build --timeout 108000 --nowait --chroot fedora-37-x86_64 $(fas_user)/$(copr_project) redhat-rpm-config-230-1.fc37.src.rpm | tee build.log
 	grep -Po 'Created builds: \K(\d+)' build.log > ../redhat-rpm-config.copr_build_id

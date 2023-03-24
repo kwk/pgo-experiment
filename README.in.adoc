@@ -485,7 +485,7 @@ This step is similar to step 0 in which we've build the PGO instrumented LLVM. H
 .step7/llvm/llvm.spec
 [source,spec]
 ----
-include::step0/llvm/llvm.spec[tags=pgo_build_requires_optimized]
+include::step7/llvm/llvm.spec[tags=pgo_build_requires_optimized]
 ----
 
 and use the file `%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata` as input to `LLVM_PROFDATA_FILE` for the optimization of the `llvm`, `clang` and `lld` packages.

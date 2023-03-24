@@ -26,3 +26,7 @@
 	path = step7/clang
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/clang.git
 	branch = pgo-experiment
+[submodule "step5/redhat-rpm-config"]
+	path = step5/redhat-rpm-config
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/redhat-rpm-config.git
+	branch = pgo-experiment

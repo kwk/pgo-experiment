@@ -14,3 +14,7 @@
 	path = step0/lld
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
 	branch = pgo-experiment
+[submodule "step7/lld"]
+	path = step7/lld
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
+	branch = pgo-experiment

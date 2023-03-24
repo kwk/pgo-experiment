@@ -1,4 +1,1 @@
-llvm/
-lld/
-clang/
 *.copr_build_id

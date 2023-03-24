@@ -1,8 +1,6 @@
 = A PGO optimized LLVM toolchain for Fedora
 Konrad Kleine;
-
-// :toc: left
-:toc: left
+:toc: macro
 :toclevels: 4
 :showtitle:
 :experimental:
@@ -21,9 +19,13 @@ Konrad Kleine;
 :link-llvm-pgo-documentation: link:https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official documentation]
 :link-build-conditional: link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]
 
+toc::[]
 In this experiment we generate PGO profile data from compiling
 unmodified RPM packages and feed those profiles into a PGO optimized
 rebuild of LLVM.
+
+[[_overview]]
+== Overview
 
 We create an instrumented LLVM toolchain in a Copr project called
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented].
@@ -45,10 +47,10 @@ https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/l
 image:process-overview.png[process overview]
 
 [[_non_goal]]
-== Non-goal
+=== Non-goal
 
 It is not a goal to get a perfectly tweaked PGO optimization build of
-LLVM. Instead we want to explor a way how to setup a pipeline in
+LLVM. Instead we want to explore a way how to setup a pipeline in
 https://copr.fedorainfracloud.org/[Copr] for further tweaking and
 experimentation.
 

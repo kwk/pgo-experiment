@@ -436,6 +436,77 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 #footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
+<style>
+pre.pygments .hll { background-color: #ffffcc }
+pre.pygments { background: #f8f8f8; }
+pre.pygments .tok-c { color: #408080; font-style: italic } /* Comment */
+pre.pygments .tok-err { border: 1px solid #FF0000 } /* Error */
+pre.pygments .tok-k { color: #008000; font-weight: bold } /* Keyword */
+pre.pygments .tok-o { color: #666666 } /* Operator */
+pre.pygments .tok-ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+pre.pygments .tok-cm { color: #408080; font-style: italic } /* Comment.Multiline */
+pre.pygments .tok-cp { color: #BC7A00 } /* Comment.Preproc */
+pre.pygments .tok-cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+pre.pygments .tok-c1 { color: #408080; font-style: italic } /* Comment.Single */
+pre.pygments .tok-cs { color: #408080; font-style: italic } /* Comment.Special */
+pre.pygments .tok-gd { color: #A00000 } /* Generic.Deleted */
+pre.pygments .tok-ge { font-style: italic } /* Generic.Emph */
+pre.pygments .tok-gr { color: #FF0000 } /* Generic.Error */
+pre.pygments .tok-gh { color: #000080; font-weight: bold } /* Generic.Heading */
+pre.pygments .tok-gi { color: #00A000 } /* Generic.Inserted */
+pre.pygments .tok-go { color: #888888 } /* Generic.Output */
+pre.pygments .tok-gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+pre.pygments .tok-gs { font-weight: bold } /* Generic.Strong */
+pre.pygments .tok-gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+pre.pygments .tok-gt { color: #0044DD } /* Generic.Traceback */
+pre.pygments .tok-kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+pre.pygments .tok-kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+pre.pygments .tok-kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+pre.pygments .tok-kp { color: #008000 } /* Keyword.Pseudo */
+pre.pygments .tok-kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+pre.pygments .tok-kt { color: #B00040 } /* Keyword.Type */
+pre.pygments .tok-m { color: #666666 } /* Literal.Number */
+pre.pygments .tok-s { color: #BA2121 } /* Literal.String */
+pre.pygments .tok-na { color: #7D9029 } /* Name.Attribute */
+pre.pygments .tok-nb { color: #008000 } /* Name.Builtin */
+pre.pygments .tok-nc { color: #0000FF; font-weight: bold } /* Name.Class */
+pre.pygments .tok-no { color: #880000 } /* Name.Constant */
+pre.pygments .tok-nd { color: #AA22FF } /* Name.Decorator */
+pre.pygments .tok-ni { color: #999999; font-weight: bold } /* Name.Entity */
+pre.pygments .tok-ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+pre.pygments .tok-nf { color: #0000FF } /* Name.Function */
+pre.pygments .tok-nl { color: #A0A000 } /* Name.Label */
+pre.pygments .tok-nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+pre.pygments .tok-nt { color: #008000; font-weight: bold } /* Name.Tag */
+pre.pygments .tok-nv { color: #19177C } /* Name.Variable */
+pre.pygments .tok-ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+pre.pygments .tok-w { color: #bbbbbb } /* Text.Whitespace */
+pre.pygments .tok-mb { color: #666666 } /* Literal.Number.Bin */
+pre.pygments .tok-mf { color: #666666 } /* Literal.Number.Float */
+pre.pygments .tok-mh { color: #666666 } /* Literal.Number.Hex */
+pre.pygments .tok-mi { color: #666666 } /* Literal.Number.Integer */
+pre.pygments .tok-mo { color: #666666 } /* Literal.Number.Oct */
+pre.pygments .tok-sa { color: #BA2121 } /* Literal.String.Affix */
+pre.pygments .tok-sb { color: #BA2121 } /* Literal.String.Backtick */
+pre.pygments .tok-sc { color: #BA2121 } /* Literal.String.Char */
+pre.pygments .tok-dl { color: #BA2121 } /* Literal.String.Delimiter */
+pre.pygments .tok-sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+pre.pygments .tok-s2 { color: #BA2121 } /* Literal.String.Double */
+pre.pygments .tok-se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+pre.pygments .tok-sh { color: #BA2121 } /* Literal.String.Heredoc */
+pre.pygments .tok-si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+pre.pygments .tok-sx { color: #008000 } /* Literal.String.Other */
+pre.pygments .tok-sr { color: #BB6688 } /* Literal.String.Regex */
+pre.pygments .tok-s1 { color: #BA2121 } /* Literal.String.Single */
+pre.pygments .tok-ss { color: #19177C } /* Literal.String.Symbol */
+pre.pygments .tok-bp { color: #008000 } /* Name.Builtin.Pseudo */
+pre.pygments .tok-fm { color: #0000FF } /* Name.Function.Magic */
+pre.pygments .tok-vc { color: #19177C } /* Name.Variable.Class */
+pre.pygments .tok-vg { color: #19177C } /* Name.Variable.Global */
+pre.pygments .tok-vi { color: #19177C } /* Name.Variable.Instance */
+pre.pygments .tok-vm { color: #19177C } /* Name.Variable.Magic */
+pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
+</style>
 </head>
 <body class="article">
 <div id="header">
@@ -447,9 +518,72 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_overview">1. Overview</a>
+<ul class="sectlevel2">
+<li><a href="#_non_goal">1.1. Non-goal</a></li>
+</ul>
+</li>
+<li><a href="#_understand_what_pgo_can_do">2. Understand what PGO can do</a>
+<ul class="sectlevel2">
+<li><a href="#_how_to_follow_along">2.1. How to follow along?</a></li>
+</ul>
+</li>
+<li><a href="#steps">3. Steps</a>
+<ul class="sectlevel2">
+<li><a href="#step0">3.1. Step 0 - Build a PGO instrumented LLVM</a>
+<ul class="sectlevel3">
+<li><a href="#_spec_file_modifications">3.1.1. Spec file modifications</a></li>
+</ul>
+</li>
+<li><a href="#step1">3.2. Step 1 - Build "Hello, World!" RPM</a></li>
+<li><a href="#step2">3.3. Step 2 - Manually add subpackage</a>
+<ul class="sectlevel3">
+<li><a href="#_subpackage_definition">3.3.1. Subpackage definition</a></li>
+<li><a href="#_set_llvm_profile_file">3.3.2. Set LLVM_PROFILE_FILE</a></li>
+<li><a href="#_find_and_merge_the_profiles">3.3.3. Find and merge the profiles</a></li>
+<li><a href="#_try_it_out_yourself">3.3.4. Try it out yourself</a></li>
+</ul>
+</li>
+<li><a href="#step3">3.4. Step 3 - Generalize subpackage</a>
+<ul class="sectlevel3">
+<li><a href="#_subpackage_definition_2">3.4.1. Subpackage definition</a></li>
+<li><a href="#_set_llvm_profile_file_2">3.4.2. Set LLVM_PROFILE_FILE</a></li>
+<li><a href="#_find_and_merge_profiles">3.4.3. Find and merge profiles</a></li>
+</ul>
+</li>
+<li><a href="#step4">3.5. Step 4 - Automatically add subpackage</a>
+<ul class="sectlevel3">
+<li><a href="#_toggle">3.5.1. Toggle</a></li>
+</ul>
+</li>
+<li><a href="#_subpackage_template">3.6. Subpackage template</a>
+<ul class="sectlevel3">
+<li><a href="#_set_llvm_profile_file_3">3.6.1. Set LLVM_PROFILE_FILE</a></li>
+<li><a href="#_find_and_merge_profiles_2">3.6.2. Find and merge profiles</a></li>
+<li><a href="#_build_redhat_rpm_config_package">3.6.3. Build redhat-rpm-config package</a></li>
+</ul>
+</li>
+<li><a href="#step5">3.7. Step 5 - Build unmodified packages on Copr</a></li>
+<li><a href="#_optional_build_from_distgit">3.8. Optional: Build from distgit</a></li>
+<li><a href="#step6">3.9. Step 6 - Merge Raw Profiles</a></li>
+<li><a href="#step7">3.10. Step 7 - Build PGO optimized LLVM</a></li>
+</ul>
+</li>
+<li><a href="#_conclusion">4. Conclusion</a></li>
+<li><a href="#_resources">5. Resources</a></li>
+</ul>
+</div>
 <div class="paragraph lead">
 <p>In this experiment we generate PGO profile data from compiling unmodified RPM packages and feed those profiles into a PGO optimized rebuild of LLVM.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_overview"><a class="anchor" href="#_overview"></a><a class="link" href="#_overview">1. Overview</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>We create an instrumented LLVM toolchain in a Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a>. In another Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> we build a modified <code>redhat-rpm-config</code> package. Every package that gets built in that project will automatically produce a subpackage <code>&lt;PACKAGE&gt;-clang-profdata</code> with PGO profile data. We demonstrate this with a simple "Hello, World!" application that is called <code>myapp</code>. We then collect all those subpackages through <code>BuildRequires:</code> tags in another package called <code>llvm-pgo-profdata</code>. During the build of that package, all profiles are merged into an indexed profile data file. The final <code>llvm-pgo-profdata</code> RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
 </div>
@@ -458,16 +592,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <img src="process-overview.png" alt="process overview">
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_non_goal"><a class="anchor" href="#_non_goal"></a><a class="link" href="#_non_goal">1. Non-goal</a></h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_non_goal"><a class="anchor" href="#_non_goal"></a><a class="link" href="#_non_goal">1.1. Non-goal</a></h3>
 <div class="paragraph">
-<p>It is not a goal to get a perfectly tweaked PGO optimization build of LLVM. Instead we want to explor a way how to setup a pipeline in <a href="https://copr.fedorainfracloud.org/">Copr</a> for further tweaking and experimentation.</p>
+<p>It is not a goal to get a perfectly tweaked PGO optimization build of LLVM. Instead we want to explore a way how to setup a pipeline in <a href="https://copr.fedorainfracloud.org/">Copr</a> for further tweaking and experimentation.</p>
 </div>
 <div class="paragraph">
 <p>The only operating system that we build for in this experiment is Fedora 37 on x86_64.</p>
+</div>
 </div>
 </div>
 </div>
@@ -521,11 +653,11 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-console" data-lang="console">$ sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor pandoc # <b class="conum">(1)</b>
-$ gem install pygments.rb asciimath <b class="conum">(2)</b>
-$ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <b class="conum">(3)</b>
-$ cd pgo-experiment # <b class="conum">(4)</b>
-$ kinit &lt;FAS_USER&gt;@FEDORAPROJECT.ORG # <b class="conum">(5)</b></code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>sudo dnf install -y git make fedpkg podman fedora-packager krb5-workstation asciidoctor pandoc # <b class="conum">(1)</b>
+<span class="tok-gp">$ </span>gem install pygments.rb asciimath <b class="conum">(2)</b>
+<span class="tok-gp">$ </span>git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <b class="conum">(3)</b>
+<span class="tok-gp">$ </span><span class="tok-nb">cd</span> pgo-experiment # <b class="conum">(4)</b>
+<span class="tok-gp">$ </span>kinit &lt;FAS_USER&gt;@FEDORAPROJECT.ORG # <b class="conum">(5)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -594,7 +726,7 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <div class="listingblock">
 <div class="title">step0/llvm/llvm.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%bcond_with pgo_instrumented_build
+<pre class="pygments highlight"><code data-lang="spec"><span></span>%bcond_with pgo_instrumented_build
 %bcond_with pgo_optimized_build</code></pre>
 </div>
 </div>
@@ -604,11 +736,11 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <div class="listingblock">
 <div class="title">step0/Makefile</div>
 <div class="content">
-<pre class="highlight"><code class="language-make" data-lang="make">.PHONY: create-copr-project
-create-copr-project:
-	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on $(copr_project)
-	-copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on $(copr_project)
-	copr edit-chroot --rpmbuild-with pgo_instrumented_build  $(fas_user)/$(copr_project)/fedora-37-x86_64 # <b class="conum">(1)</b></code></pre>
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
+<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
+	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	-copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-chroot --rpmbuild-with pgo_instrumented_build  <span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-37-x86_64 # <b class="conum">(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -624,9 +756,9 @@ create-copr-project:
 <div class="listingblock">
 <div class="title">step0/llvm/llvm.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%if %{with pgo_instrumented_build}
-BuildRequires: compiler-rt
-%endif</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_instrumented_build}
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> compiler-rt
+<span class="tok-cp">%endif</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -647,11 +779,11 @@ When building the monorepo all at once you probably don&#8217;t notice this depe
 <div class="listingblock">
 <div class="title">step0/llvm/llvm.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%if %{with pgo_instrumented_build}
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_instrumented_build}
 	-DLLVM_BUILD_INSTRUMENTED=IR \
 	-DLLVM_BUILD_RUNTIME=No \
 	-DLLVM_VP_COUNTERS_PER_SITE=8 \
-%endif</code></pre>
+<span class="tok-cp">%endif</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -722,45 +854,84 @@ This step does NOT depend on <a href="#step0">Step 0 - Build a PGO instrumented 
 <div class="listingblock">
 <div class="title">step1/myapp/myapp.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec"># See https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros
+<pre class="pygments highlight"><code data-lang="spec"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span></pre></div></td><td class="code"><pre><span></span><span class="tok-c"># See https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros</span>
 %global toolchain clang
 
-Name: myapp
-Version: 1.0.0
-Release: 1%{?dist}
-Summary: A simple "Hello, World!" application.
+<span class="tok-gh">Name</span><span class="tok-p">:</span> myapp
+<span class="tok-gh">Version</span><span class="tok-p">:</span> 1.0.0
+<span class="tok-gh">Release</span><span class="tok-p">:</span> 1<span class="tok-nv">%{?dist}</span>
+<span class="tok-gh">Summary</span><span class="tok-p">:</span> A simple <span class="tok-s2">&quot;Hello, World!&quot;</span> application.
 
-License: Apache-2.0
-URL: https://github.com/kwk/pgo-experiment
-Source0: myapp-%{version}.tar.bz2
+<span class="tok-gh">License</span><span class="tok-p">:</span> Apache-2.0
+<span class="tok-gh">URL</span><span class="tok-p">:</span> https://github.com/kwk/pgo-experiment
+<span class="tok-gh">Source0</span><span class="tok-p">:</span> myapp-<span class="tok-kc">%{version}</span>.tar.bz2
 
-BuildRequires:	clang
-BuildRequires:	cmake
-BuildRequires:	git
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span>	clang
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span>	cmake
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span>	git
 
-%description
-A simple "Hello, World!" application.
+<span class="tok-nd">%description</span>
+A simple &quot;Hello, World!&quot; application.
 
-%prep
+<span class="tok-nd">%prep</span>
 %autosetup -S git
 
-%build
+<span class="tok-nd">%build</span>
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
 
-%install
+<span class="tok-nd">%install</span>
 %cmake_install
 
-%check
-test "`%{buildroot}/%{_bindir}/myapp`" = "Hello, World!"
+<span class="tok-nd">%check</span>
+test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span><span class="tok-s2">/</span><span class="tok-kp">%{_bindir}</span><span class="tok-s2">/myapp`&quot;</span> = <span class="tok-s2">&quot;Hello, World!&quot;</span>
 
-%files
+<span class="tok-nd">%files</span>
 %license LICENSE
-%{_bindir}/myapp
+<span class="tok-kp">%{_bindir}</span>/myapp
 
-%changelog
-* Wed Mar 1 2023 Konrad Kleine &lt;kkleine@redhat.com&gt; - 1.0.0-1
-- Building step1</code></pre>
+<span class="tok-nd">%changelog</span>
+<span class="tok-gu">* Wed Mar 1 2023 Konrad Kleine &lt;kkleine@redhat.com&gt; - 1.0.0-1</span>
+- Building step1
+</pre></td></tr></table></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -772,12 +943,18 @@ test "`%{buildroot}/%{_bindir}/myapp`" = "Hello, World!"
 <div class="listingblock">
 <div class="title">step1/myapp/myapp.cpp</div>
 <div class="content">
-<pre class="highlight"><code class="language-cpp" data-lang="cpp">#include &lt;iostream&gt;
+<pre class="pygments highlight"><code data-lang="cpp"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><pre><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;iostream&gt;</span><span class="tok-cp"></span>
 
-int main(int argc, char *argv[]) {
-    std::cout &lt;&lt; "Hello, World!" &lt;&lt; std::endl;
-    return 0;
-}</code></pre>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">main</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">argc</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">argv</span><span class="tok-p">[])</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"></span>
+<span class="tok-w">    </span><span class="tok-n">std</span><span class="tok-o">::</span><span class="tok-n">cout</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-s">&quot;Hello, World!&quot;</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-n">std</span><span class="tok-o">::</span><span class="tok-n">endl</span><span class="tok-p">;</span><span class="tok-w"></span>
+<span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"></span>
+<span class="tok-p">}</span><span class="tok-w"></span>
+</pre></td></tr></table></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -786,27 +963,48 @@ int main(int argc, char *argv[]) {
 <div class="listingblock">
 <div class="title">step1/myapp/Makefile</div>
 <div class="content">
-<pre class="highlight"><code class="language-make" data-lang="make"># Prepare variables
-TMP = $(CURDIR)/tmp
-VERSION = $(shell grep ^Version myapp.spec | sed 's/.* //')
-PACKAGE = myapp-$(VERSION)
-FILES = LICENSE myapp.cpp \
+<pre class="pygments highlight"><code data-lang="make"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><pre><span></span><span class="tok-c"># Prepare variables</span>
+<span class="tok-nv">TMP</span> <span class="tok-o">=</span> <span class="tok-k">$(</span>CURDIR<span class="tok-k">)</span>/tmp
+<span class="tok-nv">VERSION</span> <span class="tok-o">=</span> <span class="tok-k">$(</span>shell grep ^Version myapp.spec <span class="tok-p">|</span> sed <span class="tok-s1">&#39;s/.* //&#39;</span><span class="tok-k">)</span>
+<span class="tok-nv">PACKAGE</span> <span class="tok-o">=</span> myapp-<span class="tok-k">$(</span>VERSION<span class="tok-k">)</span>
+<span class="tok-nv">FILES</span> <span class="tok-o">=</span> LICENSE myapp.cpp <span class="tok-se">\</span>
 		myapp.spec CMakeLists.txt
 
-.PHONY: source, tarball, rpm, srpm, clean
+<span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">source</span><span class="tok-p">,</span> <span class="tok-n">tarball</span><span class="tok-p">,</span> <span class="tok-n">rpm</span><span class="tok-p">,</span> <span class="tok-n">srpm</span><span class="tok-p">,</span> <span class="tok-n">clean</span>
 
-source:
-	mkdir -p $(TMP)/SOURCES
-	mkdir -p $(TMP)/$(PACKAGE)
-	cp -a $(FILES) $(TMP)/$(PACKAGE)
-tarball: source
-	cd $(TMP) &amp;&amp; tar vcfj ../$(PACKAGE).tar.bz2 $(PACKAGE)
-rpm: tarball
-	fedpkg --release f37 --name myapp local -- --noclean
-srpm: tarball
+<span class="tok-nf">source</span><span class="tok-o">:</span>
+	mkdir -p <span class="tok-k">$(</span>TMP<span class="tok-k">)</span>/SOURCES
+	mkdir -p <span class="tok-k">$(</span>TMP<span class="tok-k">)</span>/<span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>
+	cp -a <span class="tok-k">$(</span>FILES<span class="tok-k">)</span> <span class="tok-k">$(</span>TMP<span class="tok-k">)</span>/<span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>
+<span class="tok-nf">tarball</span><span class="tok-o">:</span> <span class="tok-n">source</span>
+	<span class="tok-nb">cd</span> <span class="tok-k">$(</span>TMP<span class="tok-k">)</span> <span class="tok-o">&amp;&amp;</span> tar vcfj ../<span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>.tar.bz2 <span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>
+<span class="tok-nf">rpm</span><span class="tok-o">:</span> <span class="tok-n">tarball</span>
+	fedpkg --release f37 --name myapp <span class="tok-nb">local</span> -- --noclean
+<span class="tok-nf">srpm</span><span class="tok-o">:</span> <span class="tok-n">tarball</span>
 	fedpkg --release f37 --name myapp srpm
-clean:
-	rm -rf $(TMP) $(PACKAGE)*</code></pre>
+<span class="tok-nf">clean</span><span class="tok-o">:</span>
+	rm -rf <span class="tok-k">$(</span>TMP<span class="tok-k">)</span> <span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>*
+</pre></td></tr></table></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -815,20 +1013,34 @@ clean:
 <div class="listingblock">
 <div class="title">step1/Containerfile</div>
 <div class="content">
-<pre class="highlight"><code class="language-dockerfile" data-lang="dockerfile">FROM fedora:37
-LABEL description="A basic specfile-to-RPM process demo"
+<pre class="pygments highlight"><code data-lang="dockerfile"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><pre><span></span><span class="tok-k">FROM</span> <span class="tok-s">fedora:37</span>
+<span class="tok-k">LABEL</span> <span class="tok-nv">description</span><span class="tok-o">=</span><span class="tok-s2">&quot;A basic specfile-to-RPM process demo&quot;</span>
 
-# Install packages to build and package "myapp"
-RUN dnf install -y cmake fedora-packager git clang
+<span class="tok-c"># Install packages to build and package &quot;myapp&quot;</span>
+<span class="tok-k">RUN</span> dnf install -y cmake fedora-packager git clang
 
-WORKDIR /root
-RUN useradd --create-home tester
-COPY entrypoint.sh /root/entrypoint.sh
-COPY ./myapp /home/tester/myapp
-RUN chown -Rfv  tester:tester /home/tester/myapp
+<span class="tok-k">WORKDIR</span><span class="tok-s"> /root</span>
+<span class="tok-k">RUN</span> useradd --create-home tester
+<span class="tok-k">COPY</span> entrypoint.sh /root/entrypoint.sh
+<span class="tok-k">COPY</span> ./myapp /home/tester/myapp
+<span class="tok-k">RUN</span> chown -Rfv  tester:tester /home/tester/myapp
 
-USER root
-ENTRYPOINT [ "/root/entrypoint.sh" ]</code></pre>
+<span class="tok-k">USER</span><span class="tok-s"> root</span>
+<span class="tok-k">ENTRYPOINT</span> <span class="tok-p">[</span> <span class="tok-s2">&quot;/root/entrypoint.sh&quot;</span> <span class="tok-p">]</span>
+</pre></td></tr></table></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -837,15 +1049,24 @@ ENTRYPOINT [ "/root/entrypoint.sh" ]</code></pre>
 <div class="listingblock">
 <div class="title">step1/entrypoint.sh</div>
 <div class="content">
-<pre class="highlight"><code class="language-shell" data-lang="shell">#!/bin/bash
+<pre class="pygments highlight"><code data-lang="shell"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><pre><span></span><span class="tok-ch">#!/bin/bash</span>
 
-set -ex
+<span class="tok-nb">set</span> -ex
 
-# Build the app and always enter bash for further inspection
-cd /home/tester/myapp
-su -c "make rpm" tester || true
+<span class="tok-c1"># Build the app and always enter bash for further inspection</span>
+<span class="tok-nb">cd</span> /home/tester/myapp
+su -c <span class="tok-s2">&quot;make rpm&quot;</span> tester <span class="tok-o">||</span> <span class="tok-nb">true</span>
 
-bash</code></pre>
+bash
+</pre></td></tr></table></code></pre>
 </div>
 </div>
 </div>
@@ -859,10 +1080,10 @@ bash</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-dockerfile" data-lang="dockerfile">RUN dnf install -y 'dnf-command(copr)'
-RUN dnf copr enable -y kkleine/llvm-pgo-instrumented
-RUN sudo dnf install -y \
-    llvm \
+<pre class="pygments highlight"><code data-lang="dockerfile"><span></span><span class="tok-k">RUN</span> dnf install -y <span class="tok-s1">&#39;dnf-command(copr)&#39;</span>
+<span class="tok-k">RUN</span> dnf copr <span class="tok-nb">enable</span> -y kkleine/llvm-pgo-instrumented
+<span class="tok-k">RUN</span> sudo dnf install -y <span class="tok-se">\</span>
+    llvm <span class="tok-se">\</span>
     clang</code></pre>
 </div>
 </div>
@@ -873,16 +1094,16 @@ RUN sudo dnf install -y \
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%package -n myapp-clang-pgo-profdata
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nd">%package</span> -n myapp-clang-pgo-profdata
 
-Summary: Indexed PGO profile data from myapp package
+<span class="tok-gh">Summary</span><span class="tok-p">:</span> Indexed PGO profile data from myapp package
 
-%description -n myapp-clang-pgo-profdata 
+<span class="tok-nd">%description</span> -n myapp-clang-pgo-profdata 
 This package contains profiledata for clang that was generated while
 compiling myapp. This can be used for doing Profile Guided Optimizations
 (PGO) builds of clang.
 
-%files -n myapp-clang-pgo-profdata
+<span class="tok-nd">%files</span> -n myapp-clang-pgo-profdata
 /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
 </div>
 </div>
@@ -898,14 +1119,14 @@ compiling myapp. This can be used for doing Profile Guided Optimizations
 <div class="listingblock">
 <div class="title">step2/myapp/myapp.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">#-----------------------------------------------------------------------
-# We want the profile data to be written to specific files that will
-# later land in the sub-package "myapp-clang-raw-pgo-profdata". See
-# https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
-TMPDIR="%{_builddir}/raw-pgo-profdata"
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c">#-----------------------------------------------------------------------</span>
+<span class="tok-c"># We want the profile data to be written to specific files that will</span>
+<span class="tok-c"># later land in the sub-package &quot;myapp-clang-raw-pgo-profdata&quot;. See</span>
+<span class="tok-c"># https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program</span>
+TMPDIR=<span class="tok-s2">&quot;</span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata&quot;</span>
 export TMPDIR
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/myapp.clang.%m.%p.profraw&quot;</span>
 export LLVM_PROFILE_FILE</code></pre>
 </div>
 </div>
@@ -918,22 +1139,22 @@ export LLVM_PROFILE_FILE</code></pre>
 <div class="listingblock">
 <div class="title">step2/myapp/myapp.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
-find %{_builddir}/raw-pgo-profdata \
+<pre class="pygments highlight"><code data-lang="spec"><span></span>mkdir -pv <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp
+find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata \
   -type f \
-  -name "myapp.clang.*.profraw" \
-  &gt; %{_builddir}/pgo-profiles
+  -name <span class="tok-s2">&quot;myapp.clang.*.profraw&quot;</span> \
+  &gt; <span class="tok-kp">%{_builddir}</span>/pgo-profiles
 
-# llvm-profdata itself is instrumented and wants to write profile data itself,
-# hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
-# to a non existing location coming from when llvm-profdata was built.  
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
+<span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
+<span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
+<span class="tok-c"># to a non existing location coming from when llvm-profdata was built.  </span>
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span>
 export LLVM_PROFILE_FILE
 llvm-profdata merge \
   --compress-all-sections \
   -sparse \
-  $(cat %{_builddir}/pgo-profiles) \
-  -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
+  $(cat <span class="tok-kp">%{_builddir}</span>/pgo-profiles) \
+  -o <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
 </div>
 </div>
 <div class="admonitionblock important">
@@ -974,31 +1195,31 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-console" data-lang="console">$ make build-step2 # <b class="conum">(1)</b>
-[...]
-Wrote: /home/tester/myapp/myapp-1.0.0-2.fc37.src.rpm
-Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-2.fc37.x86_64.rpm
-Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-2.fc37.x86_64.rpm
-Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-2.fc37.x86_64.rpm
-Wrote: /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm
-[...]
-# dnf install -y --disablerepo=* /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm <b class="conum">(2)</b>
-# llvm-profdata show --topn=10 /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata | c++filt <b class="conum">(3)</b>
-Instrumentation level: IR  entry_first = 0
-Total functions: 22243
-Maximum function count: 156465725
-Maximum internal block count: 25709548
-Top 10 functions with the largest internal block counts:
-  llvm::SmallVectorTemplateBase&lt;unsigned int, true&gt;::push_back(unsigned int), max count = 156465725
-  llvm::BumpPtrAllocatorImpl&lt;llvm::MallocAllocator, 4096ul, 4096ul, 128ul&gt;::Allocate(unsigned long, llvm::Align), max count = 94266378
-  llvm::hashing::detail::hash_combine_recursive_helper::hash_combine_recursive_helper(), max count = 36883602
-  clang::SourceManager::getSLocEntryByID(int, bool*) const, max count = 34883434
-  llvm::SmallPtrSetImplBase::insert_imp(void const*), max count = 29731602
-  llvm::MVT::getVectorElementType() const, max count = 25709548
-  llvm::SmallPtrSetImplBase::find_imp(void const*) const, max count = 16374270
-  llvm::SmallVectorTemplateBase&lt;llvm::cl::OptionCategory*, true&gt;::push_back(llvm::cl::OptionCategory*), max count = 15480760
-  llvm::cl::Option::Option(llvm::cl::NumOccurrencesFlag, llvm::cl::OptionHidden), max count = 15480760
-  llvm::APInt::APInt(unsigned int, unsigned long, bool), max count = 11292172</code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>make build-step2 # <b class="conum">(1)</b>
+<span class="tok-go">[...]</span>
+<span class="tok-go">Wrote: /home/tester/myapp/myapp-1.0.0-2.fc37.src.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-2.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-2.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-2.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm</span>
+<span class="tok-go">[...]</span>
+<span class="tok-gp"># </span>dnf install -y --disablerepo<span class="tok-o">=</span>* /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm <b class="conum">(2)</b>
+<span class="tok-gp"># </span>llvm-profdata show --topn<span class="tok-o">=</span><span class="tok-m">10</span> /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata <span class="tok-p">|</span> c++filt <b class="conum">(3)</b>
+<span class="tok-go">Instrumentation level: IR  entry_first = 0</span>
+<span class="tok-go">Total functions: 22243</span>
+<span class="tok-go">Maximum function count: 156465725</span>
+<span class="tok-go">Maximum internal block count: 25709548</span>
+<span class="tok-go">Top 10 functions with the largest internal block counts:</span>
+<span class="tok-go">  llvm::SmallVectorTemplateBase&lt;unsigned int, true&gt;::push_back(unsigned int), max count = 156465725</span>
+<span class="tok-go">  llvm::BumpPtrAllocatorImpl&lt;llvm::MallocAllocator, 4096ul, 4096ul, 128ul&gt;::Allocate(unsigned long, llvm::Align), max count = 94266378</span>
+<span class="tok-go">  llvm::hashing::detail::hash_combine_recursive_helper::hash_combine_recursive_helper(), max count = 36883602</span>
+<span class="tok-go">  clang::SourceManager::getSLocEntryByID(int, bool*) const, max count = 34883434</span>
+<span class="tok-go">  llvm::SmallPtrSetImplBase::insert_imp(void const*), max count = 29731602</span>
+<span class="tok-go">  llvm::MVT::getVectorElementType() const, max count = 25709548</span>
+<span class="tok-go">  llvm::SmallPtrSetImplBase::find_imp(void const*) const, max count = 16374270</span>
+<span class="tok-go">  llvm::SmallVectorTemplateBase&lt;llvm::cl::OptionCategory*, true&gt;::push_back(llvm::cl::OptionCategory*), max count = 15480760</span>
+<span class="tok-go">  llvm::cl::Option::Option(llvm::cl::NumOccurrencesFlag, llvm::cl::OptionHidden), max count = 15480760</span>
+<span class="tok-go">  llvm::APInt::APInt(unsigned int, unsigned long, bool), max count = 11292172</span></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1054,17 +1275,17 @@ Top 10 functions with the largest internal block counts:
 <div class="listingblock">
 <div class="title">step3/myapp/myapp.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%package -n %{name}-%{toolchain}-raw-pgo-profdata
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nd">%package</span> -n %{name}-%{toolchain}-raw-pgo-profdata
 
-Summary: Indexed PGO profile data from %{name} package
+<span class="tok-gh">Summary</span><span class="tok-p">:</span> Indexed PGO profile data from <span class="tok-kc">%{name}</span> package
 
-%description -n %{name}-%{toolchain}-raw-pgo-profdata 
+<span class="tok-nd">%description</span> -n %{name}-%{toolchain}-raw-pgo-profdata 
 This package contains profiledata for %{toolchain} that was generated while
 compiling %{name}. This can be used for doing Profile Guided Optimizations
 (PGO) builds of %{toolchain}.
 
-%files -n %{name}-%{toolchain}-raw-pgo-profdata
-%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata</code></pre>
+<span class="tok-nd">%files</span> -n %{name}-%{toolchain}-raw-pgo-profdata
+<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata</code></pre>
 </div>
 </div>
 </div>
@@ -1073,10 +1294,10 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations
 <div class="listingblock">
 <div class="title">step3/myapp/myapp.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">TMPDIR="%{_builddir}/raw-pgo-profdata"
+<pre class="pygments highlight"><code data-lang="spec"><span></span>TMPDIR=<span class="tok-s2">&quot;</span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata&quot;</span>
 export TMPDIR
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.%m.%p.profraw&quot;</span>
 export LLVM_PROFILE_FILE</code></pre>
 </div>
 </div>
@@ -1086,21 +1307,21 @@ export LLVM_PROFILE_FILE</code></pre>
 <div class="listingblock">
 <div class="title">step3/myapp/myapp.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}
-find %{_builddir}/raw-pgo-profdata \
+<pre class="pygments highlight"><code data-lang="spec"><span></span>mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>
+find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata \
   -type f \
-  -name "%{name}.%{toolchain}.*.profraw" \
-  &gt; %{_builddir}/pgo-profiles
+  -name <span class="tok-s2">&quot;</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.*.profraw&quot;</span> \
+  &gt; <span class="tok-kp">%{_builddir}</span>/pgo-profiles
 
-# llvm-profdata itself is instrumented and wants to write profile data itself,
-# hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
-# to a non existing location coming from when llvm-profdata was built.  
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
+<span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
+<span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
+<span class="tok-c"># to a non existing location coming from when llvm-profdata was built.  </span>
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span>
 llvm-profdata merge \
   --compress-all-sections \
   -sparse \
-  $(cat %{_builddir}/pgo-profiles) \
-  -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata</code></pre>
+  $(cat <span class="tok-kp">%{_builddir}</span>/pgo-profiles) \
+  -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1133,7 +1354,7 @@ You can specify <code>%global toolchain clang</code> to have your code compile w
 <div class="listingblock">
 <div class="title">step4/redhat-rpm-config/macros</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%_toolchain_profile_subpackages 1</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span>%_toolchain_profile_subpackages 1</code></pre>
 </div>
 </div>
 <div class="admonitionblock important">
@@ -1158,17 +1379,17 @@ Currently there&#8217;s no sanity checking of whether or not a package can even 
 <div class="listingblock">
 <div class="title">step4/redhat-rpm-config/macros</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec"># Generate profiledata packages for the compiler
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># Generate profiledata packages for the compiler</span>
 %_toolchain_profile_subpackage_template \
-%package -n %{name}-%{toolchain}-pgo-profdata \
-Summary: Indexed PGO profile data from %{name} package \
-%description -n %{name}-%{toolchain}-pgo-profdata \
+<span class="tok-nd">%package</span> -n %{name}-%{toolchain}-pgo-profdata \
+<span class="tok-gh">Summary</span><span class="tok-p">:</span> Indexed PGO profile data from <span class="tok-kc">%{name}</span> package \
+<span class="tok-nd">%description</span> -n %{name}-%{toolchain}-pgo-profdata \
 This package contains profiledata for %{toolchain} that was generated while \
 compiling %{name}. This can be used for doing Profile Guided Optimizations \
 (PGO) builds of %{toolchain} \
-%files -n %{name}-%{toolchain}-pgo-profdata \
-%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata \
-%{nil}</code></pre>
+<span class="tok-nd">%files</span> -n %{name}-%{toolchain}-pgo-profdata \
+<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata \
+<span class="tok-kc">%{nil}</span></code></pre>
 </div>
 </div>
 <div class="sect3">
@@ -1179,17 +1400,17 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 <div class="listingblock">
 <div class="title">step4/redhat-rpm-config/macros</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%set_build_flags \
-  CFLAGS="${CFLAGS:-%{build_cflags}}" ; export CFLAGS ; \
-  CXXFLAGS="${CXXFLAGS:-%{build_cxxflags}}" ; export CXXFLAGS ; \
-  FFLAGS="${FFLAGS:-%{build_fflags}}" ; export FFLAGS ; \
-  FCFLAGS="${FCFLAGS:-%{build_fflags}}" ; export FCFLAGS ; \
-  LDFLAGS="${LDFLAGS:-%{build_ldflags}}" ; export LDFLAGS ; \
-  LT_SYS_LIBRARY_PATH="${LT_SYS_LIBRARY_PATH:-%_libdir:}" ; export LT_SYS_LIBRARY_PATH ; \
-  CC="${CC:-%{__cc}}" ; export CC ; \
-  CXX="${CXX:-%{__cxx}}" ; export CXX ; \
-  [ "%_toolchain_profile_subpackages" = 1 ] &amp;&amp; TMPDIR="%{_builddir}/raw-pgo-profdata" &amp;&amp; export TMPDIR &amp;&amp; mkdir -pv $TMPDIR &amp;&amp; \
-  LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw" &amp;&amp; export LLVM_PROFILE_FILE ;</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span>%set_build_flags \
+  CFLAGS=<span class="tok-s2">&quot;${CFLAGS:-</span><span class="tok-kc">%{build_cflags}</span><span class="tok-s2">}&quot;</span> ; export CFLAGS ; \
+  CXXFLAGS=<span class="tok-s2">&quot;${CXXFLAGS:-</span><span class="tok-kc">%{build_cxxflags}</span><span class="tok-s2">}&quot;</span> ; export CXXFLAGS ; \
+  FFLAGS=<span class="tok-s2">&quot;${FFLAGS:-</span><span class="tok-kc">%{build_fflags}</span><span class="tok-s2">}&quot;</span> ; export FFLAGS ; \
+  FCFLAGS=<span class="tok-s2">&quot;${FCFLAGS:-</span><span class="tok-kc">%{build_fflags}</span><span class="tok-s2">}&quot;</span> ; export FCFLAGS ; \
+  LDFLAGS=<span class="tok-s2">&quot;${LDFLAGS:-</span><span class="tok-kc">%{build_ldflags}</span><span class="tok-s2">}&quot;</span> ; export LDFLAGS ; \
+  LT_SYS_LIBRARY_PATH=<span class="tok-s2">&quot;${LT_SYS_LIBRARY_PATH:-</span><span class="tok-kp">%_libdir</span><span class="tok-s2">:}&quot;</span> ; export LT_SYS_LIBRARY_PATH ; \
+  CC=<span class="tok-s2">&quot;${CC:-</span><span class="tok-nf">%{__cc}</span><span class="tok-s2">}&quot;</span> ; export CC ; \
+  CXX=<span class="tok-s2">&quot;${CXX:-</span><span class="tok-nf">%{__cxx}</span><span class="tok-s2">}&quot;</span> ; export CXX ; \
+  [ <span class="tok-s2">&quot;%_toolchain_profile_subpackages&quot;</span> = 1 ] &amp;&amp; TMPDIR=<span class="tok-s2">&quot;</span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata&quot;</span> &amp;&amp; export TMPDIR &amp;&amp; mkdir -pv $TMPDIR &amp;&amp; \
+  LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.%m.%p.profraw&quot;</span> &amp;&amp; export LLVM_PROFILE_FILE ;</code></pre>
 </div>
 </div>
 </div>
@@ -1201,23 +1422,23 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 <div class="listingblock">
 <div class="title">step4/redhat-rpm-config/macros</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%__copy_profraw %[ 0%{_toolchain_profile_subpackages} &gt; 0 ? "mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} &amp;&amp; find %{_builddir}/raw-pgo-profdata -type f -name '%{name}.%{toolchain}.*.profraw' &gt; %{_builddir}/pgo-profiles &amp;&amp; LLVM_PROFILE_FILE='llvm-profdata.%{toolchain}.%m.%p.profdata' llvm-profdata merge --compress-all-sections -sparse $(cat %{_builddir}/pgo-profiles) -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata" : "%{nil}" ]
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__copy_profraw</span> %[ 0%{_toolchain_profile_subpackages} &gt; 0 ? <span class="tok-s2">&quot;mkdir -pv </span><span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span><span class="tok-s2">/</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">-pgo-profdata/</span><span class="tok-kc">%{name}</span><span class="tok-s2"> &amp;&amp; find </span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata -type f -name &#39;</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.*.profraw&#39; &gt; </span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/pgo-profiles &amp;&amp; LLVM_PROFILE_FILE=&#39;llvm-profdata.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.%m.%p.profdata&#39; llvm-profdata merge --compress-all-sections -sparse $(cat </span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/pgo-profiles) -o </span><span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span><span class="tok-s2">/</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">-pgo-profdata/</span><span class="tok-kc">%{name}</span><span class="tok-s2">/</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.profdata&quot;</span> : <span class="tok-s2">&quot;</span><span class="tok-kc">%{nil}</span><span class="tok-s2">&quot;</span> ]
 
-%__os_install_post    \
-    %{?__brp_ldconfig} \
-    %{?__brp_compress} \
+<span class="tok-nf">%__os_install_post</span>    \
+    <span class="tok-nv">%{?__brp_ldconfig}</span> \
+    <span class="tok-nv">%{?__brp_compress}</span> \
     %{!?__debug_package:\
-    %{?__brp_strip} \
-    %{?__brp_strip_comment_note} \
+    <span class="tok-nv">%{?__brp_strip}</span> \
+    <span class="tok-nv">%{?__brp_strip_comment_note}</span> \
     } \
-    %{?__brp_strip_lto} \
-    %{?__brp_strip_static_archive} \
-    %{?__brp_check_rpaths} \
-    %{?__brp_mangle_shebangs} \
-    %{?__brp_remove_la_files} \
-    %{__os_install_post_python} \
-    %{?_toolchain_profile_subpackages:%{?__copy_profraw}} \
-%{nil}</code></pre>
+    <span class="tok-nv">%{?__brp_strip_lto}</span> \
+    <span class="tok-nv">%{?__brp_strip_static_archive}</span> \
+    <span class="tok-nv">%{?__brp_check_rpaths}</span> \
+    <span class="tok-nv">%{?__brp_mangle_shebangs}</span> \
+    <span class="tok-nv">%{?__brp_remove_la_files}</span> \
+    <span class="tok-nf">%{__os_install_post_python}</span> \
+    %{?_toolchain_profile_subpackages:<span class="tok-nv">%{?__copy_profraw}</span>} \
+<span class="tok-kc">%{nil}</span></code></pre>
 </div>
 </div>
 </div>
@@ -1229,10 +1450,10 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 <div class="listingblock">
 <div class="title">step4/entrypoint.sh</div>
 <div class="content">
-<pre class="highlight"><code class="language-shell" data-lang="shell"># Build and install our customized redhat-rpm-config
-cd /root/redhat-rpm-config
-fedpkg --release f37 local
-sudo dnf install -y --disablerepo=* noarch/redhat-rpm-config-230-1.fc37.noarch.rpm</code></pre>
+<pre class="pygments highlight"><code data-lang="shell"><span></span><span class="tok-c1"># Build and install our customized redhat-rpm-config</span>
+<span class="tok-nb">cd</span> /root/redhat-rpm-config
+fedpkg --release f37 <span class="tok-nb">local</span>
+sudo dnf install -y --disablerepo<span class="tok-o">=</span>* noarch/redhat-rpm-config-230-1.fc37.noarch.rpm</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1241,7 +1462,7 @@ sudo dnf install -y --disablerepo=* noarch/redhat-rpm-config-230-1.fc37.noarch.r
 <div class="listingblock">
 <div class="title">Makefile</div>
 <div class="content">
-<pre class="highlight"><code class="language-make" data-lang="make">build-step4:
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">build-step4</span><span class="tok-o">:</span>
 	rm -rf step4/myapp
 	cp -rf step1/myapp step4/myapp
 	podman build -t pgo-experiment-step4 ./step4
@@ -1288,10 +1509,10 @@ You don&#8217;t need to run this step manually. It has already been run and the 
 <div class="listingblock">
 <div class="title">step5/Makefile</div>
 <div class="content">
-<pre class="highlight"><code class="language-make" data-lang="make">.PHONY: create-copr-project
-create-copr-project:
-	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
-	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)</code></pre>
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
+<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
+	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/llvm-pgo-instrumented <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/llvm-pgo-instrumented <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1305,8 +1526,8 @@ create-copr-project:
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-console" data-lang="console">$ cd step5/
-$ make distgit-&lt;PACKAGE&gt; # <b class="conum">(1)</b></code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span><span class="tok-nb">cd</span> step5/
+<span class="tok-gp">$ </span>make distgit-&lt;PACKAGE&gt; # <b class="conum">(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1322,25 +1543,25 @@ $ make distgit-&lt;PACKAGE&gt; # <b class="conum">(1)</b></code></pre>
 <div class="listingblock">
 <div class="title">step5/Makefile</div>
 <div class="content">
-<pre class="highlight"><code class="language-make" data-lang="make"># Build an arbitrary package from dist-git
-distgit-%:
-	$(eval package:=$(subst distgit-,,$@))
-	-copr add-package-distgit \
-		--name $(package) \
-		--distgit fedora \
-		--commit f37 \
-		$(fas_user)/$(copr_project)
-	copr edit-package-distgit \
-		--name $(package) \
-		--distgit fedora \
-		--commit f37 \
-		$(fas_user)/$(copr_project)
-	copr build-package \
-		--name $(package) \
-		--timeout 108000 \
-		--nowait \
-		--chroot fedora-37-x86_64 \
-		$(fas_user)/$(copr_project)</code></pre>
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-c"># Build an arbitrary package from dist-git</span>
+<span class="tok-nf">distgit-%</span><span class="tok-o">:</span>
+	<span class="tok-k">$(</span><span class="tok-nb">eval</span> package:<span class="tok-o">=</span><span class="tok-k">$(</span>subst distgit-,,<span class="tok-nv">$@</span><span class="tok-k">))</span>
+	-copr add-package-distgit <span class="tok-se">\</span>
+		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
+		--distgit fedora <span class="tok-se">\</span>
+		--commit f37 <span class="tok-se">\</span>
+		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-package-distgit <span class="tok-se">\</span>
+		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
+		--distgit fedora <span class="tok-se">\</span>
+		--commit f37 <span class="tok-se">\</span>
+		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr build-package <span class="tok-se">\</span>
+		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
+		--timeout <span class="tok-m">108000</span> <span class="tok-se">\</span>
+		--nowait <span class="tok-se">\</span>
+		--chroot fedora-37-x86_64 <span class="tok-se">\</span>
+		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1374,9 +1595,9 @@ You might wonder why we first add and then edit a package. This is because we do
 <div class="listingblock">
 <div class="title">step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">BuildRequires: myapp-clang-pgo-profdata
-BuildRequires: retsnoop-clang-pgo-profdata
-BuildRequires: chromium-clang-pgo-profdata</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> myapp-clang-pgo-profdata
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> retsnoop-clang-pgo-profdata
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> chromium-clang-pgo-profdata</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1385,14 +1606,14 @@ BuildRequires: chromium-clang-pgo-profdata</code></pre>
 <div class="listingblock">
 <div class="title">step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">llvm-profdata merge \
-      %{_libdir}/%{toolchain}-pgo-profdata/myapp/* \
-      %{_libdir}/%{toolchain}-pgo-profdata/retsnoop/* \
-      %{_libdir}/%{toolchain}-pgo-profdata/chromium/* \
+<pre class="pygments highlight"><code data-lang="spec"><span></span>llvm-profdata merge \
+      <span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/myapp/* \
+      <span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/retsnoop/* \
+      <span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/chromium/* \
       -output llvm-pgo.profdata
-%files
+<span class="tok-nd">%files</span>
 %license LICENSE
-%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code></pre>
+<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata</code></pre>
 </div>
 </div>
 <div class="admonitionblock caution">
@@ -1408,7 +1629,7 @@ BuildRequires: chromium-clang-pgo-profdata</code></pre>
 <div class="listingblock">
 <div class="title">step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%global _toolchain_profile_subpackages %{nil}</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span>%global _toolchain_profile_subpackages <span class="tok-kc">%{nil}</span></code></pre>
 </div>
 </div>
 </td>
@@ -1427,9 +1648,9 @@ BuildRequires: chromium-clang-pgo-profdata</code></pre>
 <div class="listingblock">
 <div class="title">step7/llvm/llvm.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%if %{with pgo_optimized_build}
-BuildRequires: llvm-pgo-profdata
-%endif</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> llvm-pgo-profdata
+<span class="tok-cp">%endif</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1438,9 +1659,9 @@ BuildRequires: llvm-pgo-profdata
 <div class="listingblock">
 <div class="title">step7/llvm/llvm.spec</div>
 <div class="content">
-<pre class="highlight"><code class="language-spec" data-lang="spec">%if %{with pgo_optimized_build}
-	-DLLVM_PROFDATA_FILE=%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata \
-%endif</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
+	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata \
+<span class="tok-cp">%endif</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1449,11 +1670,11 @@ BuildRequires: llvm-pgo-profdata
 <div class="listingblock">
 <div class="title">step7/Makefile</div>
 <div class="content">
-<pre class="highlight"><code class="language-make" data-lang="make">.PHONY: create-copr-project
-create-copr-project:
-	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/profile-data-collection $(copr_project)
-	copr  modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/profile-data-collection $(copr_project)
-	copr edit-chroot --rpmbuild-with pgo_optimized_build $(copr_project)/fedora-37-x86_64</code></pre>
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
+<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
+	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr  modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-chroot --rpmbuild-with pgo_optimized_build <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-37-x86_64</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1560,7 +1781,7 @@ create-copr-project:
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-24 17:38:07 +0100
+Last updated 2023-03-24 17:54:35 +0100
 </div>
 </div>
 <script type="text/x-mathjax-config">

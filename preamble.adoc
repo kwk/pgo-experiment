@@ -2,7 +2,7 @@
 Konrad Kleine;
 
 // :toc: left
-:toc:
+:toc: macro
 :toclevels: 4
 :showtitle:
 :experimental:

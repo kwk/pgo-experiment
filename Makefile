@@ -53,6 +53,7 @@ docs:
 	cat index.html | sed -n '/<body/,/<div id="footer">/{//!p}' > blog.drupal.html
 	# Make admonition texts in bold font
 	sed -i -e 's/\(<div class="title">\)\(.*\)\(<\/div>\)/\1<strong>\2<\/strong>\3/g' blog.drupal.html
+	# Prepare asciidoc to be rendered on github
 	asciidoctor README.in.adoc --doctype article --backend docbook -o README.xml
 	pandoc --from=docbook --to=asciidoc -o README.adoc.tmp README.xml
 	cat preamble.adoc > README.adoc

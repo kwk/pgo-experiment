@@ -13,6 +13,12 @@ RUN sudo dnf install -y \
 # Install packages to build and package "myapp"
 RUN dnf install -y cmake fedora-packager git
 
+# Install lsof for use in the background-merge.sh script
+# TODO(kwk): Make sure this is available in standard Copr
+# tag::install_lsof[]
+RUN dnf install -y lsof
+# end::install_lsof[]
+
 WORKDIR /root
 RUN useradd --create-home tester
 COPY entrypoint.sh /root/entrypoint.sh

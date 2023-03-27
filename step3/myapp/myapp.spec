@@ -51,33 +51,39 @@ mkdir -pv $TMPDIR
 LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
 export LLVM_PROFILE_FILE
 # end::llvm_profile_file[]
+# tag::start_background_merge[]
+./background-merge.sh $TMPDIR /tmp/%{name}.%{toolchain}.background.merge &
+# end::start_background_merge[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
+
+#-----------------------------------------------------------------------
+# tag::wait_for_background_merge[]
+# Terminate online merge and wait for it to finish.
+MERGE_PID=$(cat /tmp/background-merge.pid)
+kill -s TERM $MERGE_PID
+wait $MERGE_PID || true
+# end::wait_for_background_merge[]
+#-----------------------------------------------------------------------
 
 %install
 %cmake_install
 #-----------------------------------------------------------------------
 # Generalized
 #-----------------------------------------------------------------------
-# tag::find_profiles[]
-mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}
-find %{_builddir}/raw-pgo-profdata \
-  -type f \
-  -name "%{name}.%{toolchain}.*.profraw" \
-  > %{_builddir}/pgo-profiles
-
-# end::find_profiles[]
-
 # tag::merge_profiles[]
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.  
 LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
+export LLVM_PROFILE_FILE
+mkdir -pv %{buildroot}%{_libdir}/clang-pgo-profdata/myapp
 llvm-profdata merge \
   --compress-all-sections \
   -sparse \
-  $(cat %{_builddir}/pgo-profiles) \
+  /tmp/%{name}.%{toolchain}.background.merge \
+  $(find %{_builddir}/raw-pgo-profdata -type f) \
   -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata
 # end::merge_profiles[]
 

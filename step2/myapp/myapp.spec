@@ -51,13 +51,7 @@ LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
 export LLVM_PROFILE_FILE
 # end::llvm_profile_file[]
 # tag::start_background_merge[]
-echo ""
-echo ""
-echo ""
-./background-merge.sh $TMPDIR /tmp/myapp.clang.background.merge
-echo ""
-echo ""
-echo ""
+./background-merge.sh $TMPDIR /tmp/myapp.clang.background.merge &
 # end::start_background_merge[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
@@ -66,16 +60,9 @@ echo ""
 #-----------------------------------------------------------------------
 # tag::wait_for_background_merge[]
 # Terminate online merge and wait for it to finish.
-echo ""
-echo ""
-echo ""
-ps -aux
 MERGE_PID=$(cat /tmp/background-merge.pid)
 kill -s TERM $MERGE_PID
 wait $MERGE_PID || true
-echo ""
-echo ""
-echo ""
 # end::wait_for_background_merge[]
 #-----------------------------------------------------------------------
 

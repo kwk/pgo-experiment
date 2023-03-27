@@ -47,11 +47,6 @@ function do_sleep() {
 # tag::main[]
 function main()
 {
-    # It is important that the trap is set up in main because main is send to
-    # the background. To trigger the trap, run: kill -s TERM <PID>, where <PID>
-    # is the process ID of the background job in which "main" is running.
-    trap catch_sigterm SIGTERM
-
     while true; do
         # Graceful shutdown
         if [ $signal_caught -gt 0 ]; then
@@ -101,30 +96,36 @@ function main()
 }
 # end::main[]
 
-# Handle if PID file exists and whether process is still running or not.
-if [ -e $pid_file ]; then
-    if [ `ps -q $(cat $pid_file)` ]; then
-        echo "ERROR: PID file already in use: $pid_file"
-        echo "Once you're done, kill job with: kill -s SIGTERM \$(cat $pid_file)"
-        exit 1
-    else
-        echo "Process is no longer running: $(cat $pid_file). Removing file $pid_file."
-        rm -f $pid_file
+# tag::setup[]
+function setup() {
+    # It is important that the trap is set up in main because main is send to
+    # the background. To trigger the trap, run: kill -s TERM <PID>, where <PID>
+    # is the process ID of the background job in which "main" is running.
+    trap catch_sigterm SIGTERM
+
+    # Handle if PID file exists and whether process is still running or not.
+    if [ -e $pid_file ]; then
+        if [ `ps -q $(cat $pid_file)` ]; then
+            echo "ERROR: PID file already in use: $pid_file"
+            echo "Once you're done, kill job with: kill -s SIGTERM \$(cat $pid_file)"
+            exit 1
+        else
+            echo "Process is no longer running: $(cat $pid_file). Removing file $pid_file."
+            rm -f $pid_file
+        fi
     fi
-fi
 
-# Create log backup
-if [ -e $log_file ]; then
-    echo "Backing up existing log file: $log_file"
-    cp -bv $log_file $log_file.bak
-fi
+    # Save this PID to a file
+    echo $$ > $pid_file
 
-# Send to background and log to fresh file
-main > $log_file 2>&1 &
+    # Create log backup
+    if [ -e $log_file ]; then
+        echo "Backing up existing log file: $log_file"
+        cp -bv $log_file $log_file.bak
+    fi
+}
+# end::setup[]
 
-# Save the PID to a file
-echo $! > $pid_file
+setup
 
-echo "Online PGO pofile merging job started in background..."
-echo "Once you're done, kill job with: kill -s TERM \$(cat $pid_file)"
-echo "Logs are here: $log_file"
+main > $log_file 2>&1

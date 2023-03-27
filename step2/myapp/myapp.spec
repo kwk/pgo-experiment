@@ -50,34 +50,53 @@ mkdir -pv $TMPDIR
 LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
 export LLVM_PROFILE_FILE
 # end::llvm_profile_file[]
+# tag::start_background_merge[]
+echo ""
+echo ""
+echo ""
+./background-merge.sh $TMPDIR /tmp/myapp.clang.background.merge
+echo ""
+echo ""
+echo ""
+# end::start_background_merge[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
 
+#-----------------------------------------------------------------------
+# tag::wait_for_background_merge[]
+# Terminate online merge and wait for it to finish.
+echo ""
+echo ""
+echo ""
+ps -aux
+MERGE_PID=$(cat /tmp/background-merge.pid)
+kill -s TERM $MERGE_PID
+wait $MERGE_PID || true
+echo ""
+echo ""
+echo ""
+# end::wait_for_background_merge[]
+#-----------------------------------------------------------------------
+
 %install
 %cmake_install
+
 #-----------------------------------------------------------------------
 # Must be generatlized and automated as well.
 #-----------------------------------------------------------------------
-# tag::find_profiles[]
-mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
-find %{_builddir}/raw-pgo-profdata \
-  -type f \
-  -name "myapp.clang.*.profraw" \
-  > %{_builddir}/pgo-profiles
-
-# end::find_profiles[]
-
 # tag::merge_profiles[]
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
-# to a non existing location coming from when llvm-profdata was built.  
+# to a non existing location coming from when llvm-profdata was built.
 LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
 export LLVM_PROFILE_FILE
+mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
 llvm-profdata merge \
   --compress-all-sections \
   -sparse \
-  $(cat %{_builddir}/pgo-profiles) \
+  /tmp/myapp.clang.background.merge \
+  $(find %{_builddir}/raw-pgo-profdata -type f) \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
 # end::merge_profiles[]
 #-----------------------------------------------------------------------

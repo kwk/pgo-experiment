@@ -3,7 +3,7 @@ TMP = $(CURDIR)/tmp
 VERSION = $(shell grep ^Version myapp.spec | sed 's/.* //')
 PACKAGE = myapp-$(VERSION)
 FILES = LICENSE myapp.cpp \
-		myapp.spec CMakeLists.txt
+		myapp.spec CMakeLists.txt background-merge.sh
 
 .PHONY: source, tarball, rpm, srpm, clean
 

@@ -209,11 +209,6 @@ create-copr-project:
     copr edit-chroot --rpmbuild-with pgo_instrumented_build  $(fas_user)/$(copr_project)/fedora-37-x86_64 
 ----
 
-* Here we modify a particular `fedora-37-x86_64` chroot of the
-https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented]
-project to use `--with pgo_instrumented_build` when invoking `mock` to
-build our packages.
-
 Another change I had to make was adding a build dependency on
 `compiler-rt`:
 
@@ -426,6 +421,19 @@ su -c "make rpm" tester || true
 bash
 ----
 
+When you build this step, the output should look like this:
+
+[source,console]
+----
+[...]
+Wrote: /home/tester/myapp/myapp-1.0.0-1.fc37.src.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-1.fc37.x86_64.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-1.fc37.x86_64.rpm
+Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm
++ bash
+[root@7cf29caa0097 myapp]#
+----
+
 [[step2]]
 === Step 2 - Manually add subpackage
 
@@ -435,8 +443,9 @@ executing a PGO instrumented `clang` from the Copr repo
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented]
 which we’ve built in step 0.
 
-The only changes from step1 to step2 are in the the `Containerfile` were
-we add the PGO instrumented LLVM.
+The only changes from link:#step1[Step 1 - Build "Hello, World!" RPM] to
+link:#step2[Step 2 - Manually add subpackage] are in the the
+`Containerfile` were we add the PGO instrumented LLVM.
 
 [source,dockerfile]
 ----
@@ -1074,8 +1083,7 @@ this is good for now. The cases in which you want to cross-compile on
 one architecture for another exists but are not considered here (for
 now).
 ====
-* Benchmark a PGO-optimized LLVM toolchain with CTMark on
-http://llvm-compile-time-tracker.com/.
+* Benchmark a PGO-optimized LLVM toolchain
 
 I hope you liked this article and follow us exploring the possibilities
 ahead of us! Don’t forget to leave a comment ;)

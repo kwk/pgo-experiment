@@ -743,13 +743,6 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 	copr edit-chroot --rpmbuild-with pgo_instrumented_build  <span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-37-x86_64 # <b class="conum">(1)</b></code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Here we modify a particular <code>fedora-37-x86_64</code> chroot of the <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a> project to use <code>--with pgo_instrumented_build</code> when invoking <code>mock</code> to build our packages.</p>
-</li>
-</ol>
-</div>
 <div class="paragraph">
 <p>Another change I had to make was adding a build dependency on <code>compiler-rt</code>:</p>
 </div>
@@ -854,45 +847,7 @@ This step does NOT depend on <a href="#step0">Step 0 - Build a PGO instrumented 
 <div class="listingblock">
 <div class="title">step1/myapp/myapp.spec</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span></pre></div></td><td class="code"><pre><span></span><span class="tok-c"># See https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros</span>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># See https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros</span>
 %global toolchain clang
 
 <span class="tok-gh">Name</span><span class="tok-p">:</span> myapp
@@ -930,8 +885,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 
 <span class="tok-nd">%changelog</span>
 <span class="tok-gu">* Wed Mar 1 2023 Konrad Kleine &lt;kkleine@redhat.com&gt; - 1.0.0-1</span>
-- Building step1
-</pre></td></tr></table></code></pre>
+- Building step1</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -943,18 +897,12 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <div class="listingblock">
 <div class="title">step1/myapp/myapp.cpp</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="cpp"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><pre><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;iostream&gt;</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="cpp"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;iostream&gt;</span><span class="tok-cp"></span>
 
 <span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">main</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">argc</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">argv</span><span class="tok-p">[])</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"></span>
 <span class="tok-w">    </span><span class="tok-n">std</span><span class="tok-o">::</span><span class="tok-n">cout</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-s">&quot;Hello, World!&quot;</span><span class="tok-w"> </span><span class="tok-o">&lt;&lt;</span><span class="tok-w"> </span><span class="tok-n">std</span><span class="tok-o">::</span><span class="tok-n">endl</span><span class="tok-p">;</span><span class="tok-w"></span>
 <span class="tok-w">    </span><span class="tok-k">return</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"></span>
-<span class="tok-p">}</span><span class="tok-w"></span>
-</pre></td></tr></table></code></pre>
+<span class="tok-p">}</span><span class="tok-w"></span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -963,27 +911,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <div class="listingblock">
 <div class="title">step1/myapp/Makefile</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="make"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span></pre></div></td><td class="code"><pre><span></span><span class="tok-c"># Prepare variables</span>
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-c"># Prepare variables</span>
 <span class="tok-nv">TMP</span> <span class="tok-o">=</span> <span class="tok-k">$(</span>CURDIR<span class="tok-k">)</span>/tmp
 <span class="tok-nv">VERSION</span> <span class="tok-o">=</span> <span class="tok-k">$(</span>shell grep ^Version myapp.spec <span class="tok-p">|</span> sed <span class="tok-s1">&#39;s/.* //&#39;</span><span class="tok-k">)</span>
 <span class="tok-nv">PACKAGE</span> <span class="tok-o">=</span> myapp-<span class="tok-k">$(</span>VERSION<span class="tok-k">)</span>
@@ -1003,8 +931,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <span class="tok-nf">srpm</span><span class="tok-o">:</span> <span class="tok-n">tarball</span>
 	fedpkg --release f37 --name myapp srpm
 <span class="tok-nf">clean</span><span class="tok-o">:</span>
-	rm -rf <span class="tok-k">$(</span>TMP<span class="tok-k">)</span> <span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>*
-</pre></td></tr></table></code></pre>
+	rm -rf <span class="tok-k">$(</span>TMP<span class="tok-k">)</span> <span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>*</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1013,20 +940,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <div class="listingblock">
 <div class="title">step1/Containerfile</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="dockerfile"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span></pre></div></td><td class="code"><pre><span></span><span class="tok-k">FROM</span> <span class="tok-s">fedora:37</span>
+<pre class="pygments highlight"><code data-lang="dockerfile"><span></span><span class="tok-k">FROM</span> <span class="tok-s">fedora:37</span>
 <span class="tok-k">LABEL</span> <span class="tok-nv">description</span><span class="tok-o">=</span><span class="tok-s2">&quot;A basic specfile-to-RPM process demo&quot;</span>
 
 <span class="tok-c"># Install packages to build and package &quot;myapp&quot;</span>
@@ -1039,8 +953,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <span class="tok-k">RUN</span> chown -Rfv  tester:tester /home/tester/myapp
 
 <span class="tok-k">USER</span><span class="tok-s"> root</span>
-<span class="tok-k">ENTRYPOINT</span> <span class="tok-p">[</span> <span class="tok-s2">&quot;/root/entrypoint.sh&quot;</span> <span class="tok-p">]</span>
-</pre></td></tr></table></code></pre>
+<span class="tok-k">ENTRYPOINT</span> <span class="tok-p">[</span> <span class="tok-s2">&quot;/root/entrypoint.sh&quot;</span> <span class="tok-p">]</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1049,15 +962,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <div class="listingblock">
 <div class="title">step1/entrypoint.sh</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="shell"><table class="linenotable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><pre><span></span><span class="tok-ch">#!/bin/bash</span>
+<pre class="pygments highlight"><code data-lang="shell"><span></span><span class="tok-ch">#!/bin/bash</span>
 
 <span class="tok-nb">set</span> -ex
 
@@ -1065,8 +970,21 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <span class="tok-nb">cd</span> /home/tester/myapp
 su -c <span class="tok-s2">&quot;make rpm&quot;</span> tester <span class="tok-o">||</span> <span class="tok-nb">true</span>
 
-bash
-</pre></td></tr></table></code></pre>
+bash</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When you build this step, the output should look like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-go">[...]</span>
+<span class="tok-go">Wrote: /home/tester/myapp/myapp-1.0.0-1.fc37.src.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">+ bash</span>
+<span class="tok-gp">[root@7cf29caa0097 myapp]#</span></code></pre>
 </div>
 </div>
 </div>
@@ -1076,7 +994,7 @@ bash
 <p>In this step we manually add a <code>myapp-clang-pgo-profdata</code> subpackage which contains PGO profile data from LLVM. This data is generated by executing a PGO instrumented <code>clang</code> from the Copr repo <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a> which we&#8217;ve built in step 0.</p>
 </div>
 <div class="paragraph">
-<p>The only changes from step1 to step2 are in the the <code>Containerfile</code> were we add the PGO instrumented LLVM.</p>
+<p>The only changes from <a href="#step1">Step 1 - Build "Hello, World!" RPM</a> to <a href="#step2">Step 2 - Manually add subpackage</a> are in the the <code>Containerfile</code> were we add the PGO instrumented LLVM.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1715,7 +1633,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 </li>
 <li>
-<p>Benchmark a PGO-optimized LLVM toolchain with CTMark on <a href="http://llvm-compile-time-tracker.com/" class="bare">http://llvm-compile-time-tracker.com/</a>.</p>
+<p>Benchmark a PGO-optimized LLVM toolchain</p>
 </li>
 </ul>
 </div>
@@ -1781,7 +1699,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-24 17:54:35 +0100
+Last updated 2023-03-27 08:37:35 +0200
 </div>
 </div>
 <script type="text/x-mathjax-config">

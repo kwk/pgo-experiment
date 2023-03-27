@@ -42,11 +42,17 @@ update-submodules:
 #   * https://docs.asciidoctor.org/asciidoc/latest/directives/include-tagged-regions/
 #   * https://docs.asciidoctor.org/asciidoc/latest/directives/include-lines/
 # 
-# The index.html will be rendered on https://kwk.github.io/pgo-experiment/
-# The README.adoc will be rendered as the README on https://github.com/kwk/pgo-experiment#readme
+# Files and their purpose:
+#   * index.html - rendered on https://kwk.github.io/pgo-experiment/
+#   * README.adoc - README on https://github.com/kwk/pgo-experiment#readme
+#   * blog.drupal.html - same as <body> content from index.html with a few adjustments.
+#                        Can be copy'n'pasted for putting it in Drupal as the source HTML for a blog post.
 .PHONY: docs
 docs:
 	asciidoctor README.in.adoc --doctype article -o index.html
+	cat index.html | sed -n '/<body/,/<div id="footer">/{//!p}' > blog.drupal.html
+	# Make admonition texts in bold font
+	sed -i -e 's/\(<div class="title">\)\(.*\)\(<\/div>\)/\1<strong>\2<\/strong>\3/g' blog.drupal.html
 	asciidoctor README.in.adoc --doctype article --backend docbook -o README.xml
 	pandoc --from=docbook --to=asciidoc -o README.adoc.tmp README.xml
 	cat preamble.adoc > README.adoc

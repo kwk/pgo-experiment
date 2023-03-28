@@ -45,26 +45,26 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations
 # later land in the sub-package "myapp-clang-raw-pgo-profdata". See
 # https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
 # tag::llvm_profile_file[]
-TMPDIR="%{_builddir}/raw-pgo-profdata"
-export TMPDIR
+export TMPDIR="%{_builddir}/raw-pgo-profdata"
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
-export LLVM_PROFILE_FILE
+export LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
 # end::llvm_profile_file[]
 # tag::start_background_merge[]
-./background-merge.sh $TMPDIR /tmp/%{name}.%{toolchain}.background.merge &
+./pgo-background-merge.sh \
+  -d $TMPDIR \
+  -f /tmp//%{name}.%{toolchain}.background.merge \
+  -p /tmp/background-merge.pid &
 # end::start_background_merge[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
 
 #-----------------------------------------------------------------------
-# tag::wait_for_background_merge[]
+# tag::stop_background_merge[]
 # Terminate online merge and wait for it to finish.
-MERGE_PID=$(cat /tmp/background-merge.pid)
-kill -s TERM $MERGE_PID
-wait $MERGE_PID || true
-# end::wait_for_background_merge[]
+kill -s TERM $(cat /tmp/background-merge.pid)
+while true; do [ ! -e /tmp/background-merge.pid ] && break; sleep 5; done;\
+# end::stop_background_merge[]
 #-----------------------------------------------------------------------
 
 %install
@@ -77,7 +77,8 @@ wait $MERGE_PID || true
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.  
 mkdir -pv %{buildroot}%{_libdir}/clang-pgo-profdata/myapp
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
+export TMPDIR="/tmp"
+export LLVM_PROFILE_FILE="%t/llvm-profdata.clang.%m.%p.profraw"
 llvm-profdata merge \
   --compress-all-sections \
   --sparse \

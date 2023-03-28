@@ -7,6 +7,7 @@ Konrad Kleine;
 :sectnums:
 :stem:
 :sectlinks:
+:listing-caption: Listing
 :sectanchors:
 // :icons: font
 :source-highlighter: pygments
@@ -36,7 +37,7 @@ built in that project will automatically produce a subpackage
 `<PACKAGE>-clang-profdata` with PGO profile data. We demonstrate this
 with a simple "Hello, World!" application that is called `myapp`. We
 then collect all those subpackages through `BuildRequires:` tags in
-another package called `llvm-pgo-profdata`. During the build of that
+another package called `llvm-pgo-profdata`. During the build of this
 package, all profiles are merged into an indexed profile data file. The
 final `llvm-pgo-profdata` RPM then installs the indexed profile data
 file into a location from which a PGO optimized build of LLVM can read
@@ -111,8 +112,7 @@ and MUST NOT be used in production sites.
 === How to follow along?
 
 I’ve been writing and testing everything on a
-https://getfedora.org/[Fedora Linux] 37 laptop with `make`, `git`,
-`fedpkg`, and `podman` installed.
+https://getfedora.org/[Fedora Linux] 37 laptop.
 
 Here’s a good starting point for preparing your system if you want to
 follow along. Don’t worry we don’t install any custom RPM on your
@@ -158,13 +158,13 @@ flags when building the LLVM RPM packages: `llvm`, `clang`, and `lld`.
 
 In this step, we’re essentially following the
 https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official
-documentation] for how to build a PGO instumented clang. In this step
-we’re going to create PGO instrumented LLVM packages and host them for
-later consumption on a Copr project. The resulting `clang` will generate
+documentation] for how to build a PGO instumented clang. We’re going to
+create PGO instrumented LLVM packages and host them for later
+consumption on a Copr project. The resulting `clang` will generate
 profile data upon execution and we’re trying to collect, bundle, and
 merge it for optimizing a rebuild of the LLVM toolchain later
 (link:#step7[Step 7 - Build PGO optimized LLVM]). But rest assured, you
-don’t need to run this on your own. The
+don’t need to run this on your own. A build takes a couple of hours. The
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented]
 project is ready for you to consume in the next steps. So you’re free to
 continue with link:#step1[Step 1 - Build "Hello, World!" RPM].
@@ -403,8 +403,8 @@ ENTRYPOINT [ "/root/entrypoint.sh" ]
 
 Once the build is done, we stay in the container (see `bash` in the
 following shell script) and you have to manually exit it (e.g. using
-`<ctrl>+<d>`). We do this to allow you to look around in the build
-directories etc.
+[.keycombo]#Ctrl+d#). We do this to allow you to look around in the
+build directories etc.
 
 *step1/entrypoint.sh*
 
@@ -502,9 +502,9 @@ instrumented `clang`.
 [[TMPDIR]]
 ==== Set LLVM_PROFILE_FILE
 
-By specifying `export LLVM_PROFILE_FILE="%t/myapp.clang.%m.profraw"` we
-instruct `clang` to create a raw profile file for each invocation under
-`TMPDIR` (see `%t` in
+By specifying `export LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"`
+we instruct `clang` to create a raw profile file for each invocation
+under `TMPDIR` (see `%t` in
 https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program[the
 docs]).
 
@@ -516,19 +516,18 @@ docs]).
 # We want the profile data to be written to specific files that will
 # later land in the sub-package "myapp-clang-raw-pgo-profdata". See
 # https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program
-TMPDIR="%{_builddir}/raw-pgo-profdata"
-export TMPDIR
+export TMPDIR="%{_builddir}/raw-pgo-profdata"
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
-export LLVM_PROFILE_FILE
+export LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
 ----
 
 [[find_and_merge_profiles]]
 ==== Find and merge the profiles
 
-We then find all raw profiles and merge them into the final
-`myapp.clang.profdata` under the buildroot to be picked up by the
-`%files` section of the `myapp-clang-pgo-profdata` subpackage:
+In the `%install` section of the specfile We then find all raw profiles
+and merge them into the final `myapp.clang.profdata` under the buildroot
+to be picked up by the `%files` section of the
+`myapp-clang-pgo-profdata` subpackage:
 
 *step2/myapp/myapp.spec*
 
@@ -538,7 +537,8 @@ We then find all raw profiles and merge them into the final
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.
 mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
+export TMPDIR="/tmp"
+export LLVM_PROFILE_FILE="%t/llvm-profdata.clang.%m.%p.profraw"
 llvm-profdata merge \
   --compress-all-sections \
   --sparse \
@@ -655,7 +655,8 @@ link:#find_and_merge_profiles[Find and merge the profiles]:
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.
 mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
+export TMPDIR="/tmp"
+export LLVM_PROFILE_FILE="%t/llvm-profdata.clang.%m.%p.profraw"
 llvm-profdata merge \
   --compress-all-sections \
   --sparse \
@@ -680,10 +681,10 @@ We already discussed link:#merge_for_smaller_profiles[here] that it is a
 good idea to store the merged profiles instead of the raw ones in the
 PGO subpackage that we’re trying to create.
 
-We must not wait until we merge the raw PGO profiles. Right now we first
-create many of them in the `%build` section of an RPM spec file and then
-we’re merging it in the '%install' section. This gap causes a lot of
-disk space to usage that we can avoid by merging regularly in the
+We don’t have to wait until we merge the raw PGO profiles. Right now we
+first create many of them in the `%build` section of an RPM spec file
+and then we’re merging it in the '%install' section. This gap causes a
+lot of disk space to usage that we can avoid by merging regularly in the
 background.
 
 To imporove this situation, we’re initiating a background merge script
@@ -693,7 +694,10 @@ right before we kick-off the build with `%cmake`.
 
 [source,spec]
 ----
-./background-merge.sh $TMPDIR /tmp/myapp.clang.background.merge &
+./pgo-background-merge.sh \
+  -d $TMPDIR \
+  -f /tmp/myapp.clang.background.merge \
+  -p /tmp/background-merge.pid &
 ----
 
 Then, once build is done, we ask the background job to gracefully shut
@@ -704,31 +708,36 @@ down by sending it a `TERM` signal and waiting for it to finish.
 [source,spec]
 ----
 # Terminate online merge and wait for it to finish.
-MERGE_PID=$(cat /tmp/background-merge.pid)
-kill -s TERM $MERGE_PID
-wait $MERGE_PID || true
+kill -s TERM $(cat /tmp/background-merge.pid)
+while true; do [ ! -e /tmp/background-merge.pid ] && break; sleep 5; done;\
 ----
 
-[[_background_merge]]
-===== Background merge
+Now, for the simple application in this experiment it might look like
+overkill, but trust me, we need this for building bigger projects like
+`chromium`.
+
+[[_pgo_background_merge]]
+===== PGO background merge
 
 The background script itself gathers all profiles that have been already
-written to the `TMPDIR` we’ve specified link:#TMPDIR[here]:
+written to the `TMPDIR` directory that we’ve specified
+link:#TMPDIR[here]:
 
-*step2/myapp/background-merge.sh*
+*step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
         # Gather profiles
-        find $profile_dir -type f 2>/dev/null > $profiles
-        sort -o $profiles $profiles
+        find $profile_dir -type f 2>/dev/null > $profiles.tmp
+        sort -o $profiles $profiles.tmp
+        rm -f $profiles.tmp
 ----
 
 It then checks (using `lsof`) if there are profiles still in use. That
 potentially means, that `clang`, `clang++` or `lld` are writing to those
 files.
 
-*step2/myapp/background-merge.sh*
+*step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
@@ -740,12 +749,12 @@ files.
 We then look for overlaps in the file listings before we use them for
 merging:
 
-*step2/myapp/background-merge.sh*
+*step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
         # Get distinct profiles that are not overlapping with the ones in use
-        profiles_not_in_use=$(comm -13 $profiles_in_use $profiles)
+        profiles_not_in_use=$(comm -13 $profiles_in_use $profiles | grep --regexp ".*\.profraw")
 ----
 
 [TIP]
@@ -763,44 +772,48 @@ the background, that’s where the `comm` script comes in handy.
 [source,shell]
 ----
 cat <<EOF > profiles.txt
-a
-b
-c
-d
-e
-f
+a.profraw
+b.profraw
+c.profraw
+d.profraw
+e.profraw
+f.profraw
 EOF
 cat <<EOF > profiles_in_use.txt
-c
-d
+c.profraw
+d.profraw
 EOF
 ----
 
 [source,console]
 ----
 $ comm -13 profiles_in_use.txt profiles.txt
-a
-b
-e
-f
+a.profraw
+b.profraw
+e.profraw
+f.profraw
 ----
 ====
 
-*step2/myapp/background-merge.sh*
+We merge the raw profiles and then delete them in order to free up disk
+space.
+
+*step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
-            echo "Merging and then deleting these profiles: $profiles_not_in_use"
             # llvm-profdata itself is instrumented as well so we need to
             # tell it where to write its own profile data.
-            export TMPDIR=$profile_dir
-            export LLVM_PROFILE_FILE="%t/llvm-profdata.clang.%m.%p.profraw"
+            # TODO(kwk): Eventually use this in the final merge?
+            export TMPDIR=/tmp
+            export LLVM_PROFILE_FILE="%t/llvm-profdata.tmp"
             llvm-profdata merge \
                 --compress-all-sections \
                 --sparse \
                  $profiles_not_in_use \
                 -o $target_merge_file
             # IMPORTANT: Free up disk space!
+            rm -f $tmp_profile
             rm -f $profiles_not_in_use
 ----
 
@@ -810,7 +823,9 @@ f
 In this step we generalize the `myapp-clang-pgo-profdata` subpackage
 from step 2 to `%{name}-%{toolchain}-clang-pgo-profdata`.
 
-The only changes from step2 to step3 is in the `myapp/myapp.spec` file:
+The only changes from link:#step2[Step 2 - Manually add subpackage] to
+link:#step3[Step 3 - Generalize subpackage] are in the
+`myapp/myapp.spec` file:
 
 [[_subpackage_definition_2]]
 ==== Subpackage definition
@@ -839,11 +854,9 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations
 
 [source,spec]
 ----
-TMPDIR="%{_builddir}/raw-pgo-profdata"
-export TMPDIR
+export TMPDIR="%{_builddir}/raw-pgo-profdata"
 mkdir -pv $TMPDIR
-LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
-export LLVM_PROFILE_FILE
+export LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.%m.%p.profraw"
 ----
 
 [[_find_and_merge_profiles]]
@@ -857,7 +870,8 @@ export LLVM_PROFILE_FILE
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.  
 mkdir -pv %{buildroot}%{_libdir}/clang-pgo-profdata/myapp
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
+export TMPDIR="/tmp"
+export LLVM_PROFILE_FILE="%t/llvm-profdata.clang.%m.%p.profraw"
 llvm-profdata merge \
   --compress-all-sections \
   --sparse \
@@ -954,8 +968,8 @@ place in the `%__spec_build_pre` macro to kick of the
   %{?_generate_package_note_file} \
   [ 0%{_toolchain_profile_subpackages} > 0 ] \\\
     && %{_pgo_env} \\\
-    && /usr/lib/rpm/redhat/background-merge.sh \\\
-      -d $TMPDIR \\\
+    && /usr/lib/rpm/redhat/pgo-background-merge.sh \\\
+      -d %{_pgo_tmpdir} \\\
       -f %{_pgo_background_merge_target} \\\
       -p %{_pgo_pid_file} &
 ----
@@ -977,7 +991,7 @@ the buildroot location.
     --compress-all-sections \\\
     --sparse \\\
     %{_pgo_background_merge_target} \\\
-    $(find %{_builddir}/raw-pgo-profdata -type f -name "*.profraw") \\\
+    $(find %{_builddir}/raw-pgo-profdata -type f -name '*.profraw') \\\
     -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata \\\
   " : "%{nil}" ]
 %__os_install_post    \
@@ -1023,10 +1037,10 @@ to emphasize the point that we don’t modify the spec file:
 [source,make]
 ----
 build-step4:
-    #rm -rf step4/myapp
-    #cp -rf step1/myapp step4/myapp
+    rm -rf step4/myapp
+    cp -rf step1/myapp step4/myapp
     podman build -t pgo-experiment-step4 ./step4
-    podman run -it --cap-add NET_ADMIN,SYS_PTRACE --rm pgo-experiment-step4
+    podman run -it --rm pgo-experiment-step4
 ----
 
 [[step5]]
@@ -1067,6 +1081,7 @@ using the `--repo` option:
 create-copr-project:
     -copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
     copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
+    copr edit-chroot --packages lsof $(fas_user)/profile-data-collection/fedora-37-x86_64
 ----
 
 Any package that will be built after `redhat-rpm-config` in the

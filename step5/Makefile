@@ -11,6 +11,7 @@ all: clean create-copr-project redhat-rpm-config.copr_build_id myapp.copr_build_
 create-copr-project:
 	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
 	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
+	copr edit-chroot --packages lsof $(fas_user)/profile-data-collection/fedora-37-x86_64
 # end::create_copr_project[]
 
 .PHONY: clean
@@ -22,8 +23,6 @@ clean:
 # an older version of it when building a new. This can cause weird results.
 .ONESHELL:
 redhat-rpm-config.copr_build_id:
-	-rm -rf redhat-rpm-config
-	-cp -rf ../step4/redhat-rpm-config .
 	cd redhat-rpm-config
 	fedpkg --release f37 srpm
 	-copr delete-package --name redhat-rpm-config $(copr_project)

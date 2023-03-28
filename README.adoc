@@ -537,12 +537,11 @@ We then find all raw profiles and merge them into the final
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
-export LLVM_PROFILE_FILE
 mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
+  --sparse \
   /tmp/myapp.clang.background.merge \
   $(find %{_builddir}/raw-pgo-profdata -type f) \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
@@ -655,12 +654,11 @@ link:#find_and_merge_profiles[Find and merge the profiles]:
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
-export LLVM_PROFILE_FILE
 mkdir -pv %{buildroot}/usr/lib64/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
+  --sparse \
   /tmp/myapp.clang.background.merge \
   $(find %{_builddir}/raw-pgo-profdata -type f) \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
@@ -817,20 +815,16 @@ export LLVM_PROFILE_FILE
 
 [source,spec]
 ----
-mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}
-find %{_builddir}/raw-pgo-profdata \
-  -type f \
-  -name "%{name}.%{toolchain}.*.profraw" \
-  > %{_builddir}/pgo-profiles
-
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.  
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
+mkdir -pv %{buildroot}%{_libdir}/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
-  $(cat %{_builddir}/pgo-profiles) \
+  --sparse \
+  /tmp/%{name}.%{toolchain}.background.merge \
+  $(find %{_builddir}/raw-pgo-profdata -type f) \
   -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata
 ----
 
@@ -922,8 +916,9 @@ place.
   LT_SYS_LIBRARY_PATH="${LT_SYS_LIBRARY_PATH:-%_libdir:}" ; export LT_SYS_LIBRARY_PATH ; \
   CC="${CC:-%{__cc}}" ; export CC ; \
   CXX="${CXX:-%{__cxx}}" ; export CXX ; \
-  [ "%_toolchain_profile_subpackages" = 1 ] && TMPDIR="%{_builddir}/raw-pgo-profdata" && export TMPDIR && mkdir -pv $TMPDIR && \
-  LLVM_PROFILE_FILE="%t/%{name}.%{toolchain}.profraw%c" && export LLVM_PROFILE_FILE ;
+  [ "%_toolchain_profile_subpackages" = "1" ] \\\
+    && %{_pgo_env} \\\
+    && /usr/lib/rpm/redhat/background-merge.sh $TMPDIR %{_pgo_background_merge_target} &
 ----
 
 [[_find_and_merge_profiles_2]]
@@ -936,8 +931,18 @@ the buildroot location.
 
 [source,spec]
 ----
-%__copy_profraw %[ 0%{_toolchain_profile_subpackages} > 0 ? "mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} && find %{_builddir}/raw-pgo-profdata -type f -name '%{name}.%{toolchain}.profraw' > %{_builddir}/pgo-profiles && LLVM_PROFILE_FILE='llvm-profdata.%{toolchain}.%m.%p.profdata' llvm-profdata merge --compress-all-sections -sparse $(cat %{_builddir}/pgo-profiles) -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata" : "%{nil}" ]
+%__merge_profdata %[ 0%{_toolchain_profile_subpackages} > 0 ? "\\\
+  mkdir -pv %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name} \\\
+  && %{_pgo_env} \\\
+  && llvm-profdata merge \\\
+    --compress-all-sections \\\
+    --sparse \\\
+    /tmp/%{name}.%{toolchain}.background.merge \\\
+    $(find %{_builddir}/raw-pgo-profdata -type f) \\\
+    -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata \\\
+  " : "%{nil}" ]
 
+#./background-merge.sh $TMPDIR /tmp/%{name}.%{toolchain}.background.merge &
 %__os_install_post    \
     %{?__brp_ldconfig} \
     %{?__brp_compress} \
@@ -951,7 +956,7 @@ the buildroot location.
     %{?__brp_mangle_shebangs} \
     %{?__brp_remove_la_files} \
     %{__os_install_post_python} \
-    %{?_toolchain_profile_subpackages:%{?__copy_profraw}} \
+    %{?_toolchain_profile_subpackages:%{?__merge_profdata}} \
 %{nil}
 ----
 
@@ -981,8 +986,8 @@ to emphasize the point that we don’t modify the spec file:
 [source,make]
 ----
 build-step4:
-    rm -rf step4/myapp
-    cp -rf step1/myapp step4/myapp
+    #rm -rf step4/myapp
+    #cp -rf step1/myapp step4/myapp
     podman build -t pgo-experiment-step4 ./step4
     podman run -it --rm pgo-experiment-step4
 ----

@@ -309,7 +309,7 @@ Afterall, how can a function call be counted in a thread-safe manner? Let's supp
 The alert reader will probably already spotted the following in <<find_and_merge_profiles>>:
 
 .step2/myapp/myapp.spec
-[source,spec,highlight=10]
+[source,spec,highlight=9]
 ----
 include::step2/myapp/myapp.spec[tags=merge_profiles]
 ----
@@ -399,7 +399,7 @@ include::step3/myapp/myapp.spec[tags=llvm_profile_file]
 .step3/myapp/myapp.spec
 [source,spec]
 ----
-include::step3/myapp/myapp.spec[tags=find_profiles;merge_profiles]
+include::step3/myapp/myapp.spec[tags=merge_profiles]
 ----
 
 You should see that we've replaced all occurrences of `myapp` with the RPM specfile macro `%{name}` and the word `clang` with the `%{toolchain}` macro. That is essentially all we have to do now.

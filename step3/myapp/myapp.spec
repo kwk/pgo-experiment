@@ -76,12 +76,11 @@ wait $MERGE_PID || true
 # llvm-profdata itself is instrumented and wants to write profile data itself,
 # hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write
 # to a non existing location coming from when llvm-profdata was built.  
-LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw"
-export LLVM_PROFILE_FILE
 mkdir -pv %{buildroot}%{_libdir}/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE="llvm-profdata.clang.%m.%p.profraw" \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
+  --sparse \
   /tmp/%{name}.%{toolchain}.background.merge \
   $(find %{_builddir}/raw-pgo-profdata -type f) \
   -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata

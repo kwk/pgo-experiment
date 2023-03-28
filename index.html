@@ -1088,12 +1088,11 @@ export LLVM_PROFILE_FILE</code></pre>
 <pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
 <span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
 <span class="tok-c"># to a non existing location coming from when llvm-profdata was built.</span>
-LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span>
-export LLVM_PROFILE_FILE
 mkdir -pv <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span> \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
+  --sparse \
   /tmp/myapp.clang.background.merge \
   $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f) \
   -o <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
@@ -1215,12 +1214,11 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 <pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
 <span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
 <span class="tok-c"># to a non existing location coming from when llvm-profdata was built.</span>
-LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span>
-export LLVM_PROFILE_FILE
 mkdir -pv <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span> \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
+  --sparse \
 <span class="hll">  /tmp/myapp.clang.background.merge \
 </span>  $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f) \
   -o <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
@@ -1363,20 +1361,16 @@ export LLVM_PROFILE_FILE</code></pre>
 <div class="listingblock">
 <div class="title">step3/myapp/myapp.spec</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>
-find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata \
-  -type f \
-  -name <span class="tok-s2">&quot;</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.*.profraw&quot;</span> \
-  &gt; <span class="tok-kp">%{_builddir}</span>/pgo-profiles
-
-<span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
 <span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
 <span class="tok-c"># to a non existing location coming from when llvm-profdata was built.  </span>
-LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span>
+mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/clang-pgo-profdata/myapp
+LLVM_PROFILE_FILE=<span class="tok-s2">&quot;llvm-profdata.clang.%m.%p.profraw&quot;</span> \
 llvm-profdata merge \
   --compress-all-sections \
-  -sparse \
-  $(cat <span class="tok-kp">%{_builddir}</span>/pgo-profiles) \
+  --sparse \
+  /tmp/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.background.merge \
+  $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f) \
   -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata</code></pre>
 </div>
 </div>
@@ -1465,8 +1459,9 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
   LT_SYS_LIBRARY_PATH=<span class="tok-s2">&quot;${LT_SYS_LIBRARY_PATH:-</span><span class="tok-kp">%_libdir</span><span class="tok-s2">:}&quot;</span> ; export LT_SYS_LIBRARY_PATH ; \
   CC=<span class="tok-s2">&quot;${CC:-</span><span class="tok-nf">%{__cc}</span><span class="tok-s2">}&quot;</span> ; export CC ; \
   CXX=<span class="tok-s2">&quot;${CXX:-</span><span class="tok-nf">%{__cxx}</span><span class="tok-s2">}&quot;</span> ; export CXX ; \
-  [ <span class="tok-s2">&quot;%_toolchain_profile_subpackages&quot;</span> = 1 ] &amp;&amp; TMPDIR=<span class="tok-s2">&quot;</span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata&quot;</span> &amp;&amp; export TMPDIR &amp;&amp; mkdir -pv $TMPDIR &amp;&amp; \
-  LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.profraw%c&quot;</span> &amp;&amp; export LLVM_PROFILE_FILE ;</code></pre>
+  [ <span class="tok-s2">&quot;%_toolchain_profile_subpackages&quot;</span> = <span class="tok-s2">&quot;1&quot;</span> ] \\\
+    &amp;&amp; %{_pgo_env} \\\
+    &amp;&amp; /usr/lib/rpm/redhat/background-merge.sh $TMPDIR %{_pgo_background_merge_target} &amp;</code></pre>
 </div>
 </div>
 </div>
@@ -1478,8 +1473,19 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 <div class="listingblock">
 <div class="title">step4/redhat-rpm-config/macros</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__copy_profraw</span> %[ 0%{_toolchain_profile_subpackages} &gt; 0 ? <span class="tok-s2">&quot;mkdir -pv </span><span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span><span class="tok-s2">/</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">-pgo-profdata/</span><span class="tok-kc">%{name}</span><span class="tok-s2"> &amp;&amp; find </span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata -type f -name &#39;</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.profraw&#39; &gt; </span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/pgo-profiles &amp;&amp; LLVM_PROFILE_FILE=&#39;llvm-profdata.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.%m.%p.profdata&#39; llvm-profdata merge --compress-all-sections -sparse $(cat </span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/pgo-profiles) -o </span><span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span><span class="tok-s2">/</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">-pgo-profdata/</span><span class="tok-kc">%{name}</span><span class="tok-s2">/</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.profdata&quot;</span> : <span class="tok-s2">&quot;</span><span class="tok-kc">%{nil}</span><span class="tok-s2">&quot;</span> ]
+<pre class="pygments highlight"><code data-lang="spec"><span></span>
+<span class="tok-nf">%__merge_profdata</span> %[ 0%{_toolchain_profile_subpackages} &gt; 0 ? <span class="tok-s2">&quot;</span><span class="tok-se">\\</span><span class="tok-s2">\</span>
+  mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span> \\\
+  &amp;&amp; %{_pgo_env} \\\
+  &amp;&amp; llvm-profdata merge \\\
+    --compress-all-sections \\\
+    --sparse \\\
+    /tmp/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.background.merge \\\
+    $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f) \\\
+    -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata \\\
+  <span class="tok-s2">&quot; : &quot;</span><span class="tok-kc">%{nil}</span><span class="tok-s2">&quot; ]</span>
 
+<span class="tok-c">#./background-merge.sh $TMPDIR /tmp/%{name}.%{toolchain}.background.merge &amp;</span>
 <span class="tok-nf">%__os_install_post</span>    \
     <span class="tok-nv">%{?__brp_ldconfig}</span> \
     <span class="tok-nv">%{?__brp_compress}</span> \
@@ -1493,7 +1499,7 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
     <span class="tok-nv">%{?__brp_mangle_shebangs}</span> \
     <span class="tok-nv">%{?__brp_remove_la_files}</span> \
     <span class="tok-nf">%{__os_install_post_python}</span> \
-    %{?_toolchain_profile_subpackages:<span class="tok-nv">%{?__copy_profraw}</span>} \
+    %{?_toolchain_profile_subpackages:<span class="tok-nv">%{?__merge_profdata}</span>} \
 <span class="tok-kc">%{nil}</span></code></pre>
 </div>
 </div>
@@ -1519,8 +1525,8 @@ sudo dnf install -y --disablerepo<span class="tok-o">=</span>* noarch/redhat-rpm
 <div class="title">Makefile</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">build-step4</span><span class="tok-o">:</span>
-	rm -rf step4/myapp
-	cp -rf step1/myapp step4/myapp
+<span class="tok-c">	#rm -rf step4/myapp</span>
+<span class="tok-c">	#cp -rf step1/myapp step4/myapp</span>
 	podman build -t pgo-experiment-step4 ./step4
 	podman run -it --rm pgo-experiment-step4</code></pre>
 </div>
@@ -1837,7 +1843,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-27 17:48:01 +0200
+Last updated 2023-03-28 11:29:09 +0200
 </div>
 </div>
 <script type="text/x-mathjax-config">

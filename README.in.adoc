@@ -364,6 +364,41 @@ We then look for overlaps in the file listings before we use them for merging:
 include::step2/myapp/background-merge.sh[tags=get_ready_profiles]
 ----
 
+[TIP]
+====
+Suppose you have two files with sorted lines of profiles:
+
+1. `profiles.txt` a list of all profiles currently on disk
+2. `profiles_in_use.txt` a list of profiles that are currently open by `clang`, `clang++`, `lld` or alike.
+
+And then you want to find out which profiles are good to be merged in the background, that's where the `comm` script comes in handy.
+
+[source,shell]
+----
+cat <<EOF > profiles.txt
+a.profraw
+b.profraw
+c.profraw
+d.profraw
+e.profraw
+f.profraw
+EOF
+cat <<EOF > profiles_in_use.txt
+c.profraw
+d.profraw
+EOF
+----
+
+[source,console]
+----
+$ comm -13 profiles_in_use.txt profiles.txt
+a.profraw
+b.profraw
+e.profraw
+f.profraw
+----
+====
+
 .step2/myapp/background-merge.sh
 [source,spec]
 ----
@@ -435,12 +470,12 @@ include::step4/redhat-rpm-config/macros[tags=subpackage_template]
 
 ==== Set LLVM_PROFILE_FILE
 
-We export the `LLVM_PROFILE_FILE` environment variable at the right place.
+We export the `LLVM_PROFILE_FILE` environment variable at the right place in the `%__spec_build_pre` macro to kick of the 
 
 .step4/redhat-rpm-config/macros
 [source,spec]
 ----
-include::step4/redhat-rpm-config/macros[tags=set_build_flags]
+include::step4/redhat-rpm-config/macros[tags=__spec_build_pre]
 ----
 
 ==== Find and merge profiles

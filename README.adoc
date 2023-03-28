@@ -748,6 +748,44 @@ merging:
         profiles_not_in_use=$(comm -13 $profiles_in_use $profiles)
 ----
 
+[TIP]
+====
+Suppose you have two files with sorted lines of profiles:
+
+[arabic]
+. `profiles.txt` a list of all profiles currently on disk
+. `profiles_in_use.txt` a list of profiles that are currently open by
+`clang`, `clang++`, `lld` or alike.
+
+And then you want to find out which profiles are good to be merged in
+the background, that’s where the `comm` script comes in handy.
+
+[source,shell]
+----
+cat <<EOF > profiles.txt
+a
+b
+c
+d
+e
+f
+EOF
+cat <<EOF > profiles_in_use.txt
+c
+d
+EOF
+----
+
+[source,console]
+----
+$ comm -13 profiles_in_use.txt profiles.txt
+a
+b
+e
+f
+----
+====
+
 *step2/myapp/background-merge.sh*
 
 [source,spec]
@@ -901,24 +939,25 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 ==== Set LLVM_PROFILE_FILE
 
 We export the `LLVM_PROFILE_FILE` environment variable at the right
-place.
+place in the `%__spec_build_pre` macro to kick of the
 
 *step4/redhat-rpm-config/macros*
 
 [source,spec]
 ----
-%set_build_flags \
-  CFLAGS="${CFLAGS:-%{build_cflags}}" ; export CFLAGS ; \
-  CXXFLAGS="${CXXFLAGS:-%{build_cxxflags}}" ; export CXXFLAGS ; \
-  FFLAGS="${FFLAGS:-%{build_fflags}}" ; export FFLAGS ; \
-  FCFLAGS="${FCFLAGS:-%{build_fflags}}" ; export FCFLAGS ; \
-  LDFLAGS="${LDFLAGS:-%{build_ldflags}}" ; export LDFLAGS ; \
-  LT_SYS_LIBRARY_PATH="${LT_SYS_LIBRARY_PATH:-%_libdir:}" ; export LT_SYS_LIBRARY_PATH ; \
-  CC="${CC:-%{__cc}}" ; export CC ; \
-  CXX="${CXX:-%{__cxx}}" ; export CXX ; \
-  [ "%_toolchain_profile_subpackages" = "1" ] \\\
+# Automatically use set_build_flags macro for build, check, and
+# install phases.
+# Use "%undefine _auto_set_build_flags" to disable"
+%_auto_set_build_flags 1
+%__spec_build_pre %{___build_pre} \
+  %{?_auto_set_build_flags:%{set_build_flags}} \
+  %{?_generate_package_note_file} \
+  [ 0%{_toolchain_profile_subpackages} > 0 ] \\\
     && %{_pgo_env} \\\
-    && /usr/lib/rpm/redhat/background-merge.sh $TMPDIR %{_pgo_background_merge_target} &
+    && /usr/lib/rpm/redhat/background-merge.sh \\\
+      -d $TMPDIR \\\
+      -f %{_pgo_background_merge_target} \\\
+      -p %{_pgo_pid_file} &
 ----
 
 [[_find_and_merge_profiles_2]]
@@ -937,12 +976,10 @@ the buildroot location.
   && llvm-profdata merge \\\
     --compress-all-sections \\\
     --sparse \\\
-    /tmp/%{name}.%{toolchain}.background.merge \\\
-    $(find %{_builddir}/raw-pgo-profdata -type f) \\\
+    %{_pgo_background_merge_target} \\\
+    $(find %{_builddir}/raw-pgo-profdata -type f -name "*.profraw") \\\
     -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata \\\
   " : "%{nil}" ]
-
-#./background-merge.sh $TMPDIR /tmp/%{name}.%{toolchain}.background.merge &
 %__os_install_post    \
     %{?__brp_ldconfig} \
     %{?__brp_compress} \
@@ -989,7 +1026,7 @@ build-step4:
     #rm -rf step4/myapp
     #cp -rf step1/myapp step4/myapp
     podman build -t pgo-experiment-step4 ./step4
-    podman run -it --rm pgo-experiment-step4
+    podman run -it --cap-add NET_ADMIN,SYS_PTRACE --rm pgo-experiment-step4
 ----
 
 [[step5]]

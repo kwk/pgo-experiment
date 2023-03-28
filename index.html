@@ -1295,6 +1295,58 @@ wait $MERGE_PID || true</code></pre>
         profiles_not_in_use=$(comm -13 $profiles_in_use $profiles)</code></pre>
 </div>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Suppose you have two files with sorted lines of profiles:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>profiles.txt</code> a list of all profiles currently on disk</p>
+</li>
+<li>
+<p><code>profiles_in_use.txt</code> a list of profiles that are currently open by <code>clang</code>, <code>clang++</code>, <code>lld</code> or alike.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>And then you want to find out which profiles are good to be merged in the background, that&#8217;s where the <code>comm</code> script comes in handy.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="shell"><span></span>cat <span class="tok-s">&lt;&lt;EOF &gt; profiles.txt</span>
+<span class="tok-s">a</span>
+<span class="tok-s">b</span>
+<span class="tok-s">c</span>
+<span class="tok-s">d</span>
+<span class="tok-s">e</span>
+<span class="tok-s">f</span>
+<span class="tok-s">EOF</span>
+cat <span class="tok-s">&lt;&lt;EOF &gt; profiles_in_use.txt</span>
+<span class="tok-s">c</span>
+<span class="tok-s">d</span>
+<span class="tok-s">EOF</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>comm -13 profiles_in_use.txt profiles.txt
+<span class="tok-go">a</span>
+<span class="tok-go">b</span>
+<span class="tok-go">e</span>
+<span class="tok-go">f</span></code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="listingblock">
 <div class="title">step2/myapp/background-merge.sh</div>
 <div class="content">
@@ -1445,23 +1497,24 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 <div class="sect3">
 <h4 id="_set_llvm_profile_file_2"><a class="anchor" href="#_set_llvm_profile_file_2"></a><a class="link" href="#_set_llvm_profile_file_2">3.6.1. Set LLVM_PROFILE_FILE</a></h4>
 <div class="paragraph">
-<p>We export the <code>LLVM_PROFILE_FILE</code> environment variable at the right place.</p>
+<p>We export the <code>LLVM_PROFILE_FILE</code> environment variable at the right place in the <code>%__spec_build_pre</code> macro to kick of the</p>
 </div>
 <div class="listingblock">
 <div class="title">step4/redhat-rpm-config/macros</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>%set_build_flags \
-  CFLAGS=<span class="tok-s2">&quot;${CFLAGS:-</span><span class="tok-kc">%{build_cflags}</span><span class="tok-s2">}&quot;</span> ; export CFLAGS ; \
-  CXXFLAGS=<span class="tok-s2">&quot;${CXXFLAGS:-</span><span class="tok-kc">%{build_cxxflags}</span><span class="tok-s2">}&quot;</span> ; export CXXFLAGS ; \
-  FFLAGS=<span class="tok-s2">&quot;${FFLAGS:-</span><span class="tok-kc">%{build_fflags}</span><span class="tok-s2">}&quot;</span> ; export FFLAGS ; \
-  FCFLAGS=<span class="tok-s2">&quot;${FCFLAGS:-</span><span class="tok-kc">%{build_fflags}</span><span class="tok-s2">}&quot;</span> ; export FCFLAGS ; \
-  LDFLAGS=<span class="tok-s2">&quot;${LDFLAGS:-</span><span class="tok-kc">%{build_ldflags}</span><span class="tok-s2">}&quot;</span> ; export LDFLAGS ; \
-  LT_SYS_LIBRARY_PATH=<span class="tok-s2">&quot;${LT_SYS_LIBRARY_PATH:-</span><span class="tok-kp">%_libdir</span><span class="tok-s2">:}&quot;</span> ; export LT_SYS_LIBRARY_PATH ; \
-  CC=<span class="tok-s2">&quot;${CC:-</span><span class="tok-nf">%{__cc}</span><span class="tok-s2">}&quot;</span> ; export CC ; \
-  CXX=<span class="tok-s2">&quot;${CXX:-</span><span class="tok-nf">%{__cxx}</span><span class="tok-s2">}&quot;</span> ; export CXX ; \
-  [ <span class="tok-s2">&quot;%_toolchain_profile_subpackages&quot;</span> = <span class="tok-s2">&quot;1&quot;</span> ] \\\
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># Automatically use set_build_flags macro for build, check, and</span>
+<span class="tok-c"># install phases.</span>
+<span class="tok-c"># Use &quot;%undefine _auto_set_build_flags&quot; to disable&quot;</span>
+%_auto_set_build_flags 1
+<span class="tok-nf">%__spec_build_pre</span> <span class="tok-nf">%{___build_pre}</span> \
+  %{?_auto_set_build_flags:<span class="tok-kc">%{set_build_flags}</span>} \
+  <span class="tok-nv">%{?_generate_package_note_file}</span> \
+  [ 0%{_toolchain_profile_subpackages} &gt; 0 ] \\\
     &amp;&amp; %{_pgo_env} \\\
-    &amp;&amp; /usr/lib/rpm/redhat/background-merge.sh $TMPDIR %{_pgo_background_merge_target} &amp;</code></pre>
+    &amp;&amp; /usr/lib/rpm/redhat/background-merge.sh \\\
+      -d $TMPDIR \\\
+      -f %{_pgo_background_merge_target} \\\
+      -p %{_pgo_pid_file} &amp;</code></pre>
 </div>
 </div>
 </div>
@@ -1480,12 +1533,10 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
   &amp;&amp; llvm-profdata merge \\\
     --compress-all-sections \\\
     --sparse \\\
-    /tmp/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.background.merge \\\
-    $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f) \\\
+    %{_pgo_background_merge_target} \\\
+    $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f -name <span class="tok-s2">&quot;*.profraw&quot;</span>) \\\
     -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata \\\
   <span class="tok-s2">&quot; : &quot;</span><span class="tok-kc">%{nil}</span><span class="tok-s2">&quot; ]</span>
-
-<span class="tok-c">#./background-merge.sh $TMPDIR /tmp/%{name}.%{toolchain}.background.merge &amp;</span>
 <span class="tok-nf">%__os_install_post</span>    \
     <span class="tok-nv">%{?__brp_ldconfig}</span> \
     <span class="tok-nv">%{?__brp_compress}</span> \
@@ -1528,7 +1579,7 @@ sudo dnf install -y --disablerepo<span class="tok-o">=</span>* noarch/redhat-rpm
 <span class="tok-c">	#rm -rf step4/myapp</span>
 <span class="tok-c">	#cp -rf step1/myapp step4/myapp</span>
 	podman build -t pgo-experiment-step4 ./step4
-	podman run -it --rm pgo-experiment-step4</code></pre>
+	podman run -it --cap-add NET_ADMIN,SYS_PTRACE --rm pgo-experiment-step4</code></pre>
 </div>
 </div>
 </div>
@@ -1843,7 +1894,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-28 11:29:09 +0200
+Last updated 2023-03-28 18:55:13 +0200
 </div>
 </div>
 <script type="text/x-mathjax-config">

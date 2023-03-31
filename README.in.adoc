@@ -197,16 +197,16 @@ The only other changes from <<step1>> to <<step2>> are in the the `Containerfile
 include::step2/Containerfile[tag=install_pgo_instrumented]
 ----
 
-We also have to add the `lsof` package because of a slightly more advanced topic that we will cover at the end of this section:
+We also have to add the `inotify-tools` package because of a slightly more advanced topic that we will cover at the end of this section:
 
 [source,dockerfile]
 ----
-include::step2/Containerfile[tag=install_lsof]
+include::step2/Containerfile[tag=install_inofify_tools]
 ----
 
 [NOTE]
 ====
-When we move all this to Copr we must add `lsof` to the list of packages that are available for each build without requiring this as a `BuildRequires:` tag. The `copr edit-chroot` offers this option specifically for these kinds of purposes:
+When we move all this to Copr we must add `inotify-tools` to the list of packages that are available for each build without requiring this as a `BuildRequires:` tag. The `copr edit-chroot` offers this option specifically for these kinds of purposes:
 > `--packages PACKAGES   space separated string of package names to be added to buildroot`
 ====
 
@@ -329,7 +329,7 @@ To imporove this situation, we're initiating a background merge script right bef
 include::step2/myapp/myapp.spec[tags=start_background_merge]
 ----
 
-Then, once build is done, we ask the background job to gracefully shut down by sending it a `TERM` signal and waiting for it to finish.
+Then, once build is done, we ask the background job to gracefully shut down by writing to a *shutdown file*. Then we wait using `inotifywait` until the background job's PID (process ID) file is deleted.
 
 .step2/myapp/myapp.spec
 [source,spec]
@@ -341,66 +341,21 @@ Now, for the simple application in this experiment it might look like overkill, 
 
 ===== PGO background merge
 
-The background script itself gathers all profiles that have been already written to the `TMPDIR` directory that we've specified link:#TMPDIR[here]:
+The background script itself waits for `close_write` events on `*.profraw` files in a directory to be observed. It writes the filenames into a batch file:
 
 .step2/myapp/pgo-background-merge.sh
 [source,spec]
 ----
-include::step2/myapp/pgo-background-merge.sh[tags=gather_profiles]
+include::step2/myapp/pgo-background-merge.sh[tags=wait_for_profraw]
 ----
 
-It then checks (using `lsof`) if there are profiles still in use. That potentially means, that `clang`, `clang++` or `lld` are writing to those files.
+Once the batch size reaches the minimum size, we merge the profiles in the batch file and delete them when we're done. This saves disk space when building large projects.
 
 .step2/myapp/pgo-background-merge.sh
 [source,spec]
 ----
-include::step2/myapp/pgo-background-merge.sh[tag=get_profiles_in_use]
+include::step2/myapp/pgo-background-merge.sh[tag=merge]
 ----
-
-We then look for overlaps in the file listings before we use them for merging:
-
-.step2/myapp/pgo-background-merge.sh
-[source,spec]
-----
-include::step2/myapp/pgo-background-merge.sh[tags=get_ready_profiles]
-----
-
-[TIP]
-====
-Suppose you have two files with sorted lines of profiles:
-
-1. `profiles.txt` a list of all profiles currently on disk
-2. `profiles_in_use.txt` a list of profiles that are currently open by `clang`, `clang++`, `lld` or alike.
-
-And then you want to find out which profiles are good to be merged in the background, that's where the `comm` script comes in handy.
-
-[source,shell]
-----
-cat <<EOF > profiles.txt
-a.profraw
-b.profraw
-c.profraw
-d.profraw
-e.profraw
-f.profraw
-EOF
-cat <<EOF > profiles_in_use.txt
-c.profraw
-d.profraw
-EOF
-----
-
-[source,console]
-----
-$ comm -13 profiles_in_use.txt profiles.txt
-a.profraw
-b.profraw
-e.profraw
-f.profraw
-----
-====
-
-We merge the raw profiles and then delete them in order to free up disk space. 
 
 .step2/myapp/pgo-background-merge.sh
 [source,spec]

@@ -125,8 +125,9 @@ function process_batch()
         `[ -e $target_merge_file ] && echo "$target_merge_file"` \
         $(cat $batch_file_in_process) \
         -o $target_merge_file
-    popd
     # IMPORTANT: Free up disk space!
+    rm -fv $(cat $batch_file_in_process)
+    popd
     rm -f $TMPDIR/llvm-profdata.tmp
     # end::merge[]    
 }
@@ -134,12 +135,14 @@ function process_batch()
 
 function main()
 {
+    # tag::wait_for_profraw[]
     # On every *.profraw file written to in the /tmp directory,
     # write an event line to list of files to process in a batch.
     inotifywait -q -m -o $batch_file -e close_write \
         --format '%f' \
         --include $files_regex \
         $observe_dir > /dev/null 2>&1 &
+    # end::wait_for_profraw[]
 
     # Observe if a new profile was added to the list of the current batch.
     # If the shutdown file was modified, gracefully shutdown.
@@ -167,10 +170,6 @@ function main()
         echo "Processing batch (size: $batch_size) in 5 seconds: "
         cat $batch_file_in_process
         process_batch
-        # IMPORTANT: Free up disk space!
-        pushd $observe_dir
-        rm -fv $(cat $batch_file_in_process)
-        popd
     done
 }
 

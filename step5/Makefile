@@ -11,7 +11,7 @@ all: clean create-copr-project redhat-rpm-config.copr_build_id myapp.copr_build_
 create-copr-project:
 	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
 	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
-	copr edit-chroot --packages lsof $(fas_user)/profile-data-collection/fedora-37-x86_64
+	copr edit-chroot --packages inotify-tools $(fas_user)/profile-data-collection/fedora-37-x86_64
 # end::create_copr_project[]
 
 .PHONY: clean

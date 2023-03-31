@@ -457,18 +457,18 @@ RUN sudo dnf install -y \
     clang
 ----
 
-We also have to add the `lsof` package because of a slightly more
-advanced topic that we will cover at the end of this section:
+We also have to add the `inotify-tools` package because of a slightly
+more advanced topic that we will cover at the end of this section:
 
 [source,dockerfile]
 ----
-RUN dnf install -y lsof
+RUN dnf install -y inotify-tools
 ----
 
 [NOTE]
 ====
-When we move all this to Copr we must add `lsof` to the list of packages
-that are available for each build without requiring this as a
+When we move all this to Copr we must add `inotify-tools` to the list of
+packages that are available for each build without requiring this as a
 `BuildRequires:` tag. The `copr edit-chroot` offers this option
 specifically for these kinds of purposes: >
 `--packages PACKAGES   space separated string of package names to be added to buildroot`
@@ -543,7 +543,7 @@ llvm-profdata merge \
   --compress-all-sections \
   --sparse \
   /tmp/myapp.clang.background.merge \
-  $(find %{_builddir}/raw-pgo-profdata -type f) \
+  $(find %{_builddir}/raw-pgo-profdata -type f -name '*.profraw') \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
 ----
 
@@ -661,7 +661,7 @@ llvm-profdata merge \
   --compress-all-sections \
   --sparse \
   /tmp/myapp.clang.background.merge \
-  $(find %{_builddir}/raw-pgo-profdata -type f) \
+  $(find %{_builddir}/raw-pgo-profdata -type f -name '*.profraw') \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
 ----
 
@@ -694,22 +694,27 @@ right before we kick-off the build with `%cmake`.
 
 [source,spec]
 ----
+SHUTDOWN_FILE=%{_builddir}/raw-pgo-profdata/shutdown.txt
+PID_FILE=/tmp/background-merge.pid
 ./pgo-background-merge.sh \
   -d $TMPDIR \
   -f /tmp/myapp.clang.background.merge \
-  -p /tmp/background-merge.pid &
+  -p $PID_FILE \
+  -x $SHUTDOWN_FILE &
 ----
 
 Then, once build is done, we ask the background job to gracefully shut
-down by sending it a `TERM` signal and waiting for it to finish.
+down by writing to a *shutdown file*. Then we wait using `inotifywait`
+until the background job’s PID (process ID) file is deleted.
 
 *step2/myapp/myapp.spec*
 
 [source,spec]
 ----
-# Terminate online merge and wait for it to finish.
-kill -s TERM $(cat /tmp/background-merge.pid)
-while true; do [ ! -e /tmp/background-merge.pid ] && break; sleep 5; done;\
+# Signal stop and wait for the PID file to be deleted to gracefully
+# exit the background job.
+echo '' > $SHUTDOWN_FILE;
+[ -e $PID_FILE ] && inotifywait -e delete_self $PID_FILE || true;
 ----
 
 Now, for the simple application in this experiment it might look like
@@ -719,102 +724,68 @@ overkill, but trust me, we need this for building bigger projects like
 [[_pgo_background_merge]]
 ===== PGO background merge
 
-The background script itself gathers all profiles that have been already
-written to the `TMPDIR` directory that we’ve specified
-link:#TMPDIR[here]:
+The background script itself waits for `close_write` events on
+`*.profraw` files in a directory to be observed. It writes the filenames
+into a batch file:
 
 *step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
-        # Gather profiles
-        find $profile_dir -type f 2>/dev/null > $profiles.tmp
-        sort -o $profiles $profiles.tmp
-        rm -f $profiles.tmp
+    # On every *.profraw file written to in the /tmp directory,
+    # write an event line to list of files to process in a batch.
+    inotifywait -q -m -o $batch_file -e close_write \
+        --format '%f' \
+        --include $files_regex \
+        $observe_dir > /dev/null 2>&1 &
 ----
 
-It then checks (using `lsof`) if there are profiles still in use. That
-potentially means, that `clang`, `clang++` or `lld` are writing to those
-files.
+Once the batch size reaches the minimum size, we merge the profiles in
+the batch file and delete them when we’re done. This saves disk space
+when building large projects.
 
 *step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
-        lsof -Fn +d $profile_dir | grep ^n/ | sort > $profiles_in_use
-        # Remove n/ prefix
-        sed -i -s 's/^n\//\//g' $profiles_in_use
+    # llvm-profdata itself is instrumented as well so we need to
+    # tell it where to write its own profile data.
+    # TODO(kwk): Eventually use this in the final merge?
+    export TMPDIR=/tmp
+    export LLVM_PROFILE_FILE="%t/llvm-profdata.tmp"
+    pushd $observe_dir
+    llvm-profdata merge \
+        --compress-all-sections \
+        --sparse \
+        `[ -e $target_merge_file ] && echo "$target_merge_file"` \
+        $(cat $batch_file_in_process) \
+        -o $target_merge_file
+    # IMPORTANT: Free up disk space!
+    rm -fv $(cat $batch_file_in_process)
+    popd
+    rm -f $TMPDIR/llvm-profdata.tmp
 ----
-
-We then look for overlaps in the file listings before we use them for
-merging:
 
 *step2/myapp/pgo-background-merge.sh*
 
 [source,spec]
 ----
-        # Get distinct profiles that are not overlapping with the ones in use
-        profiles_not_in_use=$(comm -13 $profiles_in_use $profiles | grep --regexp ".*\.profraw")
-----
-
-[TIP]
-====
-Suppose you have two files with sorted lines of profiles:
-
-[arabic]
-. `profiles.txt` a list of all profiles currently on disk
-. `profiles_in_use.txt` a list of profiles that are currently open by
-`clang`, `clang++`, `lld` or alike.
-
-And then you want to find out which profiles are good to be merged in
-the background, that’s where the `comm` script comes in handy.
-
-[source,shell]
-----
-cat <<EOF > profiles.txt
-a.profraw
-b.profraw
-c.profraw
-d.profraw
-e.profraw
-f.profraw
-EOF
-cat <<EOF > profiles_in_use.txt
-c.profraw
-d.profraw
-EOF
-----
-
-[source,console]
-----
-$ comm -13 profiles_in_use.txt profiles.txt
-a.profraw
-b.profraw
-e.profraw
-f.profraw
-----
-====
-
-We merge the raw profiles and then delete them in order to free up disk
-space.
-
-*step2/myapp/pgo-background-merge.sh*
-
-[source,spec]
-----
-            # llvm-profdata itself is instrumented as well so we need to
-            # tell it where to write its own profile data.
-            # TODO(kwk): Eventually use this in the final merge?
-            export TMPDIR=/tmp
-            export LLVM_PROFILE_FILE="%t/llvm-profdata.tmp"
-            llvm-profdata merge \
-                --compress-all-sections \
-                --sparse \
-                 $profiles_not_in_use \
-                -o $target_merge_file
-            # IMPORTANT: Free up disk space!
-            rm -f $tmp_profile
-            rm -f $profiles_not_in_use
+    # llvm-profdata itself is instrumented as well so we need to
+    # tell it where to write its own profile data.
+    # TODO(kwk): Eventually use this in the final merge?
+    export TMPDIR=/tmp
+    export LLVM_PROFILE_FILE="%t/llvm-profdata.tmp"
+    pushd $observe_dir
+    llvm-profdata merge \
+        --compress-all-sections \
+        --sparse \
+        `[ -e $target_merge_file ] && echo "$target_merge_file"` \
+        $(cat $batch_file_in_process) \
+        -o $target_merge_file
+    # IMPORTANT: Free up disk space!
+    rm -fv $(cat $batch_file_in_process)
+    popd
+    rm -f $TMPDIR/llvm-profdata.tmp
 ----
 
 [[step3]]
@@ -876,7 +847,7 @@ llvm-profdata merge \
   --compress-all-sections \
   --sparse \
   /tmp/%{name}.%{toolchain}.background.merge \
-  $(find %{_builddir}/raw-pgo-profdata -type f) \
+  $(find %{_builddir}/raw-pgo-profdata -type f -name '*.profraw') \
   -o %{buildroot}%{_libdir}/%{toolchain}-pgo-profdata/%{name}/%{name}.%{toolchain}.profdata
 ----
 
@@ -959,10 +930,6 @@ place in the `%__spec_build_pre` macro to kick of the
 
 [source,spec]
 ----
-# Automatically use set_build_flags macro for build, check, and
-# install phases.
-# Use "%undefine _auto_set_build_flags" to disable"
-%_auto_set_build_flags 1
 %__spec_build_pre %{___build_pre} \
   %{?_auto_set_build_flags:%{set_build_flags}} \
   %{?_generate_package_note_file} \
@@ -971,7 +938,7 @@ place in the `%__spec_build_pre` macro to kick of the
     && /usr/lib/rpm/redhat/pgo-background-merge.sh \\\
       -d %{_pgo_tmpdir} \\\
       -f %{_pgo_background_merge_target} \\\
-      -p %{_pgo_pid_file} &
+      -p %{_pgo_pid_file} & \
 ----
 
 [[_find_and_merge_profiles_2]]
@@ -1081,7 +1048,7 @@ using the `--repo` option:
 create-copr-project:
     -copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
     copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://$(fas_user)/llvm-pgo-instrumented $(copr_project)
-    copr edit-chroot --packages lsof $(fas_user)/profile-data-collection/fedora-37-x86_64
+    copr edit-chroot --packages inotify-tools $(fas_user)/profile-data-collection/fedora-37-x86_64
 ----
 
 Any package that will be built after `redhat-rpm-config` in the
@@ -1126,7 +1093,7 @@ distgit-%:
         $(fas_user)/$(copr_project)
     copr build-package \
         --name $(package) \
-        --timeout 108000 \
+        --timeout 172800 \
         --nowait \
         --chroot fedora-37-x86_64 \
         $(fas_user)/$(copr_project)

@@ -766,28 +766,6 @@ when building large projects.
     rm -f $TMPDIR/llvm-profdata.tmp
 ----
 
-*step2/myapp/pgo-background-merge.sh*
-
-[source,spec]
-----
-    # llvm-profdata itself is instrumented as well so we need to
-    # tell it where to write its own profile data.
-    # TODO(kwk): Eventually use this in the final merge?
-    export TMPDIR=/tmp
-    export LLVM_PROFILE_FILE="%t/llvm-profdata.tmp"
-    pushd $observe_dir
-    llvm-profdata merge \
-        --compress-all-sections \
-        --sparse \
-        `[ -e $target_merge_file ] && echo "$target_merge_file"` \
-        $(cat $batch_file_in_process) \
-        -o $target_merge_file
-    # IMPORTANT: Free up disk space!
-    rm -fv $(cat $batch_file_in_process)
-    popd
-    rm -f $TMPDIR/llvm-profdata.tmp
-----
-
 [[step3]]
 === Step 3 - Generalize subpackage
 
@@ -899,7 +877,7 @@ know.
 ====
 
 [[_subpackage_template]]
-=== Subpackage template
+==== Subpackage template
 
 The subpackage can be generalized with the following template.
 
@@ -920,11 +898,11 @@ compiling %{name}. This can be used for doing Profile Guided Optimizations \
 %{nil}
 ----
 
-[[_set_llvm_profile_file_2]]
-==== Set LLVM_PROFILE_FILE
+[[_find_and_merge_profiles_2]]
+==== Find and merge profiles
 
-We export the `LLVM_PROFILE_FILE` environment variable at the right
-place in the `%__spec_build_pre` macro to kick of the
+The background merging is kicked off at the beginning of the `%build`
+section and it is stopped at the end of the `%build` section.
 
 *step4/redhat-rpm-config/macros*
 
@@ -939,10 +917,46 @@ place in the `%__spec_build_pre` macro to kick of the
       -d %{_pgo_tmpdir} \\\
       -f %{_pgo_background_merge_target} \\\
       -p %{_pgo_pid_file} & \
+# Overriding __spec_build_post macro from /usr/lib/rpm/macros
+%__spec_build_post  \
+  if [ 0%{_toolchain_profile_subpackages} > 0 ]\
+  then\
+      echo 'please exit' > %{_pgo_shutdown_file};\
+      [ -e %{_pgo_pid_file} ] && inotifywait -e delete_self %{_pgo_pid_file} || true;\
+  fi\
+  %{___build_post}
 ----
 
-[[_find_and_merge_profiles_2]]
-==== Find and merge profiles
+We define some of the variables/macros here because they are used in
+multiple places:
+
+*step4/redhat-rpm-config/macros*
+
+[source,spec]
+----
+# Auxilliary PGO profile to which the background job merges continously 
+%_pgo_background_merge_target %{_builddir}/%{name}.%{toolchain}.background.merge
+
+# Place where the background job stores its PID file
+# %%_pgo_pid_file %{_builddir}/background-merge.pid
+%_pgo_pid_file /tmp/background-merge.pid
+
+# How to specify the LLVM_PROFILE_FILE
+%_pgo_llvm_profile_file %t/%{name}.%{toolchain}.%m.%p.profraw
+
+# Where to store all raw PGO profiles
+%_pgo_tmpdir %{_builddir}/raw-pgo-profdata
+
+%_pgo_shutdown_file %{_pgo_tmpdir}/background-merge.shutdown
+
+# Use this before calling an instrumented LLVM binary.
+%_pgo_env \\\
+  TMPDIR='%{_pgo_tmpdir}' \\\
+  && export TMPDIR \\\
+  && mkdir -pv $TMPDIR \\\
+  && LLVM_PROFILE_FILE='%{_pgo_llvm_profile_file}' \\\
+  && export LLVM_PROFILE_FILE
+----
 
 We tap in the post-`%install` step to find and merge the profiles into
 the buildroot location.
@@ -1235,10 +1249,14 @@ We’ve seen how we can gather PGO profile data from building unmodified
 RPM packages and feed this data into a PGO-optimized recompilation of
 LLVM.
 
+The most tricky part for me was the background merge script. Building an
+instrumented and optimized step was the most straight-forward part.
+
 Next on our list is:
 
 * Maybe move our additional code from `redhat-rpm-config` to some LLVM
 subpackage.
+* Add a build-condition to not have PGO generation on by default.
 * Build for more architectures.
 +
 [NOTE]
@@ -1270,9 +1288,3 @@ https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumente
 
 * Macros:
 https://docs.fedoraproject.org/en-US/packaging-guidelines/RPMMacros/
-
-* PGO Instrumentation: Example of CallSite-Aware Profiling:
-** Video: https://www.youtube.com/watch?v=GBtQrYx_Jbc
-** PDF: https://llvm.org/devmtg/2020-09/slides/PGO_Instrumentation.pdf
-* Source-based Code Coverage for Embedded Use Cases:
-https://llvm.org/devmtg/2020-09/slides/PhippsAlan_EmbeddedCodeCoverage_LLVM_Conf_Talk_final.pdf

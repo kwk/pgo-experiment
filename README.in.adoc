@@ -492,7 +492,7 @@ include::step5/Makefile[tags=create_copr_project]
 Any package that will be built after `redhat-rpm-config` in the {link-profile-data-collection} Copr project will automatically have a `<package>-clang-profdata` subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.
 
 
-=== Optional: Build from distgit
+==== Optional: Build from distgit
 
 If you want, you can build any project from Fedora's distigt by doing
 

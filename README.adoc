@@ -1072,7 +1072,7 @@ subpackage that we can download in a later step to merge and feed it in
 the final, optimized build of LLVM.
 
 [[_optional_build_from_distgit]]
-=== Optional: Build from distgit
+==== Optional: Build from distgit
 
 If you want, you can build any project from Fedora’s distigt by doing
 

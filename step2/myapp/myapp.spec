@@ -49,10 +49,13 @@ mkdir -pv $TMPDIR
 export LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
 # end::llvm_profile_file[]
 # tag::start_background_merge[]
+SHUTDOWN_FILE=%{_builddir}/raw-pgo-profdata/shutdown.txt
+PID_FILE=/tmp/background-merge.pid
 ./pgo-background-merge.sh \
   -d $TMPDIR \
   -f /tmp/myapp.clang.background.merge \
-  -p /tmp/background-merge.pid &
+  -p $PID_FILE \
+  -x $SHUTDOWN_FILE &
 # end::start_background_merge[]
 #-----------------------------------------------------------------------
 %cmake -DCMAKE_BUILD_TYPE=Release
@@ -60,9 +63,10 @@ export LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"
 
 #-----------------------------------------------------------------------
 # tag::stop_background_merge[]
-# Terminate online merge and wait for it to finish.
-kill -s TERM $(cat /tmp/background-merge.pid)
-while true; do [ ! -e /tmp/background-merge.pid ] && break; sleep 5; done;\
+# Signal stop and wait for the PID file to be deleted to gracefully
+# exit the background job.
+echo '' > $SHUTDOWN_FILE;
+[ -e $PID_FILE ] && inotifywait -e delete_self $PID_FILE || true;
 # end::stop_background_merge[]
 #-----------------------------------------------------------------------
 
@@ -83,7 +87,7 @@ llvm-profdata merge \
   --compress-all-sections \
   --sparse \
   /tmp/myapp.clang.background.merge \
-  $(find %{_builddir}/raw-pgo-profdata -type f) \
+  $(find %{_builddir}/raw-pgo-profdata -type f -name '*.profraw') \
   -o %{buildroot}/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata
 # end::merge_profiles[]
 #-----------------------------------------------------------------------

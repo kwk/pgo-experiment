@@ -16,11 +16,11 @@ RUN dnf install -y cmake fedora-packager git
 # Install packages required to build redhat-rpm-config
 RUN dnf install -y perl-generators
 
-# Install lsof for use in the background-merge.sh script
+# Install inotify-tools for use in the pgo-background-merge.sh script
 # TODO(kwk): Make sure this is available in standard Copr
-# tag::install_lsof[]
-RUN dnf install -y lsof
-# end::install_lsof[]
+# tag::install_inofify_tools[]
+RUN dnf install -y inotify-tools
+# end::install_inofify_tools[]
 
 WORKDIR /root
 RUN useradd --create-home tester

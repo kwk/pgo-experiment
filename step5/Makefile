@@ -56,7 +56,7 @@ distgit-%:
 		$(fas_user)/$(copr_project)
 	copr build-package \
 		--name $(package) \
-		--timeout 108000 \
+		--timeout 172800 \
 		--nowait \
 		--chroot fedora-37-x86_64 \
 		$(fas_user)/$(copr_project)

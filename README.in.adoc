@@ -357,11 +357,6 @@ Once the batch size reaches the minimum size, we merge the profiles in the batch
 include::step2/myapp/pgo-background-merge.sh[tag=merge]
 ----
 
-.step2/myapp/pgo-background-merge.sh
-[source,spec]
-----
-include::step2/myapp/pgo-background-merge.sh[tags=merge]
-----
 
 [#step3]
 === Step 3 - Generalize subpackage
@@ -416,7 +411,7 @@ include::step4/redhat-rpm-config/macros[tags=_toolchain_profile_subpackages]
 
 IMPORTANT: Currently there's no sanity checking of whether or not a package can even produce PGO profiles. If there's no compiler or the compiler is not clang, my patch doesn't work. But right now we don't care so much about this and consider it an optimization for later. I just wanted to let you know.
 
-=== Subpackage template
+==== Subpackage template
 
 The subpackage can be generalized with the following template.
 
@@ -426,17 +421,23 @@ The subpackage can be generalized with the following template.
 include::step4/redhat-rpm-config/macros[tags=subpackage_template]
 ----
 
-==== Set LLVM_PROFILE_FILE
+==== Find and merge profiles
 
-We export the `LLVM_PROFILE_FILE` environment variable at the right place in the `%__spec_build_pre` macro to kick of the 
+The background merging is kicked off at the beginning of the `%build` section and it is stopped at the end of the `%build` section.
 
 .step4/redhat-rpm-config/macros
 [source,spec]
 ----
-include::step4/redhat-rpm-config/macros[tags=__spec_build_pre]
+include::step4/redhat-rpm-config/macros[tags=__spec_build_pre;__spec_build_post]
 ----
 
-==== Find and merge profiles
+We define some of the variables/macros here because they are used in multiple places:
+
+.step4/redhat-rpm-config/macros
+[source,spec]
+----
+include::step4/redhat-rpm-config/macros[tags=_pgo]
+----
 
 We tap in the post-`%install` step to find and merge the profiles into the buildroot location.
 
@@ -581,11 +582,14 @@ The resulting PGO optimized packages are available on {link-llvm-pgo-optimized}.
 
 We've seen how we can gather PGO profile data from building unmodified RPM packages and feed this data into a PGO-optimized recompilation of LLVM.
 
+The most tricky part for me was the background merge script. Building an instrumented and optimized step was the most straight-forward part.
+
 // In the future we'll probably explore link:https://reviews.llvm.org/D115693[lightweight instrumentation] by correlating debug information to the instrumentation. But as fascinating as this sounds I'm skeptic that brings any benefit apart from smaller profiles.
 
 Next on our list is:
 
 * Maybe move our additional code from `redhat-rpm-config` to some LLVM subpackage.
+* Add a build-condition to not have PGO generation on by default.
 * Build for more architectures.
 +
 [NOTE]
@@ -609,11 +613,11 @@ Here's a list of places to find out more about PGO and RPM Package building.
 .RPM Specfiles
 * Macros: https://docs.fedoraproject.org/en-US/packaging-guidelines/RPMMacros/
 
-.Presentations:
-* PGO Instrumentation: Example of CallSite-Aware Profiling:
-** Video: https://www.youtube.com/watch?v=GBtQrYx_Jbc
-** PDF: https://llvm.org/devmtg/2020-09/slides/PGO_Instrumentation.pdf
-* Source-based Code Coverage for Embedded Use Cases: https://llvm.org/devmtg/2020-09/slides/PhippsAlan_EmbeddedCodeCoverage_LLVM_Conf_Talk_final.pdf
+// .Presentations:
+// * PGO Instrumentation: Example of CallSite-Aware Profiling:
+// ** Video: https://www.youtube.com/watch?v=GBtQrYx_Jbc
+// ** PDF: https://llvm.org/devmtg/2020-09/slides/PGO_Instrumentation.pdf
+// * Source-based Code Coverage for Embedded Use Cases: https://llvm.org/devmtg/2020-09/slides/PhippsAlan_EmbeddedCodeCoverage_LLVM_Conf_Talk_final.pdf
 
 
 // == Open questions:

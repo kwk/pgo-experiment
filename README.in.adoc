@@ -28,7 +28,7 @@ For the {link-fedora} distribution we build a ton of packages with LLVM. The afo
 
 The question is: How can we tap in the RPM build pipeline using {link-copr} and build RPM packages without modifying their `*.spec` files manually?
 
-I've created a 8 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile` s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run `make build-stepX` where stem:[X \in {0,1,2,...,7}]. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.
+I've created an 8 step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile` s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run `make build-stepX` where stem:[X \in {0,1,2,...,7}]. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.
 
 NOTE: The `Containerfile` s run as `root` to allow packages to be installed and have a `tester` account for regular user interaction. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites.
 

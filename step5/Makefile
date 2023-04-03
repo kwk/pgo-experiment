@@ -54,6 +54,7 @@ distgit-%:
 		--distgit fedora \
 		--commit f37 \
 		$(fas_user)/$(copr_project)
+	# copr edit-chroot --rpmbuild-with clang $(fas_user)/profile-data-collection/fedora-37-x86_64
 	copr build-package \
 		--name $(package) \
 		--timeout 172800 \

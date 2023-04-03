@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -x
 
 # Build the app and always enter bash for further inspection
 cd /home/tester/myapp

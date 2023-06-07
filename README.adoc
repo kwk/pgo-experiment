@@ -19,6 +19,7 @@ Konrad Kleine;
 :link-llvm-pgo-optimized: https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized]
 :link-llvm-pgo-documentation: link:https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official documentation]
 :link-build-conditional: link:https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]
+:link-llvm-test-suite: link:https://llvm.org/docs/TestSuiteGuide.html[LLVM test suite]
 
 toc::[]
 In this experiment we generate PGO profile data from compiling
@@ -32,17 +33,18 @@ We create an instrumented LLVM toolchain in a Copr project called
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented].
 In another Copr project called
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/profile-data-collection]
-we install a new package called `llvm-pgo-instrumented-macros`. Every
-package that gets built in that project will automatically produce a
-subpackage `<PACKAGE>-llvm-pgo-profdata` with PGO profile data. We
-demonstrate this with a simple "Hello, World!" application that is
-called `myapp`. We then collect all those subpackages through
-`BuildRequires:` tags in another package called `llvm-pgo-profdata`.
-During the build of this `llvm-pgo-profdata` package, all profiles are
-merged into an indexed profile data file. The final `llvm-pgo-profdata`
-RPM then installs the indexed profile data file into a location from
-which a PGO optimized build of LLVM can read it. This PGO optimized
-build of the LLVM toolchain is done in a third Copr project called
+we install a new package called `llvm-pgo-instrumented-macros` into the
+chroot buildroot. Every package that gets built in that buildroot will
+automatically produce a subpackage `<PACKAGE>-llvm-pgo-profdata` with
+LLVM PGO profile data. We demonstrate this with a simple "Hello, World!"
+application that is called `myapp`. We then collect all generated
+subpackages through `BuildRequires:` tags in another package called
+`llvm-pgo-profdata`. During the build of this `llvm-pgo-profdata`
+package, all profiles are merged into an indexed profile data file. The
+final `llvm-pgo-profdata` RPM then installs the indexed profile data
+file into a location from which a PGO optimized build of LLVM can read
+it. This PGO optimized build of the LLVM toolchain is done in a third
+Copr project called
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized].
 
 [[_non_goals]]
@@ -60,14 +62,6 @@ apply PGO and LTO in a more holistic way.
 
 The only operating system that we build for in this experiment is Fedora
 rawhide on x86_64.
-
-[NOTE]
-====
-This is potentially a bit risky because the the profile data may become
-irrelevant more quickly compared to less frequently updated variants of
-Fedora. But rawhide is the version of choice for introducing new
-profiles.
-====
 
 [[_understand_what_pgo_can_do]]
 == Understand what PGO can do
@@ -106,10 +100,17 @@ I’ve created a multi-step experiment that shows how this can be
 achieved. For educational purposes I’ve written many of the steps using
 `Containerfile` s. This allows for a good level of isolation when you
 want to build the steps on your own. To run any of the steps on your
-own, you can run `make build-stepX` where
-latexmath:[$X\backslash \in \left\{ {0,1,2,\ldots,8} \right\}$]. But
-make sure you first read the description for each step below. Sometimes
-a step really only serves a documentation purpose.
+own, navigate to the step directory and run `make all`, for example:
+
+[source,console]
+----
+$ cd step1-myapp
+$ make all
+----
+
+But make sure you first read the description for each step below.
+Sometimes a step really only serves a documentation purpose and it isn’t
+necessary that you build it on your own.
 
 [NOTE]
 ====
@@ -173,7 +174,7 @@ create PGO instrumented LLVM packages and host them for later
 consumption on a Copr project. The resulting `clang` will generate
 profile data upon execution and we’re trying to collect, bundle, and
 merge it for optimizing a rebuild of the LLVM toolchain later
-(link:#step7[Step 7 - Build PGO optimized LLVM]). But rest assured, you
+(link:#step5[Step 5 - Build PGO optimized LLVM]). But rest assured, you
 don’t need to run this on your own. A build takes a couple of hours. The
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented]
 project is ready for you to consume in the next steps. So you’re free to
@@ -195,7 +196,7 @@ first I’ve added a
 https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional]
 that is off by default:
 
-*step0/llvm/llvm.spec*
+*step0-instrumented-llvm/llvm/llvm.spec*
 
 [source,spec]
 ----
@@ -204,11 +205,11 @@ that is off by default:
 ----
 
 As you can see, one is for building an instrumented package and one is
-for building an optimized package. In link:#step7[Step 7 - Build PGO
+for building an optimized package. In link:#step5[Step 5 - Build PGO
 optimized LLVM] we’re using the `pgo_optimized_build` but here we’re
 only turning on `pgo_instrumented_build` in our `Makefile`:
 
-*step0/Makefile*
+*step0-instrumented-llvm/Makefile*
 
 [source,make]
 ----
@@ -222,7 +223,7 @@ create-copr-project:
 Another change I had to make was adding a build dependency on
 `compiler-rt`:
 
-*step0/llvm/llvm.spec*
+*step0-instrumented-llvm/llvm/llvm.spec*
 
 [source,spec]
 ----
@@ -235,15 +236,15 @@ Then we’re modifying the the CMake arguments according to the
 https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo[official
 documentation].
 
-*step0/llvm/llvm.spec*
+*step0-instrumented-llvm/llvm/llvm.spec*
 
 [source,spec]
 ----
-%if %{with pgo_instrumented_build}
-    -DLLVM_BUILD_INSTRUMENTED=IR \
-    -DLLVM_BUILD_RUNTIME=No \
-    -DLLVM_VP_COUNTERS_PER_SITE=8 \
+ \
+%if %{without compat_build}
+    -DLLVM_VERSION_SUFFIX='' \
 %endif
+%if %{with pgo_instrumented_build}
 ----
 
 [TIP]
@@ -269,7 +270,7 @@ The solution was to modify `vp-counters-per-site` option through
 [[_building_step_0]]
 ==== Building Step 0
 
-To build this step, run `make build-step0`.
+To build this step, run `cd step0-instrumented-llvm && make all`.
 
 [[step1]]
 === Step 1 - Build "Hello, World!" RPM
@@ -286,9 +287,10 @@ instrumented LLVM]. So you should be good to just run
 `make build-step1`.
 ====
 
-Let’s have a look at the link:step1/myapp/myapp.spec[specfile] first:
+Let’s have a look at the link:step1-myapp/myapp/myapp.spec[specfile]
+first:
 
-*step1/myapp/myapp.spec*
+*step1-myapp/myapp/myapp.spec*
 
 [source,spec]
 ----
@@ -336,10 +338,10 @@ test "`%{buildroot}/%{_bindir}/myapp`" = "Hello, World!"
 This is the most simple specfile I could come up with for a "Hello,
 World!" application built with `clang`.
 
-The link:step1/myapp/myapp.cpp[application code] itself is similarly
-short and throughout this experiment we never change it:
+The link:step1-myapp/myapp/myapp.cpp[application code] itself is
+similarly short and throughout this experiment we never change it:
 
-*step1/myapp/myapp.cpp*
+*step1-myapp/myapp/myapp.cpp*
 
 [source,cpp]
 ----
@@ -352,9 +354,9 @@ int main(int argc, char *argv[]) {
 ----
 
 In order to build the RPM we use standard tools like `fedpkg` from a
-link:step1/myapp/Makefile[`step1/myapp/Makefile`]:
+link:step1-myapp/myapp/Makefile[`step1-myapp/myapp/Makefile`]:
 
-*step1/myapp/Makefile*
+*step1-myapp/myapp/Makefile*
 
 [source,make]
 ----
@@ -381,10 +383,10 @@ clean:
     rm -rf $(TMP) $(PACKAGE)* x86_64 .build-*.log
 ----
 
-Within a link:step1/Containerfile[`Containerfile`] we’re calling
+Within a link:step1-myapp/Containerfile[`Containerfile`] we’re calling
 `make rpm` to build the `myapp-1.0.0-1.fc37.x86_64.rpm` RPM:
 
-*step1/Containerfile*
+*step1-myapp/Containerfile*
 
 [source,dockerfile]
 ----
@@ -407,7 +409,7 @@ following shell script) and you have to manually exit it (e.g. using
 [.keycombo]#Ctrl+d#). We do this to allow you to look around in the
 build directories etc.
 
-*step1/entrypoint.sh*
+*step1-myapp/entrypoint.sh*
 
 [source,shell]
 ----
@@ -424,7 +426,7 @@ bash
 [[_building_step_1]]
 ==== Building Step 1
 
-To build this step, run `make build-step1`.
+To build this step, run `cd step1-myapp && make all`.
 
 When you build this step, the output should look like this:
 
@@ -439,17 +441,17 @@ Wrote: /root/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm
 [root@7cf29caa0097 myapp]#
 ----
 
-[[step4]]
-=== Step 4 - Automatically add subpackage
+[[step2]]
+=== Step 2 - Automatically add subpackage
 
 In this step we use the `myapp` directory from `step1` that doesn’t
 contain any information about the subpackage at all. And yet we’re still
 gonna get our subpackage with profile data. Let’s dive right in…​
 
-[[_building_step_4]]
-==== Building Step 4
+[[_building_step_2]]
+==== Building Step 2
 
-To build this step, run `make build-step4`.
+To build this step, run `cd step2-myapp-llvm-pgo-profdata && make all`.
 
 When you build this step, the output should look like this:
 
@@ -474,7 +476,7 @@ We do this by installing a special macros package:
 useful build-flags and macros but it also allows us to tap into the
 build process:
 
-*step4/Containerfile*
+*step2-myapp-llvm-pgo-profdata/Containerfile*
 
 [source,shell]
 ----
@@ -493,9 +495,9 @@ RUN dnf install -y \
 ----
 
 We store our RPM macros for PGO in the `/etc/rpm/` directory which is
-usually dedicated towards per-host overrides `/We need to override
-macros that _exist only fairly late_ in the list of the macro path that
-is executed from left to right:
+usually dedicated for per-host overrides. We need to override macros
+that _exist only fairly late_ in the list of the macro path that is
+executed from left to right:
 
 [source,console]
 ----
@@ -507,7 +509,7 @@ A natrual choice would have been to pick `%{_rpmmacrodir}` which expands
 to `/usr/lib/rpm/macros.d` but then we wouldn’t be able to override
 macros from the `redhat-rpm-config` package (see
 https://src.fedoraproject.org/rpms/redhat-rpm-config/pull-request/249#comment-138527[this
-pr]).
+pr] for more information).
 
 [[_summary]]
 === Summary
@@ -516,8 +518,8 @@ It is important to note that in order to achieve the additional
 subpackage, we only had to modify the LLVM package and no other
 packages.
 
-[[step5]]
-=== Step 5 - Build unmodified packages on Copr
+[[step3]]
+=== Step 3 - Build unmodified packages on Copr
 
 [NOTE]
 ====
@@ -533,20 +535,21 @@ packages automatically for us?
 Copr will become the storage for our profile data subpackages with all
 the rest of the regular packages.
 
-After running this step using `make build-step5`, we’re gonna have a
-project called:
+After running this step using `cd step3-myapp-on-copr && make all`,
+we’re gonna have a project called:
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/profile-data-collection].
 
-In that project, there will be the patched package and the `myapp`
-package with the additional subpackage inside:
+In that project, there will be the `myapp` package with the additional
+subpackage (`myapp-llvm-pgo-profdata 1.0.0`) inside:
 
 image:profile-data-collection.png[profile data collection]
 
 In order for the Copr project to use our PGO instrumented LLVM we’ve
-made the repo available in the link:step5/Makefile[`step5/Makefile`]
-using the `--repo` option:
+made the repo available in the
+link:step3-myapp-on-copr/Makefile[`step3-myapp-on-copr/Makefile`] using
+the `--repo` option:
 
-*step5/Makefile*
+*step3-myapp-on-copr/Makefile*
 
 [source,make]
 ----
@@ -559,7 +562,7 @@ create-copr-project:
 
 Any package that will be built in the
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/profile-data-collection]
-Copr project will automatically have a `<package>-clang-profdata`
+Copr project will automatically have a `<package>-llvm-pgo-profdata`
 subpackage that we can download in a later step to merge and feed it in
 the final, optimized build of LLVM.
 
@@ -570,52 +573,15 @@ If you want, you can build any project from Fedora’s distigt by doing:
 
 [source,console]
 ----
-$ cd step5/
+$ cd step3-myapp-on-copr/
 $ make distgit-<PACKAGE> 
 ----
 
 * Replace `<PACKAGE>` with a real package name, e.g. `retsnoop`, or
 `chromium`.
 
-This is backed by this special target in the
-link:step5/Makefile[`step5/Makefile`]:
-
-*step5/Makefile*
-
-[source,make]
-----
-# Build an arbitrary package from dist-git
-distgit-%:
-    $(eval package:=$(subst distgit-,,$@))
-    -copr add-package-distgit \
-        --name $(package) \
-        --distgit fedora \
-        --commit rawhide \
-        $(fas_user)/$(copr_project)
-    copr edit-package-distgit \
-        --name $(package) \
-        --distgit fedora \
-        --commit rawhide \
-        $(fas_user)/$(copr_project)
-    # copr edit-chroot --rpmbuild-with clang $(fas_user)/profile-data-collection/fedora-rawhide-x86_64
-    copr build-package \
-        --name $(package) \
-        --timeout 1728000 \
-        --nowait \
-        --chroot fedora-rawhide-x86_64 \
-        $(fas_user)/$(copr_project)
-----
-
-[NOTE]
-====
-You might wonder why we first add and then edit a package. This is
-because we don’t know if the package has already been added before. And
-to overwrite with the desired values we simply edit an added project
-right away. So, nothing really special.
-====
-
-[[step6]]
-=== Step 6 - Merge Raw Profiles
+[[step4]]
+=== Step 4 - Merge PGO Profiles
 
 In order to optimize LLVM with the raw profile data that we’ve collected
 before we need to make it available to the Copr build of LLVM and we
@@ -635,7 +601,7 @@ installable standalone. When we build a PGO optimized version of LLVM we
 add a `BuildRequires: myapp-llvm-pgo-profdata` to the spec file of a new
 package called `llvm-pgo-profdata`.
 
-*step6/llvm-pgo-profdata/llvm-pgo-profdata.spec*
+*step4-merge-profiles/llvm-pgo-profdata/llvm-pgo-profdata.spec*
 
 [source,spec]
 ----
@@ -648,7 +614,7 @@ profiles provided by the above `<PACKAGE>-llvm-pgo-profdata` packages to
 create a single PGO profile data file that we can later use for building
 a PGO optimized LLVM toolchain.
 
-*step6/llvm-pgo-profdata/llvm-pgo-profdata.spec*
+*step4-merge-profiles/llvm-pgo-profdata/llvm-pgo-profdata.spec*
 
 [source,spec]
 ----
@@ -671,7 +637,7 @@ project. That means by default the `llvm-pgo-profdata` is expected to
 output PGO profiles. In reality it doesn’t do that and so we’re
 disabling the profile generation manually:
 
-*step6/llvm-pgo-profdata/llvm-pgo-profdata.spec*
+*step4-merge-profiles/llvm-pgo-profdata/llvm-pgo-profdata.spec*
 
 [source,spec]
 ----
@@ -686,14 +652,14 @@ the PGO profile data into an indexed profile data file more than once
 we’re offloading the merge process into its own RPM. We call it
 `llvm-pgo-profdata`.
 
-[[step7]]
-=== Step 7 - Build PGO optimized LLVM
+[[step5]]
+=== Step 5 - Build PGO optimized LLVM
 
 This step is similar to link:#step0[Step 0 - Build a PGO instrumented
 LLVM] in which we’ve build the PGO instrumented LLVM. Here we’re adding
 a build requirement for `llvm-pgo-profdata`:
 
-*step7/llvm/llvm.spec*
+*step5-llvm-with-pgo/llvm/llvm.spec*
 
 [source,spec]
 ----
@@ -706,7 +672,7 @@ We then use the file `%{_libdir}/llvm-pgo-profdata/llvm-pgo.profdata`
 provided by our `llvm-prog-profdata` package as input to
 `LLVM_PROFDATA_FILE`:
 
-*step7/llvm/llvm.spec*
+*step5-llvm-with-pgo/llvm/llvm.spec*
 
 [source,spec]
 ----
@@ -719,7 +685,7 @@ Together with the proper `--with pgo_optimized_build`
 https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html[build-conditional],
 we’re building the optimized `llvm`, `clang` and `lld` packages:
 
-*step7/Makefile*
+*step5-llvm-with-pgo/Makefile*
 
 [source,make]
 ----
@@ -733,8 +699,97 @@ create-copr-project:
 The resulting PGO optimized packages are available on
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized].
 
-[[step8]]
-== Step 8 - Comparing results
+[[step6]]
+== Step 6 - Evaluation
+
+What we test here is the LLVM shipped with rawhide at the time against a
+PGO optimized LLVM 16.0.2 that we’ve built here.
+
+We test this using the https://llvm.org/docs/TestSuiteGuide.html[LLVM
+test suite]:
+
+____
+The test-suite contains benchmark and test programs. The programs come
+with reference outputs so that their correctness can be checked. The
+suite comes with tools to collect metrics such as benchmark runtime,
+compilation time and code size.
+____
+
+In the evaluation we keep an eye on the:
+
+* execution time
+* compile time
+* link time
+
+[source,console]
+----
+$ /root/test-suite/utils/compare.py --metric exec_time --metric compile_time --metric link_time --lhs-name 16.0.3 --rhs-name 16.0.2-pgo /root/rawhide/results.json vs /root/pgo/results.json
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign.test' has no metrics, skipping!
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign2.test' has no metrics, skipping!
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign.test' has no metrics, skipping!
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign2.test' has no metrics, skipping!
+Tests: 3052
+Metric: exec_time,compile_time,link_time
+
+Program                                       exec_time                    compile_time                  link_time
+                                              16.0.3    16.0.2-pgo diff    16.0.3       16.0.2-pgo diff  16.0.3    16.0.2-pgo diff
+920428-1.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.02     -27.8%
+pr17078-1.t                                     0.00      0.00        inf%   0.00         0.00             0.03      0.03      -4.2%
+enum-2.t                                        0.00      0.00        inf%   0.00         0.00             0.03      0.04      36.4%
+doloop-1.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.04      30.0%
+divconst-3.t                                    0.00      0.00        inf%   0.00         0.00             0.02      0.02     -17.9%
+pr81556.t                                       0.00      0.00        inf%   0.00         0.00             0.03      0.03      24.6%
+divcmp-4.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.04      13.9%
+20020307-1.t                                    0.00      0.00        inf%   0.00         0.00             0.03      0.02     -26.5%
+20020314-1.t                                    0.00      0.00        inf%   0.00         0.00             0.02      0.03      23.7%
+divcmp-3.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.03     -20.3%
+20020328-1.t                                    0.00      0.00        inf%   0.00         0.00             0.03      0.03       6.0%
+20020406-1.t                                    0.00      0.00        inf%   0.00         0.00             0.03      0.03      27.0%
+20020411-1.t                                    0.00      0.00        inf%   0.00         0.00             0.04      0.03     -20.1%
+complex-4.t                                     0.00      0.00        inf%   0.00         0.00             0.03      0.03       1.4%
+20020508-1.t                                    0.00      0.00        inf%   0.00         0.00             0.04      0.03     -14.0%
+                           Geomean difference                      -100.0%                         -9.7%                       -1.2%
+           exec_time                             compile_time                             link_time
+l/r           16.0.3     16.0.2-pgo         diff       16.0.3   16.0.2-pgo        diff       16.0.3   16.0.2-pgo         diff
+count  3034.000000    3034.000000    2401.000000  2505.000000  2505.000000  440.000000  2505.000000  2505.000000  2505.000000
+mean   1091.690748    1074.387911    inf          0.259116     0.225875    -0.077137    0.049104     0.048398     0.014828
+std    21120.154138   20962.649384  NaN           2.214408     1.988421     0.199779    0.032997     0.032546     0.237169
+min    0.000000       0.000000      -1.000000     0.000000     0.000000    -0.494005    0.017100     0.017500    -0.551422
+25%    0.000000       0.000000      -0.227273     0.000000     0.000000    -0.195129    0.029100     0.029100    -0.161290
+50%    0.001100       0.001100       0.000000     0.000000     0.000000    -0.110612    0.034300     0.033600    -0.010672
+75%    0.126725       0.123600       0.212121     0.000000     0.000000     0.011439    0.045700     0.044400     0.161049
+max    817849.818925  828252.719527  inf          74.697400    69.996700    0.844595    0.206500     0.227000     0.980296
+----
+
+The most important line to look at is this:
+
+....
+                           Geomean difference                      -100.0%                         -9.7%                       -1.2%
+....
+
+In order to interpret the results one has to understand that all
+programs being tested are too fast to measure their execution time,
+hence the `inf%`.
+
+The compile time on the other hand shows a performance improvement of
+*9.7%* when going from LLVM 16.0.3 to PGO optimized LLVM 16.0.2. The
+performance of linking was also improved by *1.3%*
+
+[[_conclusion]]
+== Conclusion
+
+We’ve seen how we can gather PGO profile data from building unmodified
+RPM packages and feed this data into a PGO-optimized recompilation of
+LLVM.
+
+The most tricky part for me was the background merge script. Building an
+instrumented and optimized step was the most straight-forward part.
+
+But looking at the almost *10%* performance boost in compile time I
+really like how this experiment turned out.
+
+I hope you liked this article and follow us exploring the possibilities
+ahead of us! Don’t forget to leave a comment ;)
 
 [[_frequently_asked_questions]]
 == Frequently Asked Questions
@@ -747,25 +802,35 @@ To view the top 10 functions profiled in a profile file you can use
 
 [source,console]
 ----
-$ llvm-profdata show --topn=10 /usr/lib64/llvm-pgo-profdata/myapp/myapp.llvm.profdata | c++filt 
+$ podman run -it --rm fedora:rawhide bash 
+# dnf install -y 'dnf-command(copr)' 
+# dnf copr -y enable kkleine/profile-data-collection 
+# dnf install -y llvm llvm-pgo-profdata 
+# llvm-profdata show --topn=10 /usr/lib64/llvm-pgo-profdata/llvm-pgo.profdata | llvm-cxxfilt 
 Instrumentation level: IR  entry_first = 0
-Total functions: 22243
-Maximum function count: 156465725
-Maximum internal block count: 25709548
+Total functions: 36265
+Maximum function count: 4301163594
+Maximum internal block count: 321869494
 Top 10 functions with the largest internal block counts:
-  llvm::SmallVectorTemplateBase<unsigned int, true>::push_back(unsigned int), max count = 156465725
-  llvm::BumpPtrAllocatorImpl<llvm::MallocAllocator, 4096ul, 4096ul, 128ul>::Allocate(unsigned long, llvm::Align), max count = 94266378
-  llvm::hashing::detail::hash_combine_recursive_helper::hash_combine_recursive_helper(), max count = 36883602
-  clang::SourceManager::getSLocEntryByID(int, bool*) const, max count = 34883434
-  llvm::SmallPtrSetImplBase::insert_imp(void const*), max count = 29731602
-  llvm::MVT::getVectorElementType() const, max count = 25709548
-  llvm::SmallPtrSetImplBase::find_imp(void const*) const, max count = 16374270
-  llvm::SmallVectorTemplateBase<llvm::cl::OptionCategory*, true>::push_back(llvm::cl::OptionCategory*), max count = 15480760
-  llvm::cl::Option::Option(llvm::cl::NumOccurrencesFlag, llvm::cl::OptionHidden), max count = 15480760
-  llvm::APInt::APInt(unsigned int, unsigned long, bool), max count = 11292172
+  llvm::hashing::detail::hash_combine_recursive_helper::hash_combine_recursive_helper(), max count = 4301163594
+  llvm::SmallPtrSetImplBase::insert_imp(void const*), max count = 606844728
+  llvm::SmallPtrSetImplBase::find_imp(void const*) const, max count = 337050642
+  llvm::MDNode::classof(llvm::Metadata const*), max count = 321592832
+  llvm::SmallVectorTemplateBase<unsigned int, true>::push_back(unsigned int), max count = 308883764
+  llvm::AttributeList::hasFnAttr(llvm::Attribute::AttrKind) const, max count = 292092119
+  llvm::APInt::APInt(unsigned int, unsigned long, bool), max count = 250279393
+  llvm::StringMapImpl::LookupBucketFor(llvm::StringRef), max count = 166379572
+  llvm::AttributeSetNode::findEnumAttribute(llvm::Attribute::AttrKind) const, max count = 164408905
+  llvm::AttributeSet::getMemoryEffects() const, max count = 161737452
 ----
 
-* Show the top 10 hottest functions demangled by `c++filt`.
+* Fire up a rawhide container.
+* Install the dnf plugin to enable Copr repos.
+* Enable the repository that contains the `llvm-pgo-profdata` package.
+* Install `llvm` to get the `llvm-profdata` and `llvm-cxxfilt` binaries
+and install the profile package `llvm-pgo-profdata` which we use for
+optimizing LLVM.
+* Show the top 10 hottest functions demangled by `llvm-cxxfilt`.
 
 [[TMPDIR]]
 === What is the LLVM_PROFILE_FILE environment variable?
@@ -930,7 +995,7 @@ The background script itself waits for `close_write` events on
 `*.profraw` files in a directory to be observed. It writes the filenames
 into a batch file:
 
-*step0/llvm/pgo-background-merge.sh*
+*step0-instrumented-llvm/llvm/pgo-background-merge.sh*
 
 [source,spec]
 ----
@@ -946,10 +1011,16 @@ Once the batch size reaches the minimum size, we merge the profiles in
 the batch file and delete them when we’re done. This saves disk space
 when building large projects.
 
-*step0/llvm/pgo-background-merge.sh*
+*step0-instrumented-llvm/llvm/pgo-background-merge.sh*
 
 [source,spec]
 ----
+    # llvm-profdata itself is instrumented as well so we need to
+    # tell it where to write its own profile data.
+    # TODO(kwk): Eventually use this in the final merge?
+    export TMPDIR=/tmp
+    export LLVM_PROFILE_FILE="%t/llvm-profdata.tmp"
+    pushd $observe_dir
     llvm-profdata merge \
         --compress-all-sections \
         --sparse \
@@ -958,6 +1029,8 @@ when building large projects.
         -o $target_merge_file
     # IMPORTANT: Free up disk space!
     rm -fv $(cat $batch_file_in_process)
+    popd
+    rm -f $TMPDIR/llvm-profdata.tmp
 ----
 
 Now, for the simple application in this experiment it might look like
@@ -988,19 +1061,6 @@ No. By default we optimize for each individual architecture. We think
 that this is good for now. The cases in which you want to cross-compile
 on one architecture for another exists but are not considered here (for
 now).
-
-[[_conclusion]]
-== Conclusion
-
-We’ve seen how we can gather PGO profile data from building unmodified
-RPM packages and feed this data into a PGO-optimized recompilation of
-LLVM.
-
-The most tricky part for me was the background merge script. Building an
-instrumented and optimized step was the most straight-forward part.
-
-I hope you liked this article and follow us exploring the possibilities
-ahead of us! Don’t forget to leave a comment ;)
 
 [[_resources]]
 == Resources

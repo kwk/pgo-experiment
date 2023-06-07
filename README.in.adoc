@@ -363,8 +363,82 @@ include::step5-llvm-with-pgo/Makefile[tags=create_copr_project]
 The resulting PGO optimized packages are available on {link-llvm-pgo-optimized}.
 
 [#step6]
-== Step 6 - Comparing results
+== Step 6 - Evaluation
 
+What we test here is the LLVM shipped with rawhide at the time against a PGO optimized LLVM 16.0.2 that we've built here.
+
+We test this using the {link-llvm-test-suite}:
+
+> The test-suite contains benchmark and test programs. The programs come with reference outputs so that their correctness can be checked. The suite comes with tools to collect metrics such as benchmark runtime, compilation time and code size.
+
+In the evaluation we keep an eye on the:
+
+* execution time
+* compile time
+* link time
+
+[source,console]
+----
+$ /root/test-suite/utils/compare.py --metric exec_time --metric compile_time --metric link_time --lhs-name 16.0.3 --rhs-name 16.0.2-pgo /root/rawhide/results.json vs /root/pgo/results.json
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign.test' has no metrics, skipping!
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign2.test' has no metrics, skipping!
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign.test' has no metrics, skipping!
+Warning: 'test-suite :: SingleSource/UnitTests/X86/x86-dyn_stack_alloc_realign2.test' has no metrics, skipping!
+Tests: 3052
+Metric: exec_time,compile_time,link_time
+
+Program                                       exec_time                    compile_time                  link_time                  
+                                              16.0.3    16.0.2-pgo diff    16.0.3       16.0.2-pgo diff  16.0.3    16.0.2-pgo diff  
+920428-1.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.02     -27.8%
+pr17078-1.t                                     0.00      0.00        inf%   0.00         0.00             0.03      0.03      -4.2%
+enum-2.t                                        0.00      0.00        inf%   0.00         0.00             0.03      0.04      36.4%
+doloop-1.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.04      30.0%
+divconst-3.t                                    0.00      0.00        inf%   0.00         0.00             0.02      0.02     -17.9%
+pr81556.t                                       0.00      0.00        inf%   0.00         0.00             0.03      0.03      24.6%
+divcmp-4.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.04      13.9%
+20020307-1.t                                    0.00      0.00        inf%   0.00         0.00             0.03      0.02     -26.5%
+20020314-1.t                                    0.00      0.00        inf%   0.00         0.00             0.02      0.03      23.7%
+divcmp-3.t                                      0.00      0.00        inf%   0.00         0.00             0.03      0.03     -20.3%
+20020328-1.t                                    0.00      0.00        inf%   0.00         0.00             0.03      0.03       6.0%
+20020406-1.t                                    0.00      0.00        inf%   0.00         0.00             0.03      0.03      27.0%
+20020411-1.t                                    0.00      0.00        inf%   0.00         0.00             0.04      0.03     -20.1%
+complex-4.t                                     0.00      0.00        inf%   0.00         0.00             0.03      0.03       1.4%
+20020508-1.t                                    0.00      0.00        inf%   0.00         0.00             0.04      0.03     -14.0%
+                           Geomean difference                      -100.0%                         -9.7%                       -1.2%
+           exec_time                             compile_time                             link_time                          
+l/r           16.0.3     16.0.2-pgo         diff       16.0.3   16.0.2-pgo        diff       16.0.3   16.0.2-pgo         diff
+count  3034.000000    3034.000000    2401.000000  2505.000000  2505.000000  440.000000  2505.000000  2505.000000  2505.000000
+mean   1091.690748    1074.387911    inf          0.259116     0.225875    -0.077137    0.049104     0.048398     0.014828   
+std    21120.154138   20962.649384  NaN           2.214408     1.988421     0.199779    0.032997     0.032546     0.237169   
+min    0.000000       0.000000      -1.000000     0.000000     0.000000    -0.494005    0.017100     0.017500    -0.551422   
+25%    0.000000       0.000000      -0.227273     0.000000     0.000000    -0.195129    0.029100     0.029100    -0.161290   
+50%    0.001100       0.001100       0.000000     0.000000     0.000000    -0.110612    0.034300     0.033600    -0.010672   
+75%    0.126725       0.123600       0.212121     0.000000     0.000000     0.011439    0.045700     0.044400     0.161049   
+max    817849.818925  828252.719527  inf          74.697400    69.996700    0.844595    0.206500     0.227000     0.980296
+----
+
+The most important line to look at is this:
+
+[source]
+----
+                           Geomean difference                      -100.0%                         -9.7%                       -1.2%
+----
+
+In order to interpret the results one has to understand that all programs being tested are too fast to measure their execution time, hence the `inf%`.
+
+The compile time on the other hand shows a performance improvement of *9.7%* when going from LLVM 16.0.3 to PGO optimized LLVM 16.0.2. The performance of linking was also improved by *1.3%*
+
+== Conclusion
+
+We've seen how we can gather PGO profile data from building unmodified RPM packages and feed this data into a PGO-optimized recompilation of LLVM.
+
+The most tricky part for me was the background merge script. Building an instrumented and optimized step was the most straight-forward part.
+
+But looking at the almost *10%* performance boost in compile time I really like how this experiment turned out. 
+
+// In the future we'll probably explore link:https://reviews.llvm.org/D115693[lightweight instrumentation] by correlating debug information to the instrumentation. But as fascinating as this sounds I'm skeptic that brings any benefit apart from smaller profiles.
+
+I hope you liked this article and follow us exploring the possibilities ahead of us! Don't forget to leave a comment ;)
 
 
 == Frequently Asked Questions
@@ -534,16 +608,6 @@ IMPORTANT: Currently there's no sanity checking of whether or not a package can 
 === Do you PGO for cross-compilation?
 
 No. By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exists but are not considered here (for now).
-
-== Conclusion
-
-We've seen how we can gather PGO profile data from building unmodified RPM packages and feed this data into a PGO-optimized recompilation of LLVM.
-
-The most tricky part for me was the background merge script. Building an instrumented and optimized step was the most straight-forward part.
-
-// In the future we'll probably explore link:https://reviews.llvm.org/D115693[lightweight instrumentation] by correlating debug information to the instrumentation. But as fascinating as this sounds I'm skeptic that brings any benefit apart from smaller profiles.
-
-I hope you liked this article and follow us exploring the possibilities ahead of us! Don't forget to leave a comment ;)
 
 == Resources
 

@@ -1,32 +1,13 @@
-[submodule "step4/redhat-rpm-config"]
-	path = step4/redhat-rpm-config
-	url = https://src.fedoraproject.org/forks/kkleine/rpms/redhat-rpm-config.git
-	branch = pgo-experiment
-[submodule "step0/llvm"]
-	path = step0/llvm
+[submodule "step0-instrumented-llvm/llvm"]
+	path = step0-instrumented-llvm/llvm
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git
 	branch = pgo-experiment
-[submodule "step0/clang"]
-	path = step0/clang
+[submodule "step0-instrumented-llvm/clang"]
+	path = step0-instrumented-llvm/clang
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/clang.git
 	branch = pgo-experiment
-[submodule "step0/lld"]
-	path = step0/lld
+[submodule "step0-instrumented-llvm/lld"]
+	path = step0-instrumented-llvm/lld
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
 	branch = pgo-experiment
-[submodule "step7/lld"]
-	path = step7/lld
-	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
-	branch = pgo-experiment
-[submodule "step7/llvm"]
-	path = step7/llvm
-	url = https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git
-	branch = pgo-experiment
-[submodule "step7/clang"]
-	path = step7/clang
-	url = https://src.fedoraproject.org/forks/kkleine/rpms/clang.git
-	branch = pgo-experiment
-[submodule "step5/redhat-rpm-config"]
-	path = step5/redhat-rpm-config
-	url = https://src.fedoraproject.org/forks/kkleine/rpms/redhat-rpm-config.git
-	branch = pgo-experiment
+

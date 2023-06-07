@@ -1,22 +1,22 @@
 build-step0:
-	$(MAKE) -C step0 all
+	$(MAKE) -C step0-instrumented-llvm all
 
-# tag::build_step_4[]
-build-step4:
-	rm -rf step4/myapp
-	cp -rf step1/myapp step4/myapp
-	podman build -t pgo-experiment-step4 ./step4
-	podman run -it --rm pgo-experiment-step4
+# tag::build_step_2[]
+build-step2:
+	rm -rf step2/myapp
+	cp -rf step1-myapp/myapp step2/myapp
+	podman build -t pgo-experiment-step2 ./step2
+	podman run -it --rm pgo-experiment-step2
 # end::build_step_4[]
 
+build-step3:
+	$(MAKE) -C step3-myapp-on-copr all
+
+build-step4:
+	$(MAKE) -C step4-llvm-pgo-profdata all
+
 build-step5:
-	$(MAKE) -C step5 all
-
-build-step6:
-	$(MAKE) -C step6 all
-
-build-step7:
-	$(MAKE) -C step7 all
+	$(MAKE) -C step5-llvm-with-pgo all
 
 build-step%:
 	$(eval step:=$(subst build-,,$@))
@@ -58,4 +58,5 @@ docs:
 	pandoc --from=docbook --to=asciidoc -o README.adoc.tmp README.xml
 	cat preamble.adoc > README.adoc
 	cat README.adoc.tmp >> README.adoc
+	pandoc --from=docbook -o README.docx README.xml
 	rm README.adoc.tmp README.xml

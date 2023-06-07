@@ -523,7 +523,7 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <ul class="sectlevel1">
 <li><a href="#_overview">1. Overview</a>
 <ul class="sectlevel2">
-<li><a href="#_non_goal">1.1. Non-goal</a></li>
+<li><a href="#_non_goals">1.1. Non-goals</a></li>
 </ul>
 </li>
 <li><a href="#_understand_what_pgo_can_do">2. Understand what PGO can do</a>
@@ -536,52 +536,49 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <li><a href="#step0">3.1. Step 0 - Build a PGO instrumented LLVM</a>
 <ul class="sectlevel3">
 <li><a href="#_spec_file_modifications">3.1.1. Spec file modifications</a></li>
+<li><a href="#_building_step_0">3.1.2. Building Step 0</a></li>
 </ul>
 </li>
-<li><a href="#step1">3.2. Step 1 - Build "Hello, World!" RPM</a></li>
-<li><a href="#step2">3.3. Step 2 - Manually add subpackage</a>
+<li><a href="#step1">3.2. Step 1 - Build "Hello, World!" RPM</a>
 <ul class="sectlevel3">
-<li><a href="#_subpackage_definition">3.3.1. Subpackage definition</a></li>
-<li><a href="#TMPDIR">3.3.2. Set LLVM_PROFILE_FILE</a></li>
-<li><a href="#find_and_merge_profiles">3.3.3. Find and merge the profiles</a></li>
-<li><a href="#_try_it_out_yourself">3.3.4. Try it out yourself</a></li>
-<li><a href="#_no_space_left_on_device">3.3.5. No space left on device?</a>
-<ul class="sectlevel4">
-<li><a href="#_pgo_background_merge">PGO background merge</a></li>
+<li><a href="#_building_step_1">3.2.1. Building Step 1</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a href="#step3">3.4. Step 3 - Generalize subpackage</a>
+<li><a href="#step4">3.3. Step 4 - Automatically add subpackage</a>
 <ul class="sectlevel3">
-<li><a href="#_subpackage_definition_2">3.4.1. Subpackage definition</a></li>
-<li><a href="#_set_llvm_profile_file">3.4.2. Set LLVM_PROFILE_FILE</a></li>
-<li><a href="#_find_and_merge_profiles">3.4.3. Find and merge profiles</a></li>
+<li><a href="#_building_step_4">3.3.1. Building Step 4</a></li>
 </ul>
 </li>
-<li><a href="#step4">3.5. Step 4 - Automatically add subpackage</a>
+<li><a href="#_summary">3.4. Summary</a></li>
+<li><a href="#step5">3.5. Step 5 - Build unmodified packages on Copr</a>
 <ul class="sectlevel3">
-<li><a href="#_toggle">3.5.1. Toggle</a></li>
-<li><a href="#_subpackage_template">3.5.2. Subpackage template</a></li>
-<li><a href="#_find_and_merge_profiles_2">3.5.3. Find and merge profiles</a></li>
-<li><a href="#_build_redhat_rpm_config_package">3.5.4. Build redhat-rpm-config package</a></li>
+<li><a href="#_optional_build_from_distgit">3.5.1. Optional: Build from distgit</a></li>
 </ul>
 </li>
-<li><a href="#step5">3.6. Step 5 - Build unmodified packages on Copr</a>
+<li><a href="#step6">3.6. Step 6 - Merge Raw Profiles</a></li>
+<li><a href="#step7">3.7. Step 7 - Build PGO optimized LLVM</a></li>
+</ul>
+</li>
+<li><a href="#step8">4. Step 8 - Comparing results</a></li>
+<li><a href="#_frequently_asked_questions">5. Frequently Asked Questions</a>
+<ul class="sectlevel2">
+<li><a href="#_how_can_i_view_the_top_10_functions">5.1. How can I view the top 10 functions?</a></li>
+<li><a href="#TMPDIR">5.2. What is the LLVM_PROFILE_FILE environment variable?</a></li>
+<li><a href="#find_and_merge_profiles">5.3. Why do we merge profiles and not keep the raw ones?</a>
 <ul class="sectlevel3">
-<li><a href="#_optional_build_from_distgit">3.6.1. Optional: Build from distgit</a></li>
+<li><a href="#_pgo_background_merge">5.3.1. PGO background merge</a></li>
 </ul>
 </li>
-<li><a href="#step6">3.7. Step 6 - Merge Raw Profiles</a></li>
-<li><a href="#step7">3.8. Step 7 - Build PGO optimized LLVM</a></li>
+<li><a href="#_how_to_toggle_off_pgo_profile_package_generation">5.4. How to toggle off PGO profile package generation?</a></li>
+<li><a href="#_do_you_pgo_for_cross_compilation">5.5. Do you PGO for cross-compilation?</a></li>
 </ul>
 </li>
-<li><a href="#_conclusion">4. Conclusion</a></li>
-<li><a href="#_resources">5. Resources</a></li>
+<li><a href="#_conclusion">6. Conclusion</a></li>
+<li><a href="#_resources">7. Resources</a></li>
 </ul>
 </div>
 <div class="paragraph lead">
-<p>In this experiment we generate PGO profile data from compiling unmodified RPM packages and feed those profiles into a PGO optimized rebuild of LLVM.</p>
+<p>In this experiment we generate PGO profile data from compiling unmodified RPM packages with a PGO instrumented LLVM and feed those profiles into a PGO optimized rebuild of LLVM.</p>
 </div>
 </div>
 </div>
@@ -589,20 +586,30 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <h2 id="_overview"><a class="anchor" href="#_overview"></a><a class="link" href="#_overview">1. Overview</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We create an instrumented LLVM toolchain in a Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a>. In another Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> we build a modified <code>redhat-rpm-config</code> package. Every package that gets built in that project will automatically produce a subpackage <code>&lt;PACKAGE&gt;-clang-profdata</code> with PGO profile data. We demonstrate this with a simple "Hello, World!" application that is called <code>myapp</code>. We then collect all those subpackages through <code>BuildRequires:</code> tags in another package called <code>llvm-pgo-profdata</code>. During the build of this package, all profiles are merged into an indexed profile data file. The final <code>llvm-pgo-profdata</code> RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="process-overview.png" alt="process overview">
-</div>
+<p>We create an instrumented LLVM toolchain in a Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a>. In another Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> we install a new package called <code>llvm-pgo-instrumented-macros</code>. Every package that gets built in that project will automatically produce a subpackage <code>&lt;PACKAGE&gt;-llvm-pgo-profdata</code> with PGO profile data. We demonstrate this with a simple "Hello, World!" application that is called <code>myapp</code>. We then collect all those subpackages through <code>BuildRequires:</code> tags in another package called <code>llvm-pgo-profdata</code>. During the build of this <code>llvm-pgo-profdata</code> package, all profiles are merged into an indexed profile data file. The final <code>llvm-pgo-profdata</code> RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
 </div>
 <div class="sect2">
-<h3 id="_non_goal"><a class="anchor" href="#_non_goal"></a><a class="link" href="#_non_goal">1.1. Non-goal</a></h3>
+<h3 id="_non_goals"><a class="anchor" href="#_non_goals"></a><a class="link" href="#_non_goals">1.1. Non-goals</a></h3>
 <div class="paragraph">
 <p>It is not a goal to get a perfectly tweaked PGO optimization build of LLVM. Instead we want to explore a way how to setup a pipeline in <a href="https://copr.fedorainfracloud.org/">Copr</a> for further tweaking and experimentation.</p>
 </div>
 <div class="paragraph">
-<p>The only operating system that we build for in this experiment is Fedora 37 on x86_64.</p>
+<p>It is also not a goal to change from the standalone build mode to a mono-repo build with a single buildroot. But rest assured, we&#8217;re looking into merging the <code>llvm</code> and <code>clang</code> RPM packages into one so that we can apply PGO and LTO in a more holistic way.</p>
+</div>
+<div class="paragraph">
+<p>The only operating system that we build for in this experiment is Fedora rawhide on x86_64.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This is potentially a bit risky because the the profile data may become irrelevant more quickly compared to less frequently updated variants of Fedora. But rawhide is the version of choice for introducing new profiles.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -633,7 +640,7 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <p>The question is: How can we tap in the RPM build pipeline using <a href="https://copr.fedorainfracloud.org/">Copr</a> and build RPM packages without modifying their <code>*.spec</code> files manually?</p>
 </div>
 <div class="paragraph">
-<p>I&#8217;ve created a 8 step experiment that shows how this can be achieved. For educational purposes I&#8217;ve written many of the steps using <code>Containerfile</code> s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run <code>make build-stepX</code> where \$X \in {0,1,2,...,7}\$. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.</p>
+<p>I&#8217;ve created a multi-step experiment that shows how this can be achieved. For educational purposes I&#8217;ve written many of the steps using <code>Containerfile</code> s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, you can run <code>make build-stepX</code> where \$X \in {0,1,2,...,8}\$. But make sure you first read the description for each step below. Sometimes a step really only serves a documentation purpose.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -642,7 +649,7 @@ pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 <div class="title">Note</div>
 </td>
 <td class="content">
-The <code>Containerfile</code> s run as <code>root</code> to allow packages to be installed and have a <code>tester</code> account for regular user interaction. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites.
+The Containerfiles run as <code>root</code>. Afterall the resulting images are not meant for anything but demonstration purposes and MUST NOT be used in production sites.
 </td>
 </tr>
 </table>
@@ -698,7 +705,7 @@ The <code>Containerfile</code> s run as <code>root</code> to allow packages to b
 <div class="title">Note</div>
 </td>
 <td class="content">
-This step mainly exists for documentation purposes. If you <strong>do</strong> build this step on your own, make sure to walk through the files where there&#8217;s a reference to <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a> and change it to your project. I don&#8217;t see a need to consider this part of this excersise. All we have to do is really pass along a few CMake flags when building the LLVM RPM packages: <code>llvm</code>, <code>clang</code>, and <code>lld</code>.
+This step mainly exists for documentation purposes. If you <strong>do</strong> build this step on your own, make sure to walk through the files where there&#8217;s a reference to <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a> and change it to your project. I don&#8217;t see a need to consider this part of this excersise. All we have to do is really pass along a few CMake flags when building these LLVM RPM packages: <code>llvm</code>, <code>clang</code>, and <code>lld</code>.
 </td>
 </tr>
 </table>
@@ -742,9 +749,9 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
 <span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
-	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	-copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr edit-chroot --rpmbuild-with pgo_instrumented_build  <span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-37-x86_64 # <b class="conum">(1)</b></code></pre>
+	-copr create fedora-rawhide-x86_64 --unlisted-on-hp on <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	-copr modify fedora-rawhide-x86_64 --unlisted-on-hp on <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-chroot --rpmbuild-with pgo_instrumented_build <span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-rawhide-x86_64</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -757,18 +764,6 @@ This step mainly exists for documentation purposes. If you <strong>do</strong> b
 <span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> compiler-rt
 <span class="tok-cp">%endif</span></code></pre>
 </div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-When building the monorepo all at once you probably don&#8217;t notice this dependency right away.
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>Then we&#8217;re modifying the the CMake arguments according to the <a href="https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo">official documentation</a>.</p>
@@ -817,6 +812,9 @@ When building the monorepo all at once you probably don&#8217;t notice this depe
 </tr>
 </table>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_building_step_0"><a class="anchor" href="#_building_step_0"></a><a class="link" href="#_building_step_0">3.1.2. Building Step 0</a></h4>
 <div class="paragraph">
 <p>To build this step, run <code>make build-step0</code>.</p>
 </div>
@@ -843,9 +841,6 @@ This step does NOT depend on <a href="#step0">Step 0 - Build a PGO instrumented 
 </table>
 </div>
 <div class="paragraph">
-<p>The other steps build on this simple setup by first adding lines to the RPM spec file that we later want to generalize and finally auto-generate to come back to an unmodified spec file.</p>
-</div>
-<div class="paragraph">
 <p>Let&#8217;s have a look at the <a href="step1/myapp/myapp.spec">specfile</a> first:</p>
 </div>
 <div class="listingblock">
@@ -860,7 +855,7 @@ This step does NOT depend on <a href="#step0">Step 0 - Build a PGO instrumented 
 <span class="tok-gh">Summary</span><span class="tok-p">:</span> A simple <span class="tok-s2">&quot;Hello, World!&quot;</span> application.
 
 <span class="tok-gh">License</span><span class="tok-p">:</span> Apache-2.0
-<span class="tok-gh">URL</span><span class="tok-p">:</span> https://github.com/kwk/pgo-experiment
+<span class="tok-gh">URL</span><span class="tok-p">:</span> https://github.com/kwk/hello-world
 <span class="tok-gh">Source0</span><span class="tok-p">:</span> myapp-<span class="tok-kc">%{version}</span>.tar.bz2
 
 <span class="tok-gh">BuildRequires</span><span class="tok-p">:</span>	clang
@@ -935,7 +930,7 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <span class="tok-nf">srpm</span><span class="tok-o">:</span> <span class="tok-n">tarball</span>
 	fedpkg --release f37 --name myapp srpm
 <span class="tok-nf">clean</span><span class="tok-o">:</span>
-	rm -rf <span class="tok-k">$(</span>TMP<span class="tok-k">)</span> <span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>*</code></pre>
+	rm -rf <span class="tok-k">$(</span>TMP<span class="tok-k">)</span> <span class="tok-k">$(</span>PACKAGE<span class="tok-k">)</span>* x86_64 .build-*.log</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -944,17 +939,15 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <div class="listingblock">
 <div class="title">Listing 8. step1/Containerfile</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="dockerfile"><span></span><span class="tok-k">FROM</span> <span class="tok-s">fedora:37</span>
+<pre class="pygments highlight"><code data-lang="dockerfile"><span></span><span class="tok-k">FROM</span> <span class="tok-s">fedora:rawhide</span>
 <span class="tok-k">LABEL</span> <span class="tok-nv">description</span><span class="tok-o">=</span><span class="tok-s2">&quot;A basic specfile-to-RPM process demo&quot;</span>
 
 <span class="tok-c"># Install packages to build and package &quot;myapp&quot;</span>
 <span class="tok-k">RUN</span> dnf install -y cmake fedora-packager git clang
 
 <span class="tok-k">WORKDIR</span><span class="tok-s"> /root</span>
-<span class="tok-k">RUN</span> useradd --create-home tester
 <span class="tok-k">COPY</span> entrypoint.sh /root/entrypoint.sh
-<span class="tok-k">COPY</span> ./myapp /home/tester/myapp
-<span class="tok-k">RUN</span> chown -Rfv  tester:tester /home/tester/myapp
+<span class="tok-k">COPY</span> ./myapp /root/myapp
 
 <span class="tok-k">USER</span><span class="tok-s"> root</span>
 <span class="tok-k">ENTRYPOINT</span> <span class="tok-p">[</span> <span class="tok-s2">&quot;/root/entrypoint.sh&quot;</span> <span class="tok-p">]</span></code></pre>
@@ -968,14 +961,18 @@ test <span class="tok-s2">&quot;`</span><span class="tok-kc">%{buildroot}</span>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="shell"><span></span><span class="tok-ch">#!/bin/bash</span>
 
-<span class="tok-nb">set</span> -ex
+<span class="tok-nb">set</span> -x
 
-<span class="tok-c1"># Build the app and always enter bash for further inspection</span>
-<span class="tok-nb">cd</span> /home/tester/myapp
-su -c <span class="tok-s2">&quot;make rpm&quot;</span> tester <span class="tok-o">||</span> <span class="tok-nb">true</span>
+<span class="tok-nb">cd</span> /root/myapp
+make rpm <span class="tok-o">||</span> <span class="tok-nb">true</span>
 
 bash</code></pre>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_building_step_1"><a class="anchor" href="#_building_step_1"></a><a class="link" href="#_building_step_1">3.2.1. Building Step 1</a></h4>
+<div class="paragraph">
+<p>To build this step, run <code>make build-step1</code>.</p>
 </div>
 <div class="paragraph">
 <p>When you build this step, the output should look like this:</p>
@@ -983,38 +980,176 @@ bash</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-go">[...]</span>
-<span class="tok-go">Wrote: /home/tester/myapp/myapp-1.0.0-1.fc37.src.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-1.fc37.x86_64.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-1.fc37.x86_64.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/myapp-1.0.0-1.fc37.src.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-debugsource-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm</span>
 <span class="tok-go">+ bash</span>
 <span class="tok-gp">[root@7cf29caa0097 myapp]#</span></code></pre>
 </div>
 </div>
 </div>
+</div>
 <div class="sect2">
-<h3 id="step2"><a class="anchor" href="#step2"></a><a class="link" href="#step2">3.3. Step 2 - Manually add subpackage</a></h3>
+<h3 id="step4"><a class="anchor" href="#step4"></a><a class="link" href="#step4">3.3. Step 4 - Automatically add subpackage</a></h3>
 <div class="paragraph">
-<p>In this step we manually add a <code>myapp-clang-pgo-profdata</code> subpackage which contains PGO profile data from LLVM. This data is generated by executing a PGO instrumented <code>clang</code> from the Copr repo <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-instrumented</a> which we&#8217;ve built in <a href="#step0">Step 0 - Build a PGO instrumented LLVM</a>.</p>
+<p>In this step we use the <code>myapp</code> directory from <code>step1</code> that doesn&#8217;t contain any information about the subpackage at all. And yet we&#8217;re still gonna get our subpackage with profile data. Let&#8217;s dive right in&#8230;&#8203;</p>
+</div>
+<div class="sect3">
+<h4 id="_building_step_4"><a class="anchor" href="#_building_step_4"></a><a class="link" href="#_building_step_4">3.3.1. Building Step 4</a></h4>
+<div class="paragraph">
+<p>To build this step, run <code>make build-step4</code>.</p>
 </div>
 <div class="paragraph">
-<p>The only other changes from <a href="#step1">Step 1 - Build "Hello, World!" RPM</a> to <a href="#step2">Step 2 - Manually add subpackage</a> are in the the <code>Containerfile</code> were we add the PGO instrumented LLVM.</p>
+<p>When you build this step, the output should look like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="dockerfile"><span></span><span class="tok-k">RUN</span> dnf install -y <span class="tok-s1">&#39;dnf-command(copr)&#39;</span>
-<span class="tok-k">RUN</span> dnf copr <span class="tok-nb">enable</span> -y kkleine/llvm-pgo-instrumented
-<span class="tok-k">RUN</span> sudo dnf install -y <span class="tok-se">\</span>
-    llvm <span class="tok-se">\</span>
-    clang</code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-go">[...]</span>
+<span class="tok-go">Wrote: /root/myapp/myapp-1.0.0-1.fc37.src.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-debugsource-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">Wrote: /root/myapp/x86_64/myapp-llvm-pgo-profdata-1.0.0-1.fc37.x86_64.rpm</span>
+<span class="tok-go">+ bash</span>
+<span class="tok-gp">[root@7cf29caa0097 myapp]#</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We also have to add the <code>inotify-tools</code> package because of a slightly more advanced topic that we will cover at the end of this section:</p>
+<p>How is it possible, that we got an additional <code>myapp-llvm-pgo-profdata-1.0.0-1.fc37.x86_64.rpm</code> without changing the spec file?</p>
+</div>
+<div class="paragraph">
+<p>We do this by installing a special macros package: <code>llvm-pgo-instrumentation-macros</code>. This package is the home of many useful build-flags and macros but it also allows us to tap into the build process:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 10. step4/Containerfile</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="shell"><span></span><span class="tok-c1"># Install the PGO instrumented (not PGO optimized!) LLVM Toolchain</span>
+<span class="tok-c1"># https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo We have</span>
+<span class="tok-c1"># to specify the version we want because rawhide could have moved on by now.</span>
+RUN dnf install -y <span class="tok-s1">&#39;dnf-command(copr)&#39;</span>
+RUN dnf copr <span class="tok-nb">enable</span> -y kkleine/llvm-pgo-instrumented
+RUN dnf install -y <span class="tok-se">\</span>
+    clang-16.0.2-2.fc39 <span class="tok-se">\</span>
+    clang-libs-16.0.2-2.fc39 <span class="tok-se">\</span>
+    clang-resource-filesystem-16.0.2-2.fc39 <span class="tok-se">\</span>
+    llvm-16.0.2-2.fc39 <span class="tok-se">\</span>
+    llvm-libs-16.0.2-2.fc39 <span class="tok-se">\</span>
+    llvm-pgo-instrumentation-macros-16.0.2-2.fc39</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We store our RPM macros for PGO in the <code>/etc/rpm/</code> directory which is usually dedicated towards per-host overrides `/We need to override macros that <em>exist only fairly late</em> in the list of the macro path that is executed from left to right:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="dockerfile"><span></span><span class="tok-k">RUN</span> dnf install -y inotify-tools</code></pre>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>rpm --showrc<span class="tok-p">|</span>grep -i <span class="tok-s2">&quot;macro path&quot;</span>
+<span class="tok-go">Macro path: /usr/lib/rpm/macros:/usr/lib/rpm/macros.d/macros.*:/usr/lib/rpm/platform/%{_target}/macros:/usr/lib/rpm/fileattrs/*.attr:/usr/lib/rpm/redhat/macros:/etc/rpm/macros.*:/etc/rpm/macros:/etc/rpm/%{_target}/macros:~/.rpmmacros</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A natrual choice would have been to pick <code>%{_rpmmacrodir}</code> which expands to <code>/usr/lib/rpm/macros.d</code> but then we wouldn&#8217;t be able to override macros from the <code>redhat-rpm-config</code> package (see <a href="https://src.fedoraproject.org/rpms/redhat-rpm-config/pull-request/249#comment-138527">this pr</a>).</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_summary"><a class="anchor" href="#_summary"></a><a class="link" href="#_summary">3.4. Summary</a></h3>
+<div class="paragraph">
+<p>It is important to note that in order to achieve the additional subpackage, we only had to modify the LLVM package and no other packages.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="step5"><a class="anchor" href="#step5"></a><a class="link" href="#step5">3.5. Step 5 - Build unmodified packages on Copr</a></h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+You don&#8217;t need to run this step manually. It has already been run and the results are in the Copr project
+<a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Up until this point all of our experiments look promising but how can we use Copr to build packages and produce <code>&lt;PACKAGE&gt;-llvm-pgo-profdata</code> packages automatically for us?</p>
+</div>
+<div class="paragraph">
+<p>Copr will become the storage for our profile data subpackages with all the rest of the regular packages.</p>
+</div>
+<div class="paragraph">
+<p>After running this step using <code>make build-step5</code>, we&#8217;re gonna have a project called: <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a>.</p>
+</div>
+<div class="paragraph">
+<p>In that project, there will be the patched package and the <code>myapp</code> package with the additional subpackage inside:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="profile-data-collection.png" alt="profile data collection">
+</div>
+</div>
+<div class="paragraph">
+<p>In order for the Copr project to use our PGO instrumented LLVM we&#8217;ve made the repo available in the <a href="step5/Makefile"><code>step5/Makefile</code></a> using the <code>--repo</code> option:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 11. step5/Makefile</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
+<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
+	-copr create --chroot fedora-rawhide-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/llvm-pgo-instrumented <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr modify --chroot fedora-rawhide-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/llvm-pgo-instrumented <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-chroot --packages llvm-pgo-instrumentation-macros <span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection/fedora-rawhide-x86_64</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Any package that will be built in the <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> Copr project will automatically have a <code>&lt;package&gt;-clang-profdata</code> subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.</p>
+</div>
+<div class="sect3">
+<h4 id="_optional_build_from_distgit"><a class="anchor" href="#_optional_build_from_distgit"></a><a class="link" href="#_optional_build_from_distgit">3.5.1. Optional: Build from distgit</a></h4>
+<div class="paragraph">
+<p>If you want, you can build any project from Fedora&#8217;s distigt by doing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span><span class="tok-nb">cd</span> step5/
+<span class="tok-gp">$ </span>make distgit-&lt;PACKAGE&gt; # <b class="conum">(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Replace <code>&lt;PACKAGE&gt;</code> with a real package name, e.g. <code>retsnoop</code>, or <code>chromium</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This is backed by this special target in the <a href="step5/Makefile"><code>step5/Makefile</code></a>:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 12. step5/Makefile</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-c"># Build an arbitrary package from dist-git</span>
+<span class="tok-nf">distgit-%</span><span class="tok-o">:</span>
+	<span class="tok-k">$(</span><span class="tok-nb">eval</span> package:<span class="tok-o">=</span><span class="tok-k">$(</span>subst distgit-,,<span class="tok-nv">$@</span><span class="tok-k">))</span>
+	-copr add-package-distgit <span class="tok-se">\</span>
+		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
+		--distgit fedora <span class="tok-se">\</span>
+		--commit rawhide <span class="tok-se">\</span>
+		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-package-distgit <span class="tok-se">\</span>
+		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
+		--distgit fedora <span class="tok-se">\</span>
+		--commit rawhide <span class="tok-se">\</span>
+		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+<span class="tok-c">	# copr edit-chroot --rpmbuild-with clang $(fas_user)/profile-data-collection/fedora-rawhide-x86_64</span>
+	copr build-package <span class="tok-se">\</span>
+		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
+		--timeout <span class="tok-m">1728000</span> <span class="tok-se">\</span>
+		--nowait <span class="tok-se">\</span>
+		--chroot fedora-rawhide-x86_64 <span class="tok-se">\</span>
+		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1024,128 +1159,136 @@ bash</code></pre>
 <div class="title">Note</div>
 </td>
 <td class="content">
-<div class="paragraph">
-<p>When we move all this to Copr we must add <code>inotify-tools</code> to the list of packages that are available for each build without requiring this as a <code>BuildRequires:</code> tag. The <code>copr edit-chroot</code> offers this option specifically for these kinds of purposes:
-&gt; <code>--packages PACKAGES   space separated string of package names to be added to buildroot</code></p>
-</div>
+You might wonder why we first add and then edit a package. This is because we don&#8217;t know if the package has already been added before. And to overwrite with the desired values we simply edit an added project right away. So, nothing really special.
 </td>
 </tr>
 </table>
 </div>
-<div class="sect3">
-<h4 id="_subpackage_definition"><a class="anchor" href="#_subpackage_definition"></a><a class="link" href="#_subpackage_definition">3.3.1. Subpackage definition</a></h4>
+</div>
+</div>
+<div class="sect2">
+<h3 id="step6"><a class="anchor" href="#step6"></a><a class="link" href="#step6">3.6. Step 6 - Merge Raw Profiles</a></h3>
 <div class="paragraph">
-<p>We add the subpackage manually in <a href="step2/myapp/myapp.spec">step2/myapp/myapp.spec</a>.</p>
+<p>In order to optimize LLVM with the raw profile data that we&#8217;ve collected before we need to make it available to the Copr build of LLVM and we need to <a href="https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge">merge</a> it using <code>llvm-profdata merge</code>.</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>[Merging] takes several profile data files generated by PGO instrumentation and merges them together into a single indexed profile data file. (<a href="https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge">Source</a>)</p>
+</div>
+</blockquote>
+</div>
+<div class="paragraph">
+<p>The <code>&lt;PACKAGE&gt;-llvm-pgo-profdata</code> packages that we&#8217;ve build so far are installable standalone. When we build a PGO optimized version of LLVM we add a <code>BuildRequires: myapp-llvm-pgo-profdata</code> to the spec file of a new package called <code>llvm-pgo-profdata</code>.</p>
 </div>
 <div class="listingblock">
+<div class="title">Listing 13. step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nd">%package</span> -n myapp-clang-pgo-profdata
-
-<span class="tok-gh">Summary</span><span class="tok-p">:</span> Indexed PGO profile data from myapp package
-
-<span class="tok-nd">%description</span> -n myapp-clang-pgo-profdata 
-This package contains profiledata for clang that was generated while
-compiling myapp. This can be used for doing Profile Guided Optimizations
-(PGO) builds of clang.
-
-<span class="tok-nd">%files</span> -n myapp-clang-pgo-profdata
-/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> myapp-llvm-pgo-profdata
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> retsnoop-llvm-pgo-profdata</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Notice that the added <code>myapp-clang-pgo-profdata</code> subpackage requires this file <code>/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code>. It is a file that we have to create manually by invoking the PGO instrumented <code>clang</code>.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="TMPDIR"><a class="anchor" href="#TMPDIR"></a><a class="link" href="#TMPDIR">3.3.2. Set LLVM_PROFILE_FILE</a></h4>
-<div class="paragraph">
-<p>By specifying <code>export LLVM_PROFILE_FILE="%t/myapp.clang.%m.%p.profraw"</code> we instruct <code>clang</code> to create a raw profile file for each invocation under <code>TMPDIR</code> (see <code>%t</code> in <a href="https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program">the docs</a>).</p>
+<p>The <code>%build</code> section of our <code>llvm-pgo-profdata</code> spec file merges the profiles provided by the above <code>&lt;PACKAGE&gt;-llvm-pgo-profdata</code> packages to create a single PGO profile data file that we can later use for building a PGO optimized LLVM toolchain.</p>
 </div>
 <div class="listingblock">
-<div class="title">Listing 10. step2/myapp/myapp.spec</div>
+<div class="title">Listing 14. step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c">#-----------------------------------------------------------------------</span>
-<span class="tok-c"># We want the profile data to be written to specific files that will</span>
-<span class="tok-c"># later land in the sub-package &quot;myapp-clang-raw-pgo-profdata&quot;. See</span>
-<span class="tok-c"># https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program</span>
-export TMPDIR=<span class="tok-s2">&quot;</span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata&quot;</span>
-mkdir -pv $TMPDIR
-export LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/myapp.clang.%m.%p.profraw&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span>llvm-profdata merge \
+      --compress-all-sections \
+      --sparse \
+      <span class="tok-kp">%{_libdir}</span>/llvm-pgo-profdata/myapp/* \
+      <span class="tok-kp">%{_libdir}</span>/llvm-pgo-profdata/retsnoop/* \
+      -output llvm-pgo.profdata
+<span class="tok-nd">%files</span>
+%license LICENSE
+<span class="tok-kp">%{_libdir}</span>/llvm-pgo-profdata/llvm-pgo.profdata</code></pre>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="find_and_merge_profiles"><a class="anchor" href="#find_and_merge_profiles"></a><a class="link" href="#find_and_merge_profiles">3.3.3. Find and merge the profiles</a></h4>
-<div class="paragraph">
-<p>In the <code>%install</code> section of the specfile We then find all raw profiles and merge them into the final <code>myapp.clang.profdata</code> under the buildroot to be picked up by the <code>%files</code> section of the <code>myapp-clang-pgo-profdata</code> subpackage:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 11. step2/myapp/myapp.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
-<span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
-<span class="tok-c"># to a non existing location coming from when llvm-profdata was built.</span>
-mkdir -pv <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp
-export TMPDIR=<span class="tok-s2">&quot;/tmp&quot;</span>
-export LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/llvm-profdata.clang.%m.%p.profraw&quot;</span>
-llvm-profdata merge \
-  --compress-all-sections \
-  --sparse \
-  /tmp/myapp.clang.background.merge \
-  $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f -name <span class="tok-s1">&#39;*.profraw&#39;</span>) \
-  -o <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
-</div>
-</div>
-<div id="merge_for_smaller_profiles" class="admonitionblock important">
+<div class="admonitionblock caution">
 <table>
 <tr>
 <td class="icon">
-<div class="title">Important</div>
+<div class="title">Caution</div>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Why not store the raw profiles? In the first incarnation of this experiment I did store the raw profiles and I noticed that the final <code>myapp-clang-pgo-profdata</code> RPM was 128MB in size. When we first merge the profiles we get it down to ~900KB. I did a similar experiment for the <code>retsnoop</code> project and there the effect was also very big: ~1,4GB for raw profile data down to ~1,6MB for merged one.</p>
+<p>The <code>llvm-pgo-profdata</code> package will be build on Copr in the <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> project. That means by default the <code>llvm-pgo-profdata</code> is expected to output PGO profiles. In reality it doesn&#8217;t do that and so we&#8217;re  disabling the profile generation manually:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 15. step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span>%global __llvm_pgo_subpackage <span class="tok-kc">%{nil}</span></code></pre>
+</div>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">
-You can call <code>llvm-profdata merge</code> on already merged profiles!
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>In Fedora as well as RHEL and CentOS Stream we use a build mode called "standalone-build". That means, we&#8217;re building each sub-project of LLVM (e.g. <code>clang</code>, <code>llvm</code>, <code>lld</code>) with its own specfile. To avoid merging the PGO profile data into an indexed profile data file more than once we&#8217;re offloading the merge process into its own RPM. We call it <code>llvm-pgo-profdata</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="step7"><a class="anchor" href="#step7"></a><a class="link" href="#step7">3.7. Step 7 - Build PGO optimized LLVM</a></h3>
+<div class="paragraph">
+<p>This step is similar to <a href="#step0">Step 0 - Build a PGO instrumented LLVM</a> in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 16. step7/llvm/llvm.spec</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
+<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> llvm-pgo-profdata
+<span class="tok-cp">%endif</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>Now, you may ask why we make the changes to the spec file at all when I promised that we get profile data from unmodified packages. The honest answer is that I didn&#8217;t know how to do it when I started out this experiment and I found the manual way much more easy to follow along compared to presenting the solution right away. This way we make transparent what needs to be generalized and automated.</p>
+<p>We then use the file <code>%{_libdir}/llvm-pgo-profdata/llvm-pgo.profdata</code> provided by our <code>llvm-prog-profdata</code> package as input to <code>LLVM_PROFDATA_FILE</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 17. step7/llvm/llvm.spec</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
+	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/llvm-pgo-profdata/llvm-pgo.profdata \
+<span class="tok-cp">%endif</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>In the next step we&#8217;re going to generalize the manual addition of the subpackage before we remove it entirely from the spec file again.</p>
+<p>Together with the proper <code>--with pgo_optimized_build</code> <a href="https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html">build-conditional</a>, we&#8217;re building the optimized <code>llvm</code>, <code>clang</code> and <code>lld</code> packages:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 18. step7/Makefile</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
+<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
+	-copr create --chroot fedora-rawhide-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr  modify --chroot fedora-rawhide-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
+	copr edit-chroot --rpmbuild-with pgo_optimized_build <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-rawhide-x86_64</code></pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_try_it_out_yourself"><a class="anchor" href="#_try_it_out_yourself"></a><a class="link" href="#_try_it_out_yourself">3.3.4. Try it out yourself</a></h4>
 <div class="paragraph">
-<p>I encourage you to run this step yourself and follow along these steps to get a feeling for what the profile data does provide.</p>
+<p>The resulting PGO optimized packages are available on <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step8"><a class="anchor" href="#step8"></a><a class="link" href="#step8">4. Step 8 - Comparing results</a></h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="_frequently_asked_questions"><a class="anchor" href="#_frequently_asked_questions"></a><a class="link" href="#_frequently_asked_questions">5. Frequently Asked Questions</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_how_can_i_view_the_top_10_functions"><a class="anchor" href="#_how_can_i_view_the_top_10_functions"></a><a class="link" href="#_how_can_i_view_the_top_10_functions">5.1. How can I view the top 10 functions?</a></h3>
+<div class="paragraph">
+<p>To view the top 10 functions profiled in a profile file you can use <code>llvm-profdata</code> below:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>make build-step2 # <b class="conum">(1)</b>
-<span class="tok-go">[...]</span>
-<span class="tok-go">Wrote: /home/tester/myapp/myapp-1.0.0-2.fc37.src.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debugsource-1.0.0-2.fc37.x86_64.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-1.0.0-2.fc37.x86_64.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-debuginfo-1.0.0-2.fc37.x86_64.rpm</span>
-<span class="tok-go">Wrote: /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm</span>
-<span class="tok-go">[...]</span>
-<span class="tok-gp"># </span>dnf install -y --disablerepo<span class="tok-o">=</span>* /home/tester/myapp/x86_64/myapp-clang-pgo-profdata-1.0.0-2.fc37.x86_64.rpm <b class="conum">(2)</b>
-<span class="tok-gp"># </span>llvm-profdata show --topn<span class="tok-o">=</span><span class="tok-m">10</span> /usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata <span class="tok-p">|</span> c++filt <b class="conum">(3)</b>
+<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span>llvm-profdata show --topn<span class="tok-o">=</span><span class="tok-m">10</span> /usr/lib64/llvm-pgo-profdata/myapp/myapp.llvm.profdata <span class="tok-p">|</span> c++filt # <b class="conum">(1)</b>
 <span class="tok-go">Instrumentation level: IR  entry_first = 0</span>
 <span class="tok-go">Total functions: 22243</span>
 <span class="tok-go">Maximum function count: 156465725</span>
@@ -1166,15 +1309,15 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 <div class="colist arabic">
 <ol>
 <li>
-<p>Build the step2 in a container and remain in the bash shell of that container.</p>
-</li>
-<li>
-<p>Install the resulting merged PGO file right into the container.</p>
-</li>
-<li>
 <p>Show the top 10 hottest functions demangled by <code>c++filt</code>.</p>
 </li>
 </ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="TMPDIR"><a class="anchor" href="#TMPDIR"></a><a class="link" href="#TMPDIR">5.2. What is the LLVM_PROFILE_FILE environment variable?</a></h3>
+<div class="paragraph">
+<p>By specifying <code>export LLVM_PROFILE_FILE="%t/myapp.llvm.%m.%p.profraw"</code> we instruct <code>clang</code> to create a raw profile file for each invocation under <code>TMPDIR</code> (see <code>%t</code> in <a href="https://clang.llvm.org/docs/SourceBasedCodeCoverage.html#running-the-instrumented-program">the docs</a>).</p>
 </div>
 <div class="admonitionblock caution">
 <table>
@@ -1184,7 +1327,7 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 </td>
 <td class="content">
 <div class="paragraph">
-<p>When experimenting with different templates I noticed that <code>%Nm</code> (e.g.<code>%2m</code>) causes <code>counter overflow</code> messages. The reason for this was discussed in <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=801362">this thread</a>. That&#8217;s why I&#8217;ve switched to using <code>%p</code> instead of <code>%Nm</code> but I wonder if this causes problems for multithreaded workloads. To recap, this is what <code>%Nm</code> does in the <code>LLVM_PROFILE_FILE</code>:</p>
+<p>When experimenting with different <strong>templates</strong> I noticed that <code>%Nm</code> (e.g.<code>%2m</code>) causes <code>counter overflow</code> messages. The reason for this was discussed in <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=801362">this thread</a>. That&#8217;s why I&#8217;ve switched to using <code>%p</code> instead of <code>%Nm</code> but I wonder if this causes problems for multithreaded workloads. To recap, this is what <code>%Nm</code> does in the <code>LLVM_PROFILE_FILE</code>:</p>
 </div>
 <div class="quoteblock">
 <blockquote>
@@ -1201,84 +1344,138 @@ You can call <code>llvm-profdata merge</code> on already merged profiles!
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_no_space_left_on_device"><a class="anchor" href="#_no_space_left_on_device"></a><a class="link" href="#_no_space_left_on_device">3.3.5. No space left on device?</a></h4>
+<div class="sect2">
+<h3 id="find_and_merge_profiles"><a class="anchor" href="#find_and_merge_profiles"></a><a class="link" href="#find_and_merge_profiles">5.3. Why do we merge profiles and not keep the raw ones?</a></h3>
 <div class="paragraph">
-<p>The alert reader will probably already spotted the following in <a href="#find_and_merge_profiles">Find and merge the profiles</a>:</p>
+<p>Short answer: because size matters!</p>
+</div>
+<div class="paragraph">
+<p>In the <code>%install</code> section of the specfile we then find all raw profiles and merge them into the final <code>%{buildroot}%{_libdir}/llvm-pgo-profdata/%{name}/%{name}.llvm.profdata</code> under the buildroot to be picked up by the <code>%files</code> section of the <code>%{name}-llvm-pgo-profdata</code> subpackage:</p>
 </div>
 <div class="listingblock">
-<div class="title">Listing 12. step2/myapp/myapp.spec</div>
+<div class="title">Listing 19. macros.llvm-pgo-instrumentation-setup</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
-<span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
-<span class="tok-c"># to a non existing location coming from when llvm-profdata was built.</span>
-mkdir -pv <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp
-export TMPDIR=<span class="tok-s2">&quot;/tmp&quot;</span>
-export LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/llvm-profdata.clang.%m.%p.profraw&quot;</span>
-llvm-profdata merge \
-  --compress-all-sections \
-  --sparse \
-<span class="hll">  /tmp/myapp.clang.background.merge \
-</span>  $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f -name <span class="tok-s1">&#39;*.profraw&#39;</span>) \
-  -o <span class="tok-kc">%{buildroot}</span>/usr/lib64/clang-pgo-profdata/myapp/myapp.clang.profdata</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__pgo_merge_profdata</span> %[ 0<span class="tok-nf">%{__llvm_pgo_subpackage}</span> &gt; 0 ? <span class="tok-s2">&quot;</span><span class="tok-se">\\</span><span class="tok-s2">\</span>
+  mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/llvm-pgo-profdata/<span class="tok-kc">%{name}</span> \\\
+  &amp;&amp; <span class="tok-nf">%{__pgo_env}</span> \\\
+  &amp;&amp; llvm-profdata merge \\\
+    --compress-all-sections \\\
+    --sparse \\\
+    <span class="tok-nf">%{__pgo_background_merge_target}</span> \\\
+    $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f -name <span class="tok-s1">&#39;*.profraw&#39;</span>) \\\
+    -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/llvm-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.llvm.profdata \\\
+  <span class="tok-s2">&quot; : &quot;</span><span class="tok-kc">%{nil}</span><span class="tok-s2">&quot; ]</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>You may ask what <code>/tmp/myapp.clang.background.merge</code> is doing there and where it comes from. In fact, this was a last minute addition to the whole process. I agree that we don&#8217;t really need it for small packages but the bigger a package gets, the more problematic disk space is going to be. For example, when compiling the <code>chromium</code> project with an instrumented LLVM toolchain, I ran into these error messages after 1 hour:</p>
+<p>The bigger a package gets, the more problematic disk space is going to be. For example, when compiling the <code>chromium</code> project with an instrumented LLVM toolchain, I ran into these error messages after 1 hour:</p>
 </div>
 <div class="quoteblock">
 <blockquote>
 <div class="paragraph">
-<p><code>LLVM Profile Error: Failed to write file "/builddir/build/BUILD/raw-pgo-profdata//chromium.clang.1970228969820616430_0.24617.profraw": No space left on device</code></p>
+<p><code>LLVM Profile Error: Failed to write file "/builddir/build/BUILD/raw-pgo-profdata//chromium.llvm.1970228969820616430_0.24617.profraw": No space left on device</code></p>
 </div>
 </blockquote>
 </div>
 <div class="paragraph">
-<p>We already discussed <a href="#merge_for_smaller_profiles">here</a> that it is a good idea to store the merged profiles instead of the raw ones in the PGO subpackage that we&#8217;re trying to create.</p>
+<p>As a consequence, we cannot let the build process continue to run until it is done (until the end of the <code>%build</code> section) only to then pick up the pieces and merge the raw profiles. We have to do this continuously in order to avoid disk space issues.</p>
 </div>
 <div class="paragraph">
-<p>We don&#8217;t have to wait until we merge the raw PGO profiles. Right now we first create many of them in the <code>%build</code> section of an RPM spec file and then we&#8217;re merging it in the '%install' section. This gap causes a lot of disk space to usage that we can avoid by merging regularly in the background.</p>
-</div>
-<div class="paragraph">
-<p>To imporove this situation, we&#8217;re initiating a background merge script right before we kick-off the build with <code>%cmake</code>.</p>
+<p>To imporove this situation, we&#8217;re starting a background merge script right before we enter the <code>%build</code> section:</p>
 </div>
 <div class="listingblock">
-<div class="title">Listing 13. step2/myapp/myapp.spec</div>
+<div class="title">Listing 20. macros.llvm-pgo-instrumentation-setup</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>SHUTDOWN_FILE=<span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata/shutdown.txt
-PID_FILE=/tmp/background-merge.pid
-./pgo-background-merge.sh \
-  -d $TMPDIR \
-  -f /tmp/myapp.clang.background.merge \
-  -p $PID_FILE \
-  -x $SHUTDOWN_FILE &amp;</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__llvm_pgo_instrumented_spec_build_pre</span> \
+    [ 0<span class="tok-nf">%{__llvm_pgo_subpackage}</span> &gt; 0 ] \\\
+    &amp;&amp; <span class="tok-nf">%{__pgo_env}</span> \\\
+    &amp;&amp; /usr/lib/rpm/redhat/pgo-background-merge.sh \\\
+      -d <span class="tok-nf">%{__pgo_profdir}</span> \\\
+      -f <span class="tok-nf">%{__pgo_background_merge_target}</span> \\\
+      -p <span class="tok-nf">%{__pgo_pid_file}</span> &amp; \</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Then, once build is done, we ask the background job to gracefully shut down by writing to a <strong>shutdown file</strong>. Then we wait using <code>inotifywait</code> until the background job&#8217;s PID (process ID) file is deleted.</p>
+<p>In order to stop the background job before it gets killed by the <code>__spec_build_post</code> macro, we&#8217;ve got this macro:</p>
 </div>
 <div class="listingblock">
-<div class="title">Listing 14. step2/myapp/myapp.spec</div>
+<div class="title">Listing 21. macros.llvm-pgo-instrumentation-setup</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># Signal stop and wait for the PID file to be deleted to gracefully</span>
-<span class="tok-c"># exit the background job.</span>
-echo <span class="tok-s1">&#39;&#39;</span> &gt; $SHUTDOWN_FILE;
-[ -e $PID_FILE ] &amp;&amp; inotifywait -e delete_self $PID_FILE || true;</code></pre>
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__llvm_pgo_instrumented_spec_build_post</span>	\
+  if [ 0<span class="tok-nf">%{__llvm_pgo_subpackage}</span> &gt; 0 ]\
+  then\
+      echo <span class="tok-s1">&#39;please exit&#39;</span> &gt; <span class="tok-nf">%{__pgo_shutdown_file}</span>;\
+      [ -e <span class="tok-nf">%{__pgo_pid_file}</span> ] &amp;&amp; inotifywait -e delete_self <span class="tok-nf">%{__pgo_pid_file}</span> || true;\
+  fi\</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Now, for the simple application in this experiment it might look like overkill, but trust me, we need this for building bigger projects like <code>chromium</code>.</p>
+<p>We ask the background job to gracefully shut down by writing to a <strong>shutdown file</strong>. Then we wait using <code>inotifywait</code> until the background job&#8217;s PID (process ID) file is deleted.</p>
 </div>
-<div class="sect4">
-<h5 id="_pgo_background_merge"><a class="anchor" href="#_pgo_background_merge"></a><a class="link" href="#_pgo_background_merge">PGO background merge</a></h5>
+<div class="paragraph">
+<p>The</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__llvm_pgo_instrumented_spec_build_post</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>macro is used in the override of</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__spec_build_post</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>which among other situations is called at the end of each <code>%build</code> macro:</p>
+</div>
+<div class="listingblock">
+<div class="title">Listing 22. pgo-regen-macros.sh</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># Overriding __spec_build_post macro from /usr/lib/rpm/macros</span>
+<span class="tok-nf">%__spec_build_post</span> \
+  <span class="tok-nv">%{?__llvm_pgo_instrumented_spec_build_post}</span> \
+  <span class="tok-nf">%{___build_post}</span></code></pre>
+</div>
+</div>
+<div id="merge_for_smaller_profiles" class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>But why not store the raw profiles? In the first incarnation of this experiment I did store the raw profiles and I noticed that the final <code>myapp-llvm-pgo-profdata</code> RPM was 128MB in size. When we first merge the profiles we get it down to ~900KB. I did a similar experiment for the <code>retsnoop</code> project and there the effect was also very big: ~1,4GB for raw profile data down to ~1,6MB for merged one.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+You can call <code>llvm-profdata merge</code> on already merged profiles.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_pgo_background_merge"><a class="anchor" href="#_pgo_background_merge"></a><a class="link" href="#_pgo_background_merge">5.3.1. PGO background merge</a></h4>
 <div class="paragraph">
 <p>The background script itself waits for <code>close_write</code> events on <code>*.profraw</code> files in a directory to be observed. It writes the filenames into a batch file:</p>
 </div>
 <div class="listingblock">
-<div class="title">Listing 15. step2/myapp/pgo-background-merge.sh</div>
+<div class="title">Listing 23. step0/llvm/pgo-background-merge.sh</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>    <span class="tok-c"># On every *.profraw file written to in the /tmp directory,</span>
-    <span class="tok-c"># write an event line to list of files to process in a batch.</span>
+<pre class="pygments highlight"><code data-lang="spec"><span></span>    <span class="tok-c"># On every *.profraw file written to in the directory &lt;observe_dir&gt;,</span>
+    <span class="tok-c"># add the file name to list of files to process in a batch.</span>
     inotifywait -q -m -o $batch_file -e close_write \
         --format <span class="tok-s1">&#39;%f&#39;</span> \
         --include $files_regex \
@@ -1289,119 +1486,27 @@ echo <span class="tok-s1">&#39;&#39;</span> &gt; $SHUTDOWN_FILE;
 <p>Once the batch size reaches the minimum size, we merge the profiles in the batch file and delete them when we&#8217;re done. This saves disk space when building large projects.</p>
 </div>
 <div class="listingblock">
-<div class="title">Listing 16. step2/myapp/pgo-background-merge.sh</div>
+<div class="title">Listing 24. step0/llvm/pgo-background-merge.sh</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>    <span class="tok-c"># llvm-profdata itself is instrumented as well so we need to</span>
-    <span class="tok-c"># tell it where to write its own profile data.</span>
-    <span class="tok-c"># TODO(kwk): Eventually use this in the final merge?</span>
-    export TMPDIR=/tmp
-    export LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/llvm-profdata.tmp&quot;</span>
-    pushd $observe_dir
-    llvm-profdata merge \
+<pre class="pygments highlight"><code data-lang="spec"><span></span>    llvm-profdata merge \
         --compress-all-sections \
         --sparse \
         `[ -e $target_merge_file ] &amp;&amp; echo <span class="tok-s2">&quot;$target_merge_file&quot;</span>` \
         $(cat $batch_file_in_process) \
         -o $target_merge_file
     <span class="tok-c"># IMPORTANT: Free up disk space!</span>
-    rm -fv $(cat $batch_file_in_process)
-    popd
-    rm -f $TMPDIR/llvm-profdata.tmp</code></pre>
+    rm -fv $(cat $batch_file_in_process)</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Now, for the simple application in this experiment it might look like overkill, but trust me, we need this for building bigger projects like <code>chromium</code>.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="step3"><a class="anchor" href="#step3"></a><a class="link" href="#step3">3.4. Step 3 - Generalize subpackage</a></h3>
+<h3 id="_how_to_toggle_off_pgo_profile_package_generation"><a class="anchor" href="#_how_to_toggle_off_pgo_profile_package_generation"></a><a class="link" href="#_how_to_toggle_off_pgo_profile_package_generation">5.4. How to toggle off PGO profile package generation?</a></h3>
 <div class="paragraph">
-<p>In this step we generalize the <code>myapp-clang-pgo-profdata</code> subpackage from step 2 to
-<code>%{name}-%{toolchain}-clang-pgo-profdata</code>.</p>
-</div>
-<div class="paragraph">
-<p>The only changes from <a href="#step2">Step 2 - Manually add subpackage</a> to <a href="#step3">Step 3 - Generalize subpackage</a> are in the <code>myapp/myapp.spec</code> file:</p>
-</div>
-<div class="sect3">
-<h4 id="_subpackage_definition_2"><a class="anchor" href="#_subpackage_definition_2"></a><a class="link" href="#_subpackage_definition_2">3.4.1. Subpackage definition</a></h4>
-<div class="listingblock">
-<div class="title">Listing 17. step3/myapp/myapp.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nd">%package</span> -n %{name}-%{toolchain}-raw-pgo-profdata
-
-<span class="tok-gh">Summary</span><span class="tok-p">:</span> Indexed PGO profile data from <span class="tok-kc">%{name}</span> package
-
-<span class="tok-nd">%description</span> -n %{name}-%{toolchain}-raw-pgo-profdata 
-This package contains profiledata for %{toolchain} that was generated while
-compiling %{name}. This can be used for doing Profile Guided Optimizations
-(PGO) builds of %{toolchain}.
-
-<span class="tok-nd">%files</span> -n %{name}-%{toolchain}-raw-pgo-profdata
-<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_set_llvm_profile_file"><a class="anchor" href="#_set_llvm_profile_file"></a><a class="link" href="#_set_llvm_profile_file">3.4.2. Set LLVM_PROFILE_FILE</a></h4>
-<div class="listingblock">
-<div class="title">Listing 18. step3/myapp/myapp.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>export TMPDIR=<span class="tok-s2">&quot;</span><span class="tok-kp">%{_builddir}</span><span class="tok-s2">/raw-pgo-profdata&quot;</span>
-mkdir -pv $TMPDIR
-export LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/</span><span class="tok-kc">%{name}</span><span class="tok-s2">.</span><span class="tok-kc">%{toolchain}</span><span class="tok-s2">.%m.%p.profraw&quot;</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_find_and_merge_profiles"><a class="anchor" href="#_find_and_merge_profiles"></a><a class="link" href="#_find_and_merge_profiles">3.4.3. Find and merge profiles</a></h4>
-<div class="listingblock">
-<div class="title">Listing 19. step3/myapp/myapp.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># llvm-profdata itself is instrumented and wants to write profile data itself,</span>
-<span class="tok-c"># hence we need to specify an LLVM_PROFILE_FILE. Otherwise it tries to write</span>
-<span class="tok-c"># to a non existing location coming from when llvm-profdata was built.  </span>
-mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/clang-pgo-profdata/myapp
-export TMPDIR=<span class="tok-s2">&quot;/tmp&quot;</span>
-export LLVM_PROFILE_FILE=<span class="tok-s2">&quot;%t/llvm-profdata.clang.%m.%p.profraw&quot;</span>
-llvm-profdata merge \
-  --compress-all-sections \
-  --sparse \
-  /tmp/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.background.merge \
-  $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f -name <span class="tok-s1">&#39;*.profraw&#39;</span>) \
-  -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You should see that we&#8217;ve replaced all occurrences of <code>myapp</code> with the RPM specfile macro <code>%{name}</code> and the word <code>clang</code> with the <code>%{toolchain}</code> macro. That is essentially all we have to do now.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-You can specify <code>%global toolchain clang</code> to have your code compile with clang and use all the right and sane defaults for compiler flags for clang. See <a href="https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros" class="bare">https://docs.fedoraproject.org/en-US/packaging-guidelines/#_compiler_macros</a>.
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="step4"><a class="anchor" href="#step4"></a><a class="link" href="#step4">3.5. Step 4 - Automatically add subpackage</a></h3>
-<div class="paragraph">
-<p>In this step we use the <code>myapp</code> directory from <code>step1</code> that doesn&#8217;t contain any information about the subpackage at all. And yet we&#8217;re still gonna get our subpackage with profile data. We do this by patching, compiling and installing another package that is always present on Fedora: <code>redhat-rpm-config</code>. This package is the home of many useful build-flags and macros but it also allows us to tap into the build process by.</p>
-</div>
-<div class="sect3">
-<h4 id="_toggle"><a class="anchor" href="#_toggle"></a><a class="link" href="#_toggle">3.5.1. Toggle</a></h4>
-<div class="paragraph">
-<p>To toggle the profile generation on an off we have defined the <code>%_toolchain_profile_subpackages</code>. It is on by default and to disable the generation of profile subpackages you need to specify <code>%global _toolchain_profile_subpackages %{nil}</code> this in your specfile.</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 20. step4/redhat-rpm-config/macros</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>%_toolchain_profile_subpackages 1</code></pre>
-</div>
+<p>When installing the PGO instrumented LLVM we can still turn off the generation of profile files by putting <code>%global __llvm_pgo_subpackage %{nil}</code> in the spec file (e.g. in <code>myapp.spec</code>).</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -1416,364 +1521,16 @@ Currently there&#8217;s no sanity checking of whether or not a package can even 
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_subpackage_template"><a class="anchor" href="#_subpackage_template"></a><a class="link" href="#_subpackage_template">3.5.2. Subpackage template</a></h4>
-<div class="paragraph">
-<p>The subpackage can be generalized with the following template.</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 21. step4/redhat-rpm-config/macros</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># Generate profiledata packages for the compiler</span>
-%_toolchain_profile_subpackage_template \
-<span class="tok-nd">%package</span> -n %{name}-%{toolchain}-pgo-profdata \
-<span class="tok-gh">Summary</span><span class="tok-p">:</span> Indexed PGO profile data from <span class="tok-kc">%{name}</span> package \
-<span class="tok-nd">%description</span> -n %{name}-%{toolchain}-pgo-profdata \
-This package contains profiledata for %{toolchain} that was generated while \
-compiling %{name}. This can be used for doing Profile Guided Optimizations \
-(PGO) builds of %{toolchain} \
-<span class="tok-nd">%files</span> -n %{name}-%{toolchain}-pgo-profdata \
-<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata \
-<span class="tok-kc">%{nil}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_find_and_merge_profiles_2"><a class="anchor" href="#_find_and_merge_profiles_2"></a><a class="link" href="#_find_and_merge_profiles_2">3.5.3. Find and merge profiles</a></h4>
-<div class="paragraph">
-<p>The background merging is kicked off at the beginning of the <code>%build</code> section and it is stopped at the end of the <code>%build</code> section.</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 22. step4/redhat-rpm-config/macros</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-nf">%__spec_build_pre</span> <span class="tok-nf">%{___build_pre}</span> \
-  %{?_auto_set_build_flags:<span class="tok-kc">%{set_build_flags}</span>} \
-  <span class="tok-nv">%{?_generate_package_note_file}</span> \
-  [ 0%{_toolchain_profile_subpackages} &gt; 0 ] \\\
-    &amp;&amp; %{_pgo_env} \\\
-    &amp;&amp; /usr/lib/rpm/redhat/pgo-background-merge.sh \\\
-      -d <span class="tok-kp">%{_pgo_tmpdir}</span> \\\
-      -f %{_pgo_background_merge_target} \\\
-      -p %{_pgo_pid_file} &amp; \
-<span class="tok-c"># Overriding __spec_build_post macro from /usr/lib/rpm/macros</span>
-<span class="tok-nf">%__spec_build_post</span>	\
-  if [ 0%{_toolchain_profile_subpackages} &gt; 0 ]\
-  then\
-      echo <span class="tok-s1">&#39;please exit&#39;</span> &gt; %{_pgo_shutdown_file};\
-      [ -e %{_pgo_pid_file} ] &amp;&amp; inotifywait -e delete_self %{_pgo_pid_file} || true;\
-  fi\
-  <span class="tok-nf">%{___build_post}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>We define some of the variables/macros here because they are used in multiple places:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 23. step4/redhat-rpm-config/macros</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-c"># Auxilliary PGO profile to which the background job merges continously </span>
-%_pgo_background_merge_target <span class="tok-kp">%{_builddir}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.background.merge
-
-<span class="tok-c"># Place where the background job stores its PID file</span>
-<span class="tok-c"># %%_pgo_pid_file %{_builddir}/background-merge.pid</span>
-%_pgo_pid_file /tmp/background-merge.pid
-
-<span class="tok-c"># How to specify the LLVM_PROFILE_FILE</span>
-%_pgo_llvm_profile_file %t/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.%m.%p.profraw
-
-<span class="tok-c"># Where to store all raw PGO profiles</span>
-<span class="tok-kp">%_pgo_tmpdir</span> <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata
-
-%_pgo_shutdown_file <span class="tok-kp">%{_pgo_tmpdir}</span>/background-merge.shutdown
-
-<span class="tok-c"># Use this before calling an instrumented LLVM binary.</span>
-%_pgo_env \\\
-  TMPDIR=<span class="tok-s1">&#39;%{_pgo_tmpdir}&#39;</span> \\\
-  &amp;&amp; export TMPDIR \\\
-  &amp;&amp; mkdir -pv $TMPDIR \\\
-  &amp;&amp; LLVM_PROFILE_FILE=<span class="tok-s1">&#39;%{_pgo_llvm_profile_file}&#39;</span> \\\
-  &amp;&amp; export LLVM_PROFILE_FILE</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>We tap in the post-<code>%install</code> step to find and merge the profiles into the buildroot location.</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 24. step4/redhat-rpm-config/macros</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>
-<span class="tok-nf">%__merge_profdata</span> %[ 0%{_toolchain_profile_subpackages} &gt; 0 ? <span class="tok-s2">&quot;</span><span class="tok-se">\\</span><span class="tok-s2">\</span>
-  mkdir -pv <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span> \\\
-  &amp;&amp; %{_pgo_env} \\\
-  &amp;&amp; llvm-profdata merge \\\
-    --compress-all-sections \\\
-    --sparse \\\
-    %{_pgo_background_merge_target} \\\
-    $(find <span class="tok-kp">%{_builddir}</span>/raw-pgo-profdata -type f -name <span class="tok-s1">&#39;*.profraw&#39;</span>) \\\
-    -o <span class="tok-kc">%{buildroot}</span><span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/<span class="tok-kc">%{name}</span>/<span class="tok-kc">%{name}</span>.<span class="tok-kc">%{toolchain}</span>.profdata \\\
-  <span class="tok-s2">&quot; : &quot;</span><span class="tok-kc">%{nil}</span><span class="tok-s2">&quot; ]</span>
-<span class="tok-nf">%__os_install_post</span>    \
-    <span class="tok-nv">%{?__brp_ldconfig}</span> \
-    <span class="tok-nv">%{?__brp_compress}</span> \
-    %{!?__debug_package:\
-    <span class="tok-nv">%{?__brp_strip}</span> \
-    <span class="tok-nv">%{?__brp_strip_comment_note}</span> \
-    } \
-    <span class="tok-nv">%{?__brp_strip_lto}</span> \
-    <span class="tok-nv">%{?__brp_strip_static_archive}</span> \
-    <span class="tok-nv">%{?__brp_check_rpaths}</span> \
-    <span class="tok-nv">%{?__brp_mangle_shebangs}</span> \
-    <span class="tok-nv">%{?__brp_remove_la_files}</span> \
-    <span class="tok-nf">%{__os_install_post_python}</span> \
-    %{?_toolchain_profile_subpackages:<span class="tok-nv">%{?__merge_profdata}</span>} \
-<span class="tok-kc">%{nil}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_build_redhat_rpm_config_package"><a class="anchor" href="#_build_redhat_rpm_config_package"></a><a class="link" href="#_build_redhat_rpm_config_package">3.5.4. Build redhat-rpm-config package</a></h4>
-<div class="paragraph">
-<p>In order to build the <code>redhat-rpm-config</code> we build the package using <code>fedpkg local</code>. Then we can simply imstall the resulting RPM using <code>dnf</code>:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 25. step4/entrypoint.sh</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="shell"><span></span><span class="tok-c1"># Build and install our customized redhat-rpm-config</span>
-<span class="tok-nb">cd</span> /root/redhat-rpm-config
-fedpkg --release f37 <span class="tok-nb">local</span>
-sudo dnf install -y --disablerepo<span class="tok-o">=</span>* noarch/redhat-rpm-config-230-1.fc37.noarch.rpm</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>NOTICE: There&#8217;s no <code>step4/myapp</code> directory. This is because we copy it from step1 in the top-level <a href="Makefile"><code>Makefile</code></a>. This is supposed to emphasize the point that we don&#8217;t modify the spec file:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 26. Makefile</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">build-step4</span><span class="tok-o">:</span>
-	rm -rf step4/myapp
-	cp -rf step1/myapp step4/myapp
-	podman build -t pgo-experiment-step4 ./step4
-	podman run -it --rm pgo-experiment-step4</code></pre>
-</div>
-</div>
-</div>
-</div>
 <div class="sect2">
-<h3 id="step5"><a class="anchor" href="#step5"></a><a class="link" href="#step5">3.6. Step 5 - Build unmodified packages on Copr</a></h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-You don&#8217;t need to run this step manually. It has already been run and the results are in the Copr project
-<a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a>.
-</td>
-</tr>
-</table>
-</div>
+<h3 id="_do_you_pgo_for_cross_compilation"><a class="anchor" href="#_do_you_pgo_for_cross_compilation"></a><a class="link" href="#_do_you_pgo_for_cross_compilation">5.5. Do you PGO for cross-compilation?</a></h3>
 <div class="paragraph">
-<p>Up until this point all of our experiments look promising but how can we use Copr to build packages and produce <code>&lt;PACKAGE&gt;-clang-profdata</code> packages automatically for us?</p>
-</div>
-<div class="paragraph">
-<p>Copr will become the storage for our profile data subpackages with all the rest of the regular packages.</p>
-</div>
-<div class="paragraph">
-<p>After running this step using <code>make build-step5</code>, we&#8217;re gonna have a project called: <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a>.</p>
-</div>
-<div class="paragraph">
-<p>In that project, there will be the patched <code>redhat-rpm-config</code> package and the <code>myapp</code> package with the additional subpackage inside:</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="profile-data-collection.png" alt="profile data collection">
-</div>
-</div>
-<div class="paragraph">
-<p>In order for the Copr project to use our PGO instrumented LLVM we&#8217;ve made the repo available in the <a href="step5/Makefile"><code>step5/Makefile</code></a> using the <code>--repo</code> option:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 27. step5/Makefile</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
-<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
-	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/llvm-pgo-instrumented <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/llvm-pgo-instrumented <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr edit-chroot --packages inotify-tools <span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection/fedora-37-x86_64</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Any package that will be built after <code>redhat-rpm-config</code> in the <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> Copr project will automatically have a <code>&lt;package&gt;-clang-profdata</code> subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.</p>
-</div>
-<div class="sect3">
-<h4 id="_optional_build_from_distgit"><a class="anchor" href="#_optional_build_from_distgit"></a><a class="link" href="#_optional_build_from_distgit">3.6.1. Optional: Build from distgit</a></h4>
-<div class="paragraph">
-<p>If you want, you can build any project from Fedora&#8217;s distigt by doing</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="console"><span></span><span class="tok-gp">$ </span><span class="tok-nb">cd</span> step5/
-<span class="tok-gp">$ </span>make distgit-&lt;PACKAGE&gt; # <b class="conum">(1)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Replace <code>&lt;PACKAGE&gt;</code> with a real package name, e.g. <code>chromium</code>, or <code>retsnoop</code>.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>This is backed by this special target in the <a href="step5/Makefile"><code>step5/Makefile</code></a>:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 28. step5/Makefile</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-c"># Build an arbitrary package from dist-git</span>
-<span class="tok-nf">distgit-%</span><span class="tok-o">:</span>
-	<span class="tok-k">$(</span><span class="tok-nb">eval</span> package:<span class="tok-o">=</span><span class="tok-k">$(</span>subst distgit-,,<span class="tok-nv">$@</span><span class="tok-k">))</span>
-	-copr add-package-distgit <span class="tok-se">\</span>
-		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
-		--distgit fedora <span class="tok-se">\</span>
-		--commit f37 <span class="tok-se">\</span>
-		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr edit-package-distgit <span class="tok-se">\</span>
-		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
-		--distgit fedora <span class="tok-se">\</span>
-		--commit f37 <span class="tok-se">\</span>
-		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr build-package <span class="tok-se">\</span>
-		--name <span class="tok-k">$(</span>package<span class="tok-k">)</span> <span class="tok-se">\</span>
-		--timeout <span class="tok-m">172800</span> <span class="tok-se">\</span>
-		--nowait <span class="tok-se">\</span>
-		--chroot fedora-37-x86_64 <span class="tok-se">\</span>
-		<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/<span class="tok-k">$(</span>copr_project<span class="tok-k">)</span></code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-You might wonder why we first add and then edit a package. This is because we don&#8217;t know if the package has already been added before. And to overwrite with the desired values we simply edit an added project right away. So, nothing really special.
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="step6"><a class="anchor" href="#step6"></a><a class="link" href="#step6">3.7. Step 6 - Merge Raw Profiles</a></h3>
-<div class="paragraph">
-<p>In order to optimize LLVM with the raw profile data that we&#8217;ve collected before we need to make it available to the Copr build of LLVM and we need to <a href="https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge">merge</a> it using <code>llvm-profdata merge</code>.</p>
-</div>
-<div class="quoteblock">
-<blockquote>
-<div class="paragraph">
-<p>[Merging] takes several profile data files generated by PGO instrumentation and merges them together into a single indexed profile data file. (<a href="https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge">Source</a>)</p>
-</div>
-</blockquote>
-</div>
-<div class="paragraph">
-<p>The <code>&lt;PACKAGE&gt;-clang-profdata</code> packages that we&#8217;ve build so far are installable standalone. When we build a PGO optimized version of LLVM we add a <code>BuildRequires: myapp-clang-pgo-profdata</code> to the spec file of a new package called <code>llvm-pgo-profdata</code>.</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 29. step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> myapp-clang-pgo-profdata
-<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> retsnoop-clang-pgo-profdata
-<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> chromium-clang-pgo-profdata</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>%build</code> section of our <code>llvm-pgo-profdata</code> spec file merges the profiles provided by the above <code>&lt;PACKAGE&gt;-clang-pgo-profdata</code> packages to create a single PGO profile data file that we can later use for building a PGO optimized LLVM toolchain.</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 30. step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>llvm-profdata merge \
-      <span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/myapp/* \
-      <span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/retsnoop/* \
-      <span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/chromium/* \
-      -output llvm-pgo.profdata
-<span class="tok-nd">%files</span>
-%license LICENSE
-<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata</code></pre>
-</div>
-</div>
-<div class="admonitionblock caution">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Caution</div>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>The <code>llvm-pgo-profdata</code> package will be build on Copr in the <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/profile-data-collection</a> project and as you may recall from earlier, we have our patched <code>redhat-config-rpm</code> package living there as well. That means by default the <code>llvm-pgo-profdata</code> is expected to output PGO profiles. In reality it doesn&#8217;t do that and so we&#8217;re  disabling the profile generation manually:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 31. step6/llvm-pgo-profdata/llvm-pgo-profdata.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span>%global _toolchain_profile_subpackages <span class="tok-kc">%{nil}</span></code></pre>
-</div>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>In Fedora as well as RHEL and CentOS Stream we use a build mode called "standalone-build". That means, we&#8217;re building each sub-project of LLVM (e.g. <code>clang</code>, <code>llvm</code>, <code>lld</code>) with its own specfile. To avoid merging the PGO profile data into an indexed profile data file more than once we&#8217;re offloading the merge process into its own RPM. We call it <code>llvm-pgo-profdata</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="step7"><a class="anchor" href="#step7"></a><a class="link" href="#step7">3.8. Step 7 - Build PGO optimized LLVM</a></h3>
-<div class="paragraph">
-<p>This step is similar to <a href="#step0">Step 0 - Build a PGO instrumented LLVM</a> in which we&#8217;ve build the PGO instrumented LLVM. Here we&#8217;re adding a build requirement for <code>llvm-pgo-profdata</code>:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 32. step7/llvm/llvm.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
-<span class="tok-gh">BuildRequires</span><span class="tok-p">:</span> llvm-pgo-profdata
-<span class="tok-cp">%endif</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>We then use the file <code>%{_libdir}/%{toolchain}-pgo-profdata/llvm-pgo.profdata</code> provided by our <code>llvm-prog-profdata</code> package as input to <code>LLVM_PROFDATA_FILE</code>:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 33. step7/llvm/llvm.spec</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="spec"><span></span><span class="tok-cp">%if</span> %{with pgo_optimized_build}
-	-DLLVM_PROFDATA_FILE=<span class="tok-kp">%{_libdir}</span>/<span class="tok-kc">%{toolchain}</span>-pgo-profdata/llvm-pgo.profdata \
-<span class="tok-cp">%endif</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Together with the proper <code>--with pgo_optimized_build</code> <a href="https://rpm-software-management.github.io/rpm/manual/conditionalbuilds.html">build-conditional</a>, we&#8217;re building the optimized <code>llvm</code>, <code>clang</code> and <code>lld</code> packages:</p>
-</div>
-<div class="listingblock">
-<div class="title">Listing 34. step7/Makefile</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="make"><span></span><span class="tok-nf">.PHONY</span><span class="tok-o">:</span> <span class="tok-n">create</span>-<span class="tok-n">copr</span>-<span class="tok-n">project</span>
-<span class="tok-nf">create-copr-project</span><span class="tok-o">:</span>
-	-copr create --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr  modify --chroot fedora-37-x86_64 --unlisted-on-hp on --repo copr://<span class="tok-k">$(</span>fas_user<span class="tok-k">)</span>/profile-data-collection <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>
-	copr edit-chroot --rpmbuild-with pgo_optimized_build <span class="tok-k">$(</span>copr_project<span class="tok-k">)</span>/fedora-37-x86_64</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The resulting PGO optimized packages are available on <a href="https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/">kkleine/llvm-pgo-optimized</a>.</p>
+<p>No. By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exists but are not considered here (for now).</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a><a class="link" href="#_conclusion">4. Conclusion</a></h2>
+<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a><a class="link" href="#_conclusion">6. Conclusion</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>We&#8217;ve seen how we can gather PGO profile data from building unmodified RPM packages and feed this data into a PGO-optimized recompilation of LLVM.</p>
@@ -1782,45 +1539,12 @@ You might wonder why we first add and then edit a package. This is because we do
 <p>The most tricky part for me was the background merge script. Building an instrumented and optimized step was the most straight-forward part.</p>
 </div>
 <div class="paragraph">
-<p>Next on our list is:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Maybe move our additional code from <code>redhat-rpm-config</code> to some LLVM subpackage.</p>
-</li>
-<li>
-<p>Add a build-condition to not have PGO generation on by default.</p>
-</li>
-<li>
-<p>Build for more architectures.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>By default we optimize for each individual architecture. We think that this is good for now. The cases in which you want to cross-compile on one architecture for another exists but are not considered here (for now).</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</li>
-<li>
-<p>Benchmark a PGO-optimized LLVM toolchain</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
 <p>I hope you liked this article and follow us exploring the possibilities ahead of us! Don&#8217;t forget to leave a comment ;)</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_resources"><a class="anchor" href="#_resources"></a><a class="link" href="#_resources">5. Resources</a></h2>
+<h2 id="_resources"><a class="anchor" href="#_resources"></a><a class="link" href="#_resources">7. Resources</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Here&#8217;s a list of places to find out more about PGO and RPM Package building.</p>
@@ -1855,7 +1579,7 @@ You might wonder why we first add and then edit a package. This is because we do
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-03-31 17:58:15 +0200
+Last updated 2023-06-05 11:57:16 +0200
 </div>
 </div>
 <script type="text/x-mathjax-config">

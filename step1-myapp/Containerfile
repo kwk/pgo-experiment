@@ -1,0 +1,12 @@
+FROM fedora:rawhide
+LABEL description="A basic specfile-to-RPM process demo"
+
+# Install packages to build and package "myapp"
+RUN dnf install -y cmake fedora-packager git clang
+
+WORKDIR /root
+COPY entrypoint.sh /root/entrypoint.sh
+COPY ./myapp /root/myapp
+
+USER root
+ENTRYPOINT [ "/root/entrypoint.sh" ]

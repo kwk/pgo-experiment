@@ -1,0 +1,27 @@
+FROM fedora:rawhide
+LABEL description="Using the llvm-pgo-instrumentation-macros package"
+
+# tag::install-pgo-instrumented-llvm[]
+# Install the PGO instrumented (not PGO optimized!) LLVM Toolchain
+# https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo We have
+# to specify the version we want because rawhide could have moved on by now.
+RUN dnf install -y 'dnf-command(copr)'
+RUN dnf copr enable -y kkleine/llvm-pgo-instrumented
+RUN dnf install -y \
+    clang-16.0.2-2.fc39 \
+    clang-libs-16.0.2-2.fc39 \
+    clang-resource-filesystem-16.0.2-2.fc39 \
+    llvm-16.0.2-2.fc39 \
+    llvm-libs-16.0.2-2.fc39 \
+    llvm-pgo-instrumentation-macros-16.0.2-2.fc39
+# end::install-pgo-instrumented-llvm[]
+
+# Install packages to build and package "myapp"
+RUN dnf install -y cmake fedora-packager git
+
+WORKDIR /root
+COPY entrypoint.sh /root/entrypoint.sh
+COPY ./myapp /root/myapp
+
+USER root
+ENTRYPOINT [ "/root/entrypoint.sh" ]

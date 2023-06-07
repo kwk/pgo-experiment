@@ -1,3 +1,13 @@
+.PHONY: add-submodules
+add-submodules:
+	git submodule add -b pgo-experiment -f https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git step0-instrumented-llvm/llvm
+	git submodule add -b pgo-experiment -f https://src.fedoraproject.org/forks/kkleine/rpms/clang.git step0-instrumented-llvm/clang
+	git submodule add -b pgo-experiment -f https://src.fedoraproject.org/forks/kkleine/rpms/lld.git step0-instrumented-llvm/lld
+	git submodule add -b pgo-experiment -f https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git step5-llvm-with-pgo/llvm
+	git submodule add -b pgo-experiment -f https://src.fedoraproject.org/forks/kkleine/rpms/clang.git step5-llvm-with-pgo/clang
+	git submodule add -b pgo-experiment -f https://src.fedoraproject.org/forks/kkleine/rpms/lld.git step5-llvm-with-pgo/lld
+	
+
 .PHONY: update-submodules
 update-submodules:
 	git fetch --recurse-submodules

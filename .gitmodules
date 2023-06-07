@@ -11,3 +11,16 @@
 	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
 	branch = pgo-experiment
 
+[submodule "step5-llvm-with-pgo/llvm"]
+	path = step5-llvm-with-pgo/llvm
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/llvm.git
+	branch = pgo-experiment
+[submodule "step5-llvm-with-pgo/clang"]
+	path = step5-llvm-with-pgo/clang
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/clang.git
+	branch = pgo-experiment
+[submodule "step5-llvm-with-pgo/lld"]
+	path = step5-llvm-with-pgo/lld
+	url = https://src.fedoraproject.org/forks/kkleine/rpms/lld.git
+	branch = pgo-experiment
+

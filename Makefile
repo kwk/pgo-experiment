@@ -1,28 +1,3 @@
-build-step0:
-	$(MAKE) -C step0-instrumented-llvm all
-
-# tag::build_step_2[]
-build-step2:
-	rm -rf step2/myapp
-	cp -rf step1-myapp/myapp step2/myapp
-	podman build -t pgo-experiment-step2 ./step2
-	podman run -it --rm pgo-experiment-step2
-# end::build_step_4[]
-
-build-step3:
-	$(MAKE) -C step3-myapp-on-copr all
-
-build-step4:
-	$(MAKE) -C step4-llvm-pgo-profdata all
-
-build-step5:
-	$(MAKE) -C step5-llvm-with-pgo all
-
-build-step%:
-	$(eval step:=$(subst build-,,$@))
-	podman build -t pgo-experiment-$(step) ./$(step)
-	podman run -it --rm pgo-experiment-$(step)
-
 .PHONY: update-submodules
 update-submodules:
 	git fetch --recurse-submodules

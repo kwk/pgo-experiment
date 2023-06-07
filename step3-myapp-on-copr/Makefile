@@ -18,8 +18,8 @@ create-copr-project:
 .PHONY: myapp
 .ONESHELL:
 myapp:
-	-rm -rf myapp
-	cp -rfv ../step1/myapp .
+	-rm -rf ./myapp
+	cp -rfv ../step1-myapp/myapp .
 	cd myapp
 	make srpm
 	copr build --timeout 108000 --nowait --chroot fedora-rawhide-x86_64 $(fas_user)/$(copr_project) myapp-1.0.0-1.fc37.src.rpm

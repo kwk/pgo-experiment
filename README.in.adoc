@@ -2,7 +2,7 @@
 include::preamble.adoc[]
 
 [.lead]
-In this experiment we generate PGO profile data from compiling unmodified RPM packages with a PGO instrumented LLVM and feed those profiles into a PGO optimized rebuild of LLVM.
+In this experiment we generate PGO profile data from compiling unmodified RPM packages with a PGO instrumented LLVM and feed those profiles into a PGO optimized rebuild of LLVM. Please note, that this experiment is not continued.
 
 == Overview
 

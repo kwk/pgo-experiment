@@ -4,11 +4,10 @@ include::preamble.adoc[]
 [.lead]
 In this experiment we generate PGO profile data from compiling unmodified RPM packages with a PGO instrumented LLVM and feed those profiles into a PGO optimized rebuild of LLVM. Please note, that this experiment is not continued.
 
+[abstract]
 == Overview
 
 We create an instrumented LLVM toolchain in a Copr project called {link-llvm-pgo-instrumented}. In another Copr project called {link-profile-data-collection} we install a new package called `llvm-pgo-instrumented-macros` into the chroot buildroot. Every package that gets built in that buildroot will automatically produce a subpackage `<PACKAGE>-llvm-pgo-profdata` with LLVM PGO profile data. We demonstrate this with a simple "Hello, World!" application that is called `myapp`. We then collect all generated subpackages through `BuildRequires:` tags in another package called `llvm-pgo-profdata`. During the build of this `llvm-pgo-profdata` package, all profiles are merged into an indexed profile data file. The final `llvm-pgo-profdata` RPM then installs the indexed profile data file into a location from which a PGO optimized build of LLVM can read it. This PGO optimized build of the LLVM toolchain is done in a third Copr project called {link-llvm-pgo-optimized}.
-
-// image::process-overview.png[]
 
 === Non-goals
 
@@ -20,6 +19,7 @@ The only operating system that we build for in this experiment is Fedora rawhide
 
 // NOTE: This is potentially a bit risky because the the profile data may become irrelevant more quickly compared to less frequently updated variants of Fedora. But rawhide is the version of choice for introducing new profiles.
 
+[appendix]
 == Understand what PGO can do
 
 > PGO (Profile-Guided Optimization) allows your compiler to better optimize code for how it actually runs. Users report that applying this to Clang and LLVM can decrease overall compile time by 20%.
@@ -32,7 +32,7 @@ For the {link-fedora} distribution we build a ton of packages with LLVM. The afo
 
 The question is: How can we tap in the RPM build pipeline using {link-copr} and build RPM packages without modifying their `*.spec` files manually?
 
-I've created a multi-step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using `Containerfile` s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, navigate to the step directory and run `make all`, for example:
+I've created a multi-step experiment that shows how this can be achieved. For educational purposes I've written many of the steps using ``Containerfile``s. This allows for a good level of isolation when you want to build the steps on your own. To run any of the steps on your own, navigate to the step directory and run `make all`, for example:
 
 [source,console]
 ----
@@ -58,23 +58,20 @@ $ git clone --recurse-submodules https://github.com/kwk/pgo-experiment.git # <3>
 $ cd pgo-experiment # <4>
 $ kinit <FAS_USER>@FEDORAPROJECT.ORG # <5>
 ----
-<1> Install packages that you need in order to build the <<steps>>. Maybe this list is not capturing everything you need but at least most of it. `asciidoctor` is optional for building this documentation using `make docs`.
+<1> Install packages that you need in order to build the steps. Maybe this list is not capturing everything you need but at least most of it. `asciidoctor` is optional for building this documentation using `make docs`.
 <2> OPTIONAL: Installing these ruby gems is only for building these docs using `make docs`.
 <3> Clone the project including submodules.
 <4> Navigate to the project's root directory.
 <5> OPTIONAL: If you want to build the steps that involve the `copr` CLI, you need to have a valid Kerberos ticket. Replace `<FAS_USER>` with the your own Fedora FAS user name.
 
-[#steps]
-== Steps
-
 [#step0]
-=== Step 0 - Build a PGO instrumented LLVM
+== Step 0 - Build a PGO instrumented LLVM
 
 NOTE: This step mainly exists for documentation purposes. If you *do* build this step on your own, make sure to walk through the files where there's a reference to {link-llvm-pgo-instrumented} and change it to your project. I don't see a need to consider this part of this excersise. All we have to do is really pass along a few CMake flags when building these LLVM RPM packages: `llvm`, `clang`, and `lld`.
 
 In this step, we're essentially following the {link-llvm-pgo-documentation} for how to build a PGO instumented clang. We're going to create PGO instrumented LLVM packages and host them for later consumption on a Copr project. The resulting `clang` will generate profile data upon execution and we're trying to collect, bundle, and merge it for optimizing a rebuild of the LLVM toolchain later (<<step5>>). But rest assured, you don't need to run this on your own. A build takes a couple of hours. The {link-llvm-pgo-instrumented} project is ready for you to consume in the next steps. So you're free to continue with <<step1>>.
 
-==== Spec file modifications
+=== Spec file modifications
 
 I've set up `pgo-experiment` branches in each of the following package repositories on the Fedora Source:
 
@@ -127,12 +124,12 @@ As a solution I've added the `--vp-counters-per-site` option but this resulted i
 The solution was to modify `vp-counters-per-site` option through `LLVM_VP_COUNTERS_PER_SITE` instead of adding it, hence the `-DLLVM_VP_COUNTERS_PER_SITE=8`.
 ====
 
-==== Building Step 0
+=== Building Step 0
 
 To build this step, run `cd step0-instrumented-llvm && make all`.
 
 [#step1]
-=== Step 1 - Build "Hello, World!" RPM
+== Step 1 - Build "Hello, World!" RPM
 
 In this step we set the foundation for our experiment.
 
@@ -182,7 +179,7 @@ Once the build is done, we stay in the container (see `bash` in the following sh
 include::step1-myapp/entrypoint.sh[]
 ----
 
-==== Building Step 1
+=== Building Step 1
 
 To build this step, run `cd step1-myapp && make all`.
 
@@ -200,11 +197,11 @@ Wrote: /root/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm
 ----
 
 [#step2]
-=== Step 2 - Automatically add subpackage
+== Step 2 - Automatically add subpackage
 
 In this step we use the `myapp` directory from `step1` that doesn't contain any information about the subpackage at all. And yet we're still gonna get our subpackage with profile data. Let's dive right in...
 
-==== Building Step 2
+=== Building Step 2
 
 To build this step, run `cd step2-myapp-llvm-pgo-profdata && make all`.
 
@@ -247,7 +244,7 @@ A natrual choice would have been to pick `%{_rpmmacrodir}` which expands to `/us
 It is important to note that in order to achieve the additional subpackage, we only had to modify the LLVM package and no other packages.
 
 [#step3]
-=== Step 3 - Build unmodified packages on Copr
+== Step 3 - Build unmodified packages on Copr
 
 NOTE: You don't need to run this step manually. It has already been run and the results are in the Copr project
 {link-profile-data-collection}.
@@ -272,7 +269,7 @@ include::step3-myapp-on-copr/Makefile[tags=create_copr_project]
 
 Any package that will be built in the {link-profile-data-collection} Copr project will automatically have a `<package>-llvm-pgo-profdata` subpackage that we can download in a later step to merge and feed it in the final, optimized build of LLVM.
 
-==== Optional: Build from distgit
+=== Optional: Build from distgit
 
 If you want, you can build any project from Fedora's distigt by doing:
 
@@ -294,7 +291,7 @@ $ make distgit-<PACKAGE> # <1>
 // NOTE: You might wonder why we first add and then edit a package. This is because we don't know if the package has already been added before. And to overwrite with the desired values we simply edit an added project right away. So, nothing really special.
 
 [#step4]
-=== Step 4 - Merge PGO Profiles
+== Step 4 - Merge PGO Profiles
 
 In order to optimize LLVM with the raw profile data that we've collected before we need to make it available to the Copr build of LLVM and we need to link:https://llvm.org/docs/CommandGuide/llvm-profdata.html#profdata-merge[merge] it using `llvm-profdata merge`.
 
@@ -330,7 +327,7 @@ include::step4-merge-profiles/llvm-pgo-profdata/llvm-pgo-profdata.spec[tags=disa
 In Fedora as well as RHEL and CentOS Stream we use a build mode called "standalone-build". That means, we're building each sub-project of LLVM (e.g. `clang`, `llvm`, `lld`) with its own specfile. To avoid merging the PGO profile data into an indexed profile data file more than once we're offloading the merge process into its own RPM. We call it `llvm-pgo-profdata`.
 
 [#step5]
-=== Step 5 - Build PGO optimized LLVM
+== Step 5 - Build PGO optimized LLVM
 
 This step is similar to <<step0>> in which we've build the PGO instrumented LLVM. Here we're adding a build requirement for `llvm-pgo-profdata`:
 
@@ -426,7 +423,7 @@ The most important line to look at is this:
 
 In order to interpret the results one has to understand that all programs being tested are too fast to measure their execution time, hence the `inf%`.
 
-The compile time on the other hand shows a performance improvement of *9.7%* when going from LLVM 16.0.3 to PGO optimized LLVM 16.0.2. The performance of linking was also improved by *1.3%*
+The compile time on the other hand shows a performance improvement of *9.7%* when going from LLVM 16.0.3 to PGO optimized LLVM 16.0.2. The performance of linking was also improved by *1.2%*.
 
 == Conclusion
 
@@ -434,12 +431,11 @@ We've seen how we can gather PGO profile data from building unmodified RPM packa
 
 The most tricky part for me was the background merge script. Building an instrumented and optimized step was the most straight-forward part.
 
-But looking at the almost *10%* performance boost in compile time I really like how this experiment turned out. 
+But looking at the almost *10%* performance boost in compile time I really like how this experiment turned out. And I wonder how far we can take this if we build llvm and clang in one buildroot. 
 
 // In the future we'll probably explore link:https://reviews.llvm.org/D115693[lightweight instrumentation] by correlating debug information to the instrumentation. But as fascinating as this sounds I'm skeptic that brings any benefit apart from smaller profiles.
 
 I hope you liked this article and follow us exploring the possibilities ahead of us! Don't forget to leave a comment ;)
-
 
 == Frequently Asked Questions
 

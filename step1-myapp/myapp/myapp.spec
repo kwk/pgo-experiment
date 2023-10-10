@@ -21,8 +21,20 @@ A simple "Hello, World!" application.
 %autosetup -S git
 
 %build
+env
+TMPDIR=%{_builddir}/raw-pgo-profdata2
+export TMPDIR
+mkdir -pv $TMPDIR
+LLVM_PROFILE_FILE=%t/%{name}.llvm.%m.%p.profraw
+export LLVM_PROFILE_FILE
+env
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
+llvm-profdata merge \
+    --compress-all-sections \
+    --sparse \
+    $(find /root/myapp/raw-pgo-profdata -type f -name '*.profraw') \
+    -o %{name}.llvm.profdata --text
 
 %install
 %cmake_install

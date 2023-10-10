@@ -4,7 +4,7 @@ Konrad Kleine;
 :toclevels: 5
 :showtitle:
 :experimental:
-:sectnums:
+// :sectnums:
 :stem:
 :sectlinks:
 :listing-caption: Listing
@@ -24,11 +24,10 @@ Konrad Kleine;
 toc::[]
 In this experiment we generate PGO profile data from compiling
 unmodified RPM packages with a PGO instrumented LLVM and feed those
-profiles into a PGO optimized rebuild of LLVM.
+profiles into a PGO optimized rebuild of LLVM. Please note, that this
+experiment is not continued.
 
-[[_overview]]
-== Overview
-
+____
 We create an instrumented LLVM toolchain in a Copr project called
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented].
 In another Copr project called
@@ -48,7 +47,7 @@ Copr project called
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-optimized].
 
 [[_non_goals]]
-=== Non-goals
+== Non-goals
 
 It is not a goal to get a perfectly tweaked PGO optimization build of
 LLVM. Instead we want to explore a way how to setup a pipeline in
@@ -62,6 +61,7 @@ apply PGO and LTO in a more holistic way.
 
 The only operating system that we build for in this experiment is Fedora
 rawhide on x86_64.
+____
 
 [[_understand_what_pgo_can_do]]
 == Understand what PGO can do
@@ -98,7 +98,7 @@ modifying their `*.spec` files manually?
 
 I’ve created a multi-step experiment that shows how this can be
 achieved. For educational purposes I’ve written many of the steps using
-`Containerfile` s. This allows for a good level of isolation when you
+`Containerfile`s. This allows for a good level of isolation when you
 want to build the steps on your own. To run any of the steps on your
 own, navigate to the step directory and run `make all`, for example:
 
@@ -120,7 +120,7 @@ production sites.
 ====
 
 [[_how_to_follow_along]]
-=== How to follow along?
+== How to follow along?
 
 I’ve been writing and testing everything on a
 https://getfedora.org/[Fedora Linux] 37 laptop.
@@ -139,10 +139,10 @@ $ cd pgo-experiment
 $ kinit <FAS_USER>@FEDORAPROJECT.ORG 
 ----
 
-* Install packages that you need in order to build the
-link:#steps[Steps]. Maybe this list is not capturing everything you need
-but at least most of it. `asciidoctor` is optional for building this
-documentation using `make docs`.
+* Install packages that you need in order to build the steps. Maybe this
+list is not capturing everything you need but at least most of it.
+`asciidoctor` is optional for building this documentation using
+`make docs`.
 * OPTIONAL: Installing these ruby gems is only for building these docs
 using `make docs`.
 * Clone the project including submodules.
@@ -151,10 +151,8 @@ using `make docs`.
 you need to have a valid Kerberos ticket. Replace `<FAS_USER>` with the
 your own Fedora FAS user name.
 
-== Steps
-
 [[step0]]
-=== Step 0 - Build a PGO instrumented LLVM
+== Step 0 - Build a PGO instrumented LLVM
 
 [NOTE]
 ====
@@ -178,10 +176,10 @@ merge it for optimizing a rebuild of the LLVM toolchain later
 don’t need to run this on your own. A build takes a couple of hours. The
 https://copr.fedorainfracloud.org/coprs/kkleine/llvm-pgo-instrumented/[kkleine/llvm-pgo-instrumented]
 project is ready for you to consume in the next steps. So you’re free to
-continue with link:#step1[Step 1 - Build "Hello, World!" RPM].
+continue with link:#step1[Step 1 - Build "Hello&#44; World!" RPM].
 
 [[_spec_file_modifications]]
-==== Spec file modifications
+== Spec file modifications
 
 I’ve set up `pgo-experiment` branches in each of the following package
 repositories on the Fedora Source:
@@ -268,12 +266,12 @@ The solution was to modify `vp-counters-per-site` option through
 ====
 
 [[_building_step_0]]
-==== Building Step 0
+== Building Step 0
 
 To build this step, run `cd step0-instrumented-llvm && make all`.
 
 [[step1]]
-=== Step 1 - Build "Hello, World!" RPM
+== Step 1 - Build "Hello, World!" RPM
 
 In this step we set the foundation for our experiment.
 
@@ -317,8 +315,20 @@ A simple "Hello, World!" application.
 %autosetup -S git
 
 %build
+env
+TMPDIR=%{_builddir}/raw-pgo-profdata2
+export TMPDIR
+mkdir -pv $TMPDIR
+LLVM_PROFILE_FILE=%t/%{name}.llvm.%m.%p.profraw
+export LLVM_PROFILE_FILE
+env
 %cmake -DCMAKE_BUILD_TYPE=Release
 %cmake_build
+llvm-profdata merge \
+    --compress-all-sections \
+    --sparse \
+    $(find /root/myapp/raw-pgo-profdata -type f -name '*.profraw') \
+    -o %{name}.llvm.profdata --text
 
 %install
 %cmake_install
@@ -424,7 +434,7 @@ bash
 ----
 
 [[_building_step_1]]
-==== Building Step 1
+== Building Step 1
 
 To build this step, run `cd step1-myapp && make all`.
 
@@ -442,14 +452,14 @@ Wrote: /root/myapp/x86_64/myapp-debuginfo-1.0.0-1.fc37.x86_64.rpm
 ----
 
 [[step2]]
-=== Step 2 - Automatically add subpackage
+== Step 2 - Automatically add subpackage
 
 In this step we use the `myapp` directory from `step1` that doesn’t
 contain any information about the subpackage at all. And yet we’re still
 gonna get our subpackage with profile data. Let’s dive right in…​
 
 [[_building_step_2]]
-==== Building Step 2
+== Building Step 2
 
 To build this step, run `cd step2-myapp-llvm-pgo-profdata && make all`.
 
@@ -512,14 +522,14 @@ https://src.fedoraproject.org/rpms/redhat-rpm-config/pull-request/249#comment-13
 pr] for more information).
 
 [[_summary]]
-=== Summary
+== Summary
 
 It is important to note that in order to achieve the additional
 subpackage, we only had to modify the LLVM package and no other
 packages.
 
 [[step3]]
-=== Step 3 - Build unmodified packages on Copr
+== Step 3 - Build unmodified packages on Copr
 
 [NOTE]
 ====
@@ -567,7 +577,7 @@ subpackage that we can download in a later step to merge and feed it in
 the final, optimized build of LLVM.
 
 [[_optional_build_from_distgit]]
-==== Optional: Build from distgit
+== Optional: Build from distgit
 
 If you want, you can build any project from Fedora’s distigt by doing:
 
@@ -581,7 +591,7 @@ $ make distgit-<PACKAGE>
 `chromium`.
 
 [[step4]]
-=== Step 4 - Merge PGO Profiles
+== Step 4 - Merge PGO Profiles
 
 In order to optimize LLVM with the raw profile data that we’ve collected
 before we need to make it available to the Copr build of LLVM and we
@@ -653,7 +663,7 @@ we’re offloading the merge process into its own RPM. We call it
 `llvm-pgo-profdata`.
 
 [[step5]]
-=== Step 5 - Build PGO optimized LLVM
+== Step 5 - Build PGO optimized LLVM
 
 This step is similar to link:#step0[Step 0 - Build a PGO instrumented
 LLVM] in which we’ve build the PGO instrumented LLVM. Here we’re adding
@@ -773,7 +783,7 @@ hence the `inf%`.
 
 The compile time on the other hand shows a performance improvement of
 *9.7%* when going from LLVM 16.0.3 to PGO optimized LLVM 16.0.2. The
-performance of linking was also improved by *1.3%*
+performance of linking was also improved by *1.2%*.
 
 [[_conclusion]]
 == Conclusion
@@ -786,7 +796,8 @@ The most tricky part for me was the background merge script. Building an
 instrumented and optimized step was the most straight-forward part.
 
 But looking at the almost *10%* performance boost in compile time I
-really like how this experiment turned out.
+really like how this experiment turned out. And I wonder how far we can
+take this if we build llvm and clang in one buildroot.
 
 I hope you liked this article and follow us exploring the possibilities
 ahead of us! Don’t forget to leave a comment ;)
@@ -795,7 +806,7 @@ ahead of us! Don’t forget to leave a comment ;)
 == Frequently Asked Questions
 
 [[_how_can_i_view_the_top_10_functions]]
-=== How can I view the top 10 functions?
+== How can I view the top 10 functions?
 
 To view the top 10 functions profiled in a profile file you can use
 `llvm-profdata` below:
@@ -833,7 +844,7 @@ optimizing LLVM.
 * Show the top 10 hottest functions demangled by `llvm-cxxfilt`.
 
 [[TMPDIR]]
-=== What is the LLVM_PROFILE_FILE environment variable?
+== What is the LLVM_PROFILE_FILE environment variable?
 
 By specifying `export LLVM_PROFILE_FILE="%t/myapp.llvm.%m.%p.profraw"`
 we instruct `clang` to create a raw profile file for each invocation
@@ -870,7 +881,7 @@ results.
 ====
 
 [[find_and_merge_profiles]]
-=== Why do we merge profiles and not keep the raw ones?
+== Why do we merge profiles and not keep the raw ones?
 
 Short answer: because size matters!
 
@@ -989,7 +1000,7 @@ You can call `llvm-profdata merge` on already merged profiles.
 ====
 
 [[_pgo_background_merge]]
-==== PGO background merge
+=== PGO background merge
 
 The background script itself waits for `close_write` events on
 `*.profraw` files in a directory to be observed. It writes the filenames
@@ -1038,7 +1049,7 @@ overkill, but trust me, we need this for building bigger projects like
 `chromium`.
 
 [[_how_to_toggle_off_pgo_profile_package_generation]]
-=== How to toggle off PGO profile package generation?
+== How to toggle off PGO profile package generation?
 
 When installing the PGO instrumented LLVM we can still turn off the
 generation of profile files by putting
@@ -1055,7 +1066,7 @@ know.
 ====
 
 [[_do_you_pgo_for_cross_compilation]]
-=== Do you PGO for cross-compilation?
+== Do you PGO for cross-compilation?
 
 No. By default we optimize for each individual architecture. We think
 that this is good for now. The cases in which you want to cross-compile

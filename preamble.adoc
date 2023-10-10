@@ -4,7 +4,7 @@ Konrad Kleine;
 :toclevels: 5
 :showtitle:
 :experimental:
-:sectnums:
+// :sectnums:
 :stem:
 :sectlinks:
 :listing-caption: Listing
